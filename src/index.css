@@ -1,0 +1,289 @@
+:root {
+  --brand: #8a2c55;
+  --brand-dark: #6b1f41;
+  --brand-soft: #f7e8ef;
+  --bg: #fbf6f3;
+  --card: #ffffff;
+  --text: #2b1d23;
+  --muted: #7a6870;
+  --border: #ecdfe4;
+  --error: #b42318;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+}
+
+button,
+input {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.page {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 0 16px 32px;
+}
+
+.hero {
+  text-align: center;
+  padding: 36px 0 24px;
+}
+
+.eyebrow {
+  margin: 0;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  color: var(--brand);
+}
+
+.hero h1 {
+  margin: 4px 0;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-weight: 400;
+  font-size: 2.6rem;
+  color: var(--brand-dark);
+}
+
+.tagline {
+  margin: 0;
+  color: var(--muted);
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 8px 30px rgba(138, 44, 85, 0.08);
+}
+
+h2 {
+  margin: 0 0 4px;
+  font-size: 1.3rem;
+}
+
+h3 {
+  margin: 20px 0 10px;
+  font-size: 0.95rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.error {
+  color: var(--error);
+  background: #fef3f2;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.notice {
+  background: var(--brand-soft);
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.services {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.service {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.service:hover,
+.service:focus-visible {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+}
+
+.service-main,
+.service-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.service-meta {
+  align-items: flex-end;
+  white-space: nowrap;
+}
+
+.back {
+  background: none;
+  border: none;
+  padding: 0;
+  margin-bottom: 12px;
+  color: var(--brand);
+}
+
+.days {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  scrollbar-width: thin;
+}
+
+.day {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 62px;
+  padding: 10px 6px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: none;
+}
+
+.day-week {
+  font-size: 0.8rem;
+  text-transform: capitalize;
+  color: var(--muted);
+}
+
+.day-num {
+  font-weight: 600;
+}
+
+.slots {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+  gap: 8px;
+}
+
+.slot {
+  padding: 10px 0;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: none;
+}
+
+.day.selected,
+.slot.selected {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+}
+
+.day.selected .day-week {
+  color: #fff;
+}
+
+.primary,
+.secondary {
+  display: block;
+  width: 100%;
+  margin-top: 20px;
+  padding: 14px;
+  border-radius: 14px;
+  border: none;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+}
+
+.primary {
+  background: var(--brand);
+  color: #fff;
+}
+
+.primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.secondary {
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+  margin-top: 10px;
+}
+
+form {
+  display: grid;
+  gap: 14px;
+  margin-top: 16px;
+}
+
+label {
+  display: grid;
+  gap: 6px;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+input {
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font-size: 1rem;
+  color: var(--text);
+}
+
+input:focus {
+  outline: 2px solid var(--brand);
+  outline-offset: 1px;
+}
+
+.summary {
+  background: var(--brand-soft);
+  border-radius: 12px;
+  padding: 12px;
+  margin: 12px 0 0;
+}
+
+.done {
+  text-align: center;
+}
+
+.check {
+  width: 56px;
+  height: 56px;
+  margin: 4px auto 12px;
+  border-radius: 50%;
+  background: var(--brand);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 1.6rem;
+}
+
+footer {
+  text-align: center;
+  margin-top: 24px;
+}
