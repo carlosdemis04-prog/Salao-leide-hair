@@ -6,14 +6,19 @@ Feito com React + Vite e [Supabase](https://supabase.com) (banco de dados).
 
 ## Configurar o Supabase (uma vez só)
 
-1. No painel do Supabase, abra **SQL Editor**, cole todo o conteúdo de [`supabase/migrations/0001_agendamento.sql`](supabase/migrations/0001_agendamento.sql) e clique em **Run**.
-2. Ainda no SQL Editor, rode [`supabase/seed.sql`](supabase/seed.sql). Ele cria serviços e horários **de exemplo**; depois troque pelos reais em **Table Editor**.
+No painel do Supabase, abra **SQL Editor** e rode, nesta ordem, o conteúdo de cada arquivo (cole e clique em **Run**):
+
+1. [`supabase/migrations/0001_agendamento.sql`](supabase/migrations/0001_agendamento.sql): cria as tabelas e as funções.
+2. [`supabase/migrations/0002_servicos_reais.sql`](supabase/migrations/0002_servicos_reais.sql): permite serviço sem preço definido.
+3. [`supabase/seed.sql`](supabase/seed.sql): cadastra os serviços e o horário (segunda a sábado, 9h às 18h). Pode rodar de novo sempre que mudar algo nele.
+
+Depois é possível ajustar preços, durações e horários direto no **Table Editor**.
 
 ### Onde a Leide edita as coisas (Table Editor)
 
 | Tabela | Para quê |
 | --- | --- |
-| `services` | Serviços, preço (em centavos: R$ 60,00 = `6000`) e duração em minutos. Desmarque `active` para esconder um serviço. |
+| `services` | Serviços, preço (em centavos: R$ 60,00 = `6000`; vazio = "Valor a consultar") e duração em minutos. Desmarque `active` para esconder um serviço. |
 | `business_hours` | Horário de atendimento por dia da semana (0 = domingo, 6 = sábado). Pode ter duas linhas no mesmo dia para o almoço. |
 | `blocked_times` | Folgas, feriados e compromissos. O site não oferece horários nesses períodos. |
 | `appointments` | Os agendamentos feitos pelo site. |
