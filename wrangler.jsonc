@@ -1,7 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "salao-leide-hair",
-  "compatibility_date": "2026-10-01",
+  "compatibility_date": "2025-09-01",
   // O "npx wrangler deploy" da Cloudflare roda o build do site antes de publicar
   "build": {
     "command": "npm run build"
