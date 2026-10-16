@@ -9,7 +9,7 @@ export type Service = {
   id: string
   name: string
   description: string | null
-  price_cents: number
+  price_cents: number | null
   duration_min: number
 }
 

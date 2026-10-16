@@ -3,7 +3,9 @@ import { supabase, type BusinessHours, type Service } from './supabase'
 
 const TZ = 'America/Sao_Paulo'
 const DAYS_AHEAD = 21
-const SALAO_WHATSAPP = (import.meta.env.VITE_SALAO_WHATSAPP as string | undefined) ?? ''
+const SALAO_WHATSAPP = (import.meta.env.VITE_SALAO_WHATSAPP as string | undefined) || '5511922297887'
+const INSTAGRAM = 'leidehair_beauty'
+const ENDERECO = 'Rua Silvestre Francisco Puglia, 26, Campininha'
 
 const brl = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
 const timeFmt = new Intl.DateTimeFormat('pt-BR', { timeZone: TZ, hour: '2-digit', minute: '2-digit' })
@@ -27,6 +29,10 @@ function formatDuration(min: number) {
   const m = min % 60
   if (h === 0) return `${m} min`
   return m === 0 ? `${h}h` : `${h}h${String(m).padStart(2, '0')}`
+}
+
+function formatPrice(cents: number | null) {
+  return cents === null ? 'Valor a consultar' : brl.format(cents / 100)
 }
 
 function formatPhone(raw: string) {
@@ -150,9 +156,10 @@ export default function App() {
   return (
     <div className="page">
       <header className="hero">
-        <p className="eyebrow">Salão</p>
-        <h1>Leide Hair</h1>
-        <p className="tagline">Agende seu horário em poucos toques</p>
+        <h1>
+          <img src="/logo.webp" alt="Leide Hair" width="720" height="622" />
+        </h1>
+        <p className="tagline">Agende seu horário</p>
       </header>
 
       <main className="card">
@@ -177,7 +184,7 @@ export default function App() {
                       {s.description && <span className="muted">{s.description}</span>}
                     </span>
                     <span className="service-meta">
-                      <strong>{brl.format(s.price_cents / 100)}</strong>
+                      <strong>{formatPrice(s.price_cents)}</strong>
                       <span className="muted">{formatDuration(s.duration_min)}</span>
                     </span>
                   </button>
@@ -194,7 +201,7 @@ export default function App() {
             </button>
             <h2>{service.name}</h2>
             <p className="muted">
-              {brl.format(service.price_cents / 100)} · {formatDuration(service.duration_min)}
+              {formatPrice(service.price_cents)} · {formatDuration(service.duration_min)}
             </p>
             {formError && <p className="error">{formError}</p>}
 
@@ -292,7 +299,21 @@ export default function App() {
         )}
       </main>
 
-      <footer className="muted">Leide Hair</footer>
+      <footer>
+        <a href={`https://wa.me/${SALAO_WHATSAPP}`} target="_blank" rel="noreferrer">
+          WhatsApp (11) 92229-7887
+        </a>
+        <a href={`https://instagram.com/${INSTAGRAM}`} target="_blank" rel="noreferrer">
+          @{INSTAGRAM}
+        </a>
+        <a
+          href={`https://maps.google.com/?q=${encodeURIComponent(ENDERECO)}`}
+          target="_blank"
+          rel="noreferrer"
+        >
+          {ENDERECO}
+        </a>
+      </footer>
     </div>
   )
 }
