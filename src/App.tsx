@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import GoldDust from './GoldDust'
 import { supabase, type BusinessHours, type Service } from './supabase'
 import {
   CalendarIcon,
@@ -150,6 +151,27 @@ export default function App() {
     })
   }, [])
 
+  const bookingRef = useRef<HTMLElement>(null)
+  const [bookingVisible, setBookingVisible] = useState(false)
+  useEffect(() => {
+    const el = bookingRef.current
+    if (!el || !('IntersectionObserver' in window)) {
+      setBookingVisible(true)
+      return
+    }
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setBookingVisible(true)
+          io.disconnect()
+        }
+      },
+      { threshold: 0.08 },
+    )
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
+
   const openDays = useMemo(() => {
     const weekdays = new Set(hours.map((h) => h.weekday))
     return upcomingDays().filter((d) => weekdays.has(d.weekday))
@@ -167,6 +189,12 @@ export default function App() {
     if (others.length) result.push({ key: 'outros', title: 'Outros', icon: <SparkleIcon />, match: /./, items: others })
     return result
   }, [services])
+
+  const order = useMemo(() => {
+    const m = new Map<string, number>()
+    grouped.flatMap((g) => g.items).forEach((s, i) => m.set(s.id, i))
+    return m
+  }, [grouped])
 
   useEffect(() => {
     if (!supabase || !service || !day) return
@@ -246,24 +274,47 @@ export default function App() {
   return (
     <>
       <header className="hero">
-        <div className="hero-glow" aria-hidden />
-        <img className="hero-logo" src="/logo.webp" alt="Leide Hair" width="720" height="619" />
-        <p className="hero-kicker">Salão de beleza</p>
-        <h1 className="hero-title">Agende seu horário</h1>
-        <p className="hero-sub">Escolha o serviço, o dia e a hora. Leva menos de um minuto.</p>
-        <ul className="hero-info">
-          {hours.length > 0 && (
+        <div className="hero-backdrop" aria-hidden>
+          <div className="hero-light hero-light-a" />
+          <div className="hero-light hero-light-b" />
+        </div>
+        <GoldDust />
+        <div className="hero-content">
+          <div className="hero-logo-wrap">
+            <img className="hero-logo" src="/logo.webp" alt="Leide Hair" width="720" height="619" />
+            <span className="hero-logo-shine" aria-hidden />
+          </div>
+          <p className="hero-kicker reveal-up" style={{ '--d': '1.1s' } as CSSProperties}>
+            Salão de beleza · Campininha
+          </p>
+          <h1 className="hero-title reveal-up" style={{ '--d': '1.3s' } as CSSProperties}>
+            Sua beleza, <em>no seu horário</em>
+          </h1>
+          <p className="hero-sub reveal-up" style={{ '--d': '1.5s' } as CSSProperties}>
+            Escolha o serviço, o dia e a hora. Leva menos de um minuto.
+          </p>
+          <div className="hero-actions reveal-up" style={{ '--d': '1.7s' } as CSSProperties}>
+            <a className="btn btn-primary btn-hero" href="#agendar">
+              <CalendarIcon /> Agendar agora
+            </a>
+          </div>
+          <ul className="hero-info reveal-up" style={{ '--d': '1.9s' } as CSSProperties}>
+            {hours.length > 0 && (
+              <li>
+                <ClockIcon /> {hoursLabel(hours)}
+              </li>
+            )}
             <li>
-              <ClockIcon /> {hoursLabel(hours)}
+              <InstagramIcon /> @{INSTAGRAM}
             </li>
-          )}
-          <li>
-            <PinIcon /> Campininha
-          </li>
-        </ul>
+          </ul>
+        </div>
+        <a className="scroll-cue" href="#agendar" aria-label="Ir para o agendamento">
+          <span />
+        </a>
       </header>
 
-      <main className="booking" id="agendar">
+      <main className={`booking ${bookingVisible ? 'in' : ''}`} id="agendar" ref={bookingRef}>
         {step !== 'feito' && (
           <ol className="stepper" aria-label="Etapas do agendamento">
             {STEPS.map((s, i) => (
@@ -276,7 +327,7 @@ export default function App() {
         )}
 
         <div className={`booking-grid ${service && step !== 'servico' && step !== 'feito' ? 'with-summary' : ''}`}>
-          <section className="panel">
+          <section className="panel" key={step}>
             {!supabase && (
               <p className="notice">
                 O site ainda não está ligado ao banco de dados. Configure <code>VITE_SUPABASE_URL</code> e{' '}
@@ -306,7 +357,7 @@ export default function App() {
                     </h3>
                     <ul className="services">
                       {g.items.map((s) => (
-                        <li key={s.id}>
+                        <li key={s.id} className="stagger" style={{ '--i': order.get(s.id) ?? 0 } as CSSProperties}>
                           <button className="service" onClick={() => chooseService(s)}>
                             <span className="service-main">
                               <span className="service-name">{s.name}</span>
@@ -373,14 +424,15 @@ export default function App() {
                 {slots?.length === 0 && (
                   <p className="empty">Nenhum horário livre nesse dia. Que tal escolher outro?</p>
                 )}
-                {slotGroups.map((g) => (
+                {slotGroups.map((g, gi) => (
                   <div key={g.title} className="slot-group">
                     <span className="slot-group-title">{g.title}</span>
                     <div className="slots">
-                      {g.items.map((s) => (
+                      {g.items.map((s, si) => (
                         <button
                           key={s}
-                          className={`slot ${slot === s ? 'selected' : ''}`}
+                          style={{ '--i': gi * 6 + si } as CSSProperties}
+                          className={`slot stagger ${slot === s ? 'selected' : ''}`}
                           aria-pressed={slot === s}
                           onClick={() => setSlot(s)}
                         >
