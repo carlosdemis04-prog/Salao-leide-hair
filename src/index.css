@@ -8,8 +8,11 @@
   --line: rgba(0, 0, 0, 0.12);
   --line-light: rgba(255, 255, 255, 0.22);
   --error: #9b2c2c;
-  --serif: 'Bodoni Moda', 'Didot', 'Times New Roman', serif;
-  --sans: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  /* Dourado tirado da logo: só nos botões principais e nos detalhes da faixa */
+  --gold: #ecbe55;
+  --gold-hover: #f5d27c;
+  --serif: 'Bodoni Moda', 'Didot', 'Bodoni 72', 'Times New Roman', serif;
+  --sans: 'Jost', 'Futura', 'Century Gothic', system-ui, sans-serif;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --gutter: clamp(20px, 5vw, 64px);
 }
@@ -30,9 +33,22 @@ body {
   background: var(--white);
   color: var(--black);
   font-family: var(--sans);
-  font-size: 1rem;
+  font-size: 1.0625rem;
   line-height: 1.6;
+  letter-spacing: 0.01em;
+  font-kerning: normal;
   -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+::selection {
+  background: var(--gold);
+  color: var(--black);
 }
 
 img {
@@ -94,16 +110,17 @@ svg {
 }
 
 .topbar-link {
-  font-size: 0.92rem;
+  font-size: 1rem;
   font-weight: 500;
-  text-decoration: none;
-  padding-bottom: 2px;
-  border-bottom: 1px solid var(--line-light);
-  transition: border-color 0.2s;
+  text-decoration: underline;
+  text-decoration-color: rgba(255, 255, 255, 0.35);
+  text-decoration-thickness: 0.07em;
+  text-underline-offset: 0.35em;
+  transition: text-decoration-color 0.2s;
 }
 
 .topbar-link:hover {
-  border-color: var(--white);
+  text-decoration-color: var(--gold);
 }
 
 .hero-logo {
@@ -122,8 +139,9 @@ svg {
 .hero-logo {
   aspect-ratio: 720 / 440;
   overflow: hidden;
-  -webkit-mask-image: linear-gradient(180deg, #000 62%, transparent 98%);
-  mask-image: linear-gradient(180deg, #000 62%, transparent 98%);
+  /* máscara que funde a logo no fundo preto, não é cor */
+  -webkit-mask-image: linear-gradient(180deg, #000 62%, transparent 98%); /* taste-skill-ignore */
+  mask-image: linear-gradient(180deg, #000 62%, transparent 98%); /* taste-skill-ignore */
 }
 
 /* Só a figura: o nome escrito da logo ficaria repetido com o título */
@@ -142,7 +160,8 @@ svg {
   }
 
   .hero::after {
-    background: linear-gradient(0deg, #000 42%, rgba(0, 0, 0, 0.35) 70%, rgba(0, 0, 0, 0.2) 100%);
+    /* véu neutro sob o texto, por cima da logo */
+    background: linear-gradient(0deg, #000 42%, rgba(0, 0, 0, 0.35) 70%, rgba(0, 0, 0, 0.2) 100%); /* taste-skill-ignore */
   }
 }
 
@@ -158,9 +177,10 @@ svg {
   position: absolute;
   inset: 0;
   z-index: -1;
+  /* véu neutro sob o texto, por cima da logo */
   background:
-    linear-gradient(90deg, #000 30%, rgba(0, 0, 0, 0.7) 55%, rgba(0, 0, 0, 0.15) 100%),
-    linear-gradient(0deg, #000 4%, transparent 40%);
+    linear-gradient(90deg, #000 30%, rgba(0, 0, 0, 0.7) 55%, rgba(0, 0, 0, 0.15) 100%), /* taste-skill-ignore */
+    linear-gradient(0deg, #000 4%, transparent 40%); /* taste-skill-ignore */
   pointer-events: none;
 }
 
@@ -168,11 +188,11 @@ svg {
   align-self: end;
   margin: 0;
   font-family: var(--serif);
-  font-weight: 400;
+  font-weight: 500;
   font-size: clamp(5.2rem, 21vw, 17rem);
   line-height: 0.86;
   letter-spacing: -0.035em;
-  font-variation-settings: 'opsz' 96;
+  margin-left: -0.04em;
 }
 
 .hero-title .line {
@@ -198,30 +218,17 @@ svg {
   align-items: flex-end;
   justify-content: space-between;
   gap: 24px 48px;
-  margin-top: clamp(28px, 4vw, 48px);
-  padding-top: clamp(20px, 3vw, 28px);
+  margin-top: clamp(32px, 4.5vw, 56px);
   opacity: 0;
   animation: fade 1.2s var(--ease) 1.1s forwards;
 }
 
-.hero-foot::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: var(--line-light);
-  transform: scaleX(0);
-  transform-origin: left;
-  animation: draw 1.6s var(--ease) 0.7s forwards;
-}
-
 .hero-sub {
   margin: 0;
-  max-width: 34ch;
-  font-size: 1.05rem;
-  color: rgba(255, 255, 255, 0.72);
+  max-width: 32ch;
+  font-size: clamp(1.125rem, 1.05rem + 0.35vw, 1.3rem);
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.88);
 }
 
 .hero-actions {
@@ -239,12 +246,6 @@ svg {
 @keyframes fade {
   to {
     opacity: 1;
-  }
-}
-
-@keyframes draw {
-  to {
-    transform: scaleX(1);
   }
 }
 
@@ -277,13 +278,19 @@ svg {
   padding: 0 28px;
   border-radius: 999px;
   border: 1px solid transparent;
-  font-size: 0.98rem;
-  font-weight: 600;
+  font-size: 1.02rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
   text-decoration: none;
   transition:
     background 0.2s,
     color 0.2s,
-    border-color 0.2s;
+    border-color 0.2s,
+    transform 0.2s var(--ease);
+}
+
+.btn:active:not(:disabled) {
+  transform: scale(0.97);
 }
 
 .btn svg {
@@ -291,13 +298,13 @@ svg {
   height: 1.15em;
 }
 
-.btn-light {
-  background: var(--white);
+.btn-gold {
+  background: var(--gold);
   color: var(--black);
 }
 
-.btn-light:hover {
-  background: var(--beige);
+.btn-gold:hover {
+  background: var(--gold-hover);
 }
 
 .btn-outline-light {
@@ -306,7 +313,8 @@ svg {
 }
 
 .btn-outline-light:hover {
-  border-color: var(--white);
+  border-color: var(--gold);
+  color: var(--gold);
 }
 
 .btn-primary {
@@ -315,7 +323,8 @@ svg {
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: var(--ink-2);
+  background: var(--gold);
+  color: var(--black);
 }
 
 .btn-primary:disabled {
@@ -387,9 +396,9 @@ svg {
 .booking-title {
   margin: 0;
   font-family: var(--serif);
-  font-weight: 400;
-  font-size: clamp(2.6rem, 6vw, 3.8rem);
-  line-height: 1;
+  font-weight: 500;
+  font-size: clamp(2.6rem, 6vw, 4rem);
+  line-height: 0.98;
   letter-spacing: -0.02em;
 }
 
@@ -453,14 +462,14 @@ svg {
   .stepper li {
     flex-direction: row;
     gap: 16px;
-    padding: 14px 0;
-    border-top: 1px solid var(--line);
-    font-size: 0.95rem;
+    padding: 12px 16px;
+    border-top: 0;
+    border-radius: 12px;
+    font-size: 1rem;
   }
 
-  .stepper li.done,
   .stepper li.current {
-    border-color: var(--line);
+    background: var(--beige-soft);
   }
 
   .stepper li.current .stepper-label {
@@ -490,6 +499,7 @@ svg {
 
 .summary-name {
   font-family: var(--serif);
+  font-weight: 500;
   font-size: 1.5rem;
   line-height: 1.15;
 }
@@ -536,10 +546,10 @@ svg {
 .done h2 {
   margin: 0;
   font-family: var(--serif);
-  font-weight: 400;
-  font-size: clamp(1.9rem, 4vw, 2.5rem);
-  line-height: 1.1;
-  letter-spacing: -0.01em;
+  font-weight: 500;
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  line-height: 1.05;
+  letter-spacing: -0.015em;
 }
 
 .muted {
@@ -589,9 +599,12 @@ svg {
 }
 
 .category-title {
-  margin: 0 0 4px;
-  font-size: 0.95rem;
-  font-weight: 600;
+  margin: 0 0 8px 16px;
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 500;
+  font-size: clamp(1.5rem, 3vw, 1.9rem);
+  line-height: 1.1;
   color: var(--taupe);
 }
 
@@ -601,8 +614,9 @@ svg {
   padding: 0;
 }
 
-.services li {
-  border-bottom: 1px solid var(--line);
+.services {
+  display: grid;
+  gap: 2px;
 }
 
 .service {
@@ -611,8 +625,9 @@ svg {
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 16px;
-  padding: 20px 4px;
+  padding: 18px 16px;
   border: 0;
+  border-radius: 14px;
   background: none;
   text-align: left;
   transition:
@@ -620,9 +635,10 @@ svg {
     padding 0.35s var(--ease);
 }
 
-.service:hover {
+.service:hover,
+.service:focus-visible {
   background: var(--beige-soft);
-  padding-left: 16px;
+  padding-left: 24px;
   padding-right: 12px;
 }
 
@@ -635,13 +651,15 @@ svg {
 
 .service-name {
   font-family: var(--serif);
-  font-size: clamp(1.4rem, 3vw, 1.75rem);
-  line-height: 1.15;
+  font-weight: 500;
+  font-size: clamp(1.5rem, 3vw, 1.9rem);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
 }
 
 .service-desc {
   color: var(--taupe);
-  font-size: 0.92rem;
+  font-size: 0.95rem;
 }
 
 .service-meta {
@@ -686,14 +704,13 @@ svg {
 .skeleton {
   height: 72px;
   border-radius: 12px;
-  background: linear-gradient(90deg, var(--beige-soft), #faf6f0, var(--beige-soft));
-  background-size: 200% 100%;
-  animation: shimmer 1.4s linear infinite;
+  background: var(--beige-soft);
+  animation: pulse 1.4s ease-in-out infinite alternate;
 }
 
-@keyframes shimmer {
+@keyframes pulse {
   to {
-    background-position: -200% 0;
+    opacity: 0.45;
   }
 }
 
@@ -722,8 +739,9 @@ svg {
   overflow-x: auto;
   padding-bottom: 6px;
   scrollbar-width: none;
-  -webkit-mask-image: linear-gradient(90deg, #000 88%, transparent);
-  mask-image: linear-gradient(90deg, #000 88%, transparent);
+  /* avisa que a lista de dias continua para o lado */
+  -webkit-mask-image: linear-gradient(90deg, #000 88%, transparent); /* taste-skill-ignore */
+  mask-image: linear-gradient(90deg, #000 88%, transparent); /* taste-skill-ignore */
 }
 
 .days::-webkit-scrollbar {
@@ -763,6 +781,7 @@ svg {
 
 .day-num {
   font-family: var(--serif);
+  font-weight: 500;
   font-size: 1.5rem;
   line-height: 1.1;
 }
@@ -785,10 +804,10 @@ svg {
 }
 
 .slot {
-  min-height: 46px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--white);
+  min-height: 48px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: var(--beige-soft);
   font-variant-numeric: tabular-nums;
   font-weight: 500;
   transition:
@@ -798,7 +817,7 @@ svg {
 }
 
 .slot:hover {
-  border-color: var(--black);
+  background: var(--beige);
 }
 
 .slot.selected {
@@ -908,7 +927,7 @@ svg {
 
 .ticket {
   margin: 28px 0 0;
-  padding: 6px 22px;
+  padding: 10px 22px;
   background: var(--beige-soft);
   border-radius: 14px;
 }
@@ -918,10 +937,6 @@ svg {
   justify-content: space-between;
   gap: 16px;
   padding: 14px 0;
-}
-
-.ticket div + div {
-  border-top: 1px solid var(--line);
 }
 
 .ticket dt {
@@ -958,6 +973,7 @@ svg {
 
 .footer-title {
   font-family: var(--serif);
+  font-weight: 500;
   font-size: 1.35rem;
   color: var(--white);
 }
@@ -979,13 +995,46 @@ svg {
   color: var(--beige);
 }
 
+.footer-wordmark {
+  max-width: 1240px;
+  margin: clamp(48px, 8vw, 112px) auto 0;
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: clamp(4.2rem, 18.5vw, 18rem);
+  line-height: 0.85;
+  letter-spacing: -0.04em;
+  white-space: nowrap;
+  color: var(--white);
+}
+
 .footer-copy {
   max-width: 1240px;
-  margin: 48px auto 0;
-  padding-top: 20px;
-  border-top: 1px solid var(--line-light);
-  font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.5);
+  margin: 20px auto 0;
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+/* ---------- Faixa de serviços (React Bits: CurvedLoop) ---------- */
+
+.faixa {
+  background: var(--black);
+  color: var(--beige);
+  padding: clamp(8px, 2vw, 24px) 0 clamp(20px, 4vw, 48px);
+  overflow: hidden;
+}
+
+.faixa .curved-loop-jacket {
+  min-height: 0;
+}
+
+.faixa .curved-loop-svg {
+  text-transform: none;
+}
+
+.faixa-texto {
+  font-family: var(--serif);
+  font-style: italic;
+  letter-spacing: -0.01em;
 }
 
 /* ---------- Movimento reduzido ---------- */
