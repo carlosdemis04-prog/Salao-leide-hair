@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { supabase, type BusinessHours, type Service } from './supabase'
 import {
   CalendarIcon,
@@ -6,11 +6,8 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   ClockIcon,
-  HandIcon,
   InstagramIcon,
   PinIcon,
-  ScissorsIcon,
-  SparkleIcon,
   UserIcon,
   WhatsAppIcon,
 } from './icons'
@@ -39,10 +36,10 @@ const ERROR_MESSAGES: Record<string, string> = {
   servico_invalido: 'Esse serviço não está mais disponível.',
 }
 
-const CATEGORIES: { key: string; title: string; icon: ReactNode; match: RegExp }[] = [
-  { key: 'cabelo', title: 'Cabelo', icon: <ScissorsIcon />, match: /corte|escova|hidrata|colora|luzes|progressiva|botox|selagem/i },
-  { key: 'unhas', title: 'Unhas', icon: <HandIcon />, match: /manicure|pedicure|unha/i },
-  { key: 'estetica', title: 'Estética', icon: <SparkleIcon />, match: /depila|sobrancelha|est[eé]tica/i },
+const CATEGORIES: { key: string; title: string; match: RegExp }[] = [
+  { key: 'cabelo', title: 'Cabelo', match: /corte|escova|hidrata|colora|luzes|progressiva|botox|selagem/i },
+  { key: 'unhas', title: 'Unhas', match: /manicure|pedicure|unha/i },
+  { key: 'estetica', title: 'Estética', match: /depila|sobrancelha|est[eé]tica/i },
 ]
 
 type Day = { iso: string; date: Date; weekday: number }
@@ -114,7 +111,7 @@ function hoursLabel(hours: BusinessHours[]) {
   const first = hours[0]
   const t = (s: string) => `${Number(s.slice(0, 2))}h${s.slice(3, 5) === '00' ? '' : s.slice(3, 5)}`
   const range = days.length > 1 ? `${names[days[0]]} a ${names[days[days.length - 1]]}` : names[days[0]]
-  return `${range} · ${t(first.open_time)} às ${t(first.close_time)}`
+  return `${range}, das ${t(first.open_time)} às ${t(first.close_time)}`
 }
 
 export default function App() {
@@ -185,7 +182,7 @@ export default function App() {
       else others.push(s)
     }
     const result = groups.filter((g) => g.items.length > 0)
-    if (others.length) result.push({ key: 'outros', title: 'Outros', icon: <SparkleIcon />, match: /./, items: others })
+    if (others.length) result.push({ key: 'outros', title: 'Outros', match: /./, items: others })
     return result
   }, [services])
 
@@ -221,7 +218,10 @@ export default function App() {
 
   function goTo(next: Step) {
     setStep(next)
-    window.scrollTo({ top: (document.getElementById('agendar')?.offsetTop ?? 0) - 40, behavior: 'smooth' })
+    // No celular o título da agenda fica em cima do painel; pula direto para as etapas
+    const target = (window.innerWidth < 960 && document.querySelector('.stepper')) || document.getElementById('agendar')
+    const top = (target?.getBoundingClientRect().top ?? 0) + window.scrollY - 24
+    window.scrollTo({ top, behavior: 'smooth' })
   }
 
   function chooseService(s: Service) {
@@ -272,69 +272,82 @@ export default function App() {
 
   return (
     <>
-      <nav className="topbar">
-        <a href="#" className="topbar-brand" aria-label="Leide Hair">
-          <img src="/logo-escuro.webp" alt="" width="720" height="619" />
-          <span>Leide Hair</span>
-        </a>
-        <a className="topbar-link" href="#agendar">
-          Agendar
-        </a>
-      </nav>
-
       <header className="hero">
-        <div className="hero-text">
-          <p className="eyebrow reveal-up" style={{ '--d': '0.1s' } as CSSProperties}>
-            Salão de beleza · Campininha
+        <nav className="topbar">
+          <a href="#" className="topbar-brand" aria-label="Leide Hair, início">
+            <img src="/logo.webp" alt="" width="720" height="619" />
+          </a>
+          <a className="topbar-link" href="#agendar">
+            Agendar horário
+          </a>
+        </nav>
+
+        <div className="hero-logo" aria-hidden>
+          <img src="/logo.webp" alt="" width="720" height="619" />
+        </div>
+
+        <h1 className="hero-title">
+          <span className="line">
+            <span style={{ '--d': '0.15s' } as CSSProperties}>Leide</span>
+          </span>
+          <span className="line">
+            <span style={{ '--d': '0.3s' } as CSSProperties}>Hair</span>
+          </span>
+        </h1>
+
+        <div className="hero-foot">
+          <p className="hero-sub">
+            Salão de beleza em Campininha, São Paulo. Cabelo, unhas e estética com hora marcada pelo site.
           </p>
-          <h1 className="hero-title reveal-up" style={{ '--d': '0.2s' } as CSSProperties}>
-            Sua beleza,
-            <br />
-            <em>no seu horário.</em>
-          </h1>
-          <p className="hero-sub reveal-up" style={{ '--d': '0.35s' } as CSSProperties}>
-            Cabelo, unhas e estética com o cuidado da Leide. Escolha o serviço, o dia e a hora em menos de um minuto.
-          </p>
-          <div className="hero-actions reveal-up" style={{ '--d': '0.5s' } as CSSProperties}>
-            <a className="btn btn-primary" href="#agendar">
+          <div className="hero-actions">
+            <a className="btn btn-light" href="#agendar">
               Agendar horário
             </a>
-            <a className="btn btn-ghost" href={`https://wa.me/${SALAO_WHATSAPP}`} target="_blank" rel="noreferrer">
+            <a className="btn btn-outline-light" href={`https://wa.me/${SALAO_WHATSAPP}`} target="_blank" rel="noreferrer">
               <WhatsAppIcon /> Falar no WhatsApp
             </a>
-          </div>
-          <ul className="hero-info reveal-up" style={{ '--d': '0.65s' } as CSSProperties}>
-            {hours.length > 0 && (
-              <li>
-                <ClockIcon /> {hoursLabel(hours)}
-              </li>
-            )}
-            <li>
-              <PinIcon /> {ENDERECO}
-            </li>
-          </ul>
-        </div>
-        <div className="hero-art reveal-fade" style={{ '--d': '0.2s' } as CSSProperties} aria-hidden>
-          <div className="arch">
-            <img src="/logo-escuro.webp" alt="" width="720" height="619" />
           </div>
         </div>
       </header>
 
       <main className={`booking ${bookingVisible ? 'in' : ''}`} id="agendar" ref={bookingRef}>
-        {step !== 'feito' && (
-          <ol className="stepper" aria-label="Etapas do agendamento">
-            {STEPS.map((s, i) => (
-              <li key={s.key} className={i < stepIndex ? 'done' : i === stepIndex ? 'current' : ''}>
-                <span className="stepper-dot">{i < stepIndex ? <CheckIcon /> : i + 1}</span>
-                <span className="stepper-label">{s.label}</span>
-              </li>
-            ))}
-          </ol>
-        )}
+        <div className="booking-side">
+          <h2 className="booking-title">Agende seu horário</h2>
+          <p className="booking-lead">
+            {hours.length > 0 ? `${hoursLabel(hours)}. ` : ''}A Leide confirma cada reserva pelo WhatsApp.
+          </p>
+          {step !== 'feito' && (
+            <ol className="stepper" aria-label="Etapas do agendamento">
+              {STEPS.map((s, i) => (
+                <li key={s.key} className={i < stepIndex ? 'done' : i === stepIndex ? 'current' : ''}>
+                  <span className="stepper-dot">{i < stepIndex ? <CheckIcon /> : i + 1}</span>
+                  <span className="stepper-label">{s.label}</span>
+                </li>
+              ))}
+            </ol>
+          )}
+          {service && step !== 'servico' && step !== 'feito' && (
+            <aside className="summary" aria-label="Resumo">
+              <div className="summary-row">
+                <span className="summary-name">{service.name}</span>
+                <span className="summary-price">{formatPrice(service.price_cents)}</span>
+              </div>
+              <div className="summary-meta">
+                <span>
+                  <ClockIcon /> {formatDuration(service.duration_min)}
+                </span>
+                {slotDate && (
+                  <span>
+                    <CalendarIcon /> {capitalize(weekdayFmt.format(slotDate).replace('.', ''))},{' '}
+                    {dayNumFmt.format(slotDate)} às {timeFmt.format(slotDate)}
+                  </span>
+                )}
+              </div>
+            </aside>
+          )}
+        </div>
 
-        <div className={`booking-grid ${service && step !== 'servico' && step !== 'feito' ? 'with-summary' : ''}`}>
-          <section className="panel" key={step}>
+        <section className="panel" key={step}>
             {!supabase && (
               <p className="notice">
                 O site ainda não está ligado ao banco de dados. Configure <code>VITE_SUPABASE_URL</code> e{' '}
@@ -358,10 +371,7 @@ export default function App() {
                 {loadError && <p className="error">{loadError}</p>}
                 {grouped.map((g) => (
                   <div key={g.key} className="category">
-                    <h3 className="category-title">
-                      <span className="category-icon">{g.icon}</span>
-                      {g.title}
-                    </h3>
+                    <h3 className="category-title">{g.title}</h3>
                     <ul className="services">
                       {g.items.map((s) => (
                         <li key={s.id} className="stagger" style={{ '--i': order.get(s.id) ?? 0 } as CSSProperties}>
@@ -369,11 +379,13 @@ export default function App() {
                             <span className="service-main">
                               <span className="service-name">{s.name}</span>
                               {s.description && <span className="service-desc">{s.description}</span>}
-                              <span className="service-duration">
-                                <ClockIcon /> {formatDuration(s.duration_min)}
+                              <span className="service-meta">
+                                <span className="service-duration">
+                                  <ClockIcon /> {formatDuration(s.duration_min)}
+                                </span>
+                                <span className="service-price">{formatPrice(s.price_cents)}</span>
                               </span>
                             </span>
-                            <span className="service-price">{formatPrice(s.price_cents)}</span>
                             <ChevronRightIcon className="service-chevron" />
                           </button>
                         </li>
@@ -510,8 +522,7 @@ export default function App() {
                 <div className="done-check">
                   <CheckIcon />
                 </div>
-                <p className="hero-kicker">Tudo certo</p>
-                <h2>Horário reservado!</h2>
+                <h2>Horário reservado</h2>
                 <p className="muted">
                   Obrigada, {name.split(' ')[0]}. A Leide vai confirmar pelo WhatsApp.
                 </p>
@@ -553,27 +564,6 @@ export default function App() {
             )}
           </section>
 
-          {service && step !== 'servico' && step !== 'feito' && (
-            <aside className="summary" aria-label="Resumo">
-              <span className="summary-title">Resumo</span>
-              <div className="summary-row">
-                <span className="summary-name">{service.name}</span>
-                <span className="summary-price">{formatPrice(service.price_cents)}</span>
-              </div>
-              <div className="summary-meta">
-                <span>
-                  <ClockIcon /> {formatDuration(service.duration_min)}
-                </span>
-                {slotDate && (
-                  <span>
-                    <CalendarIcon /> {capitalize(weekdayFmt.format(slotDate).replace('.', ''))},{' '}
-                    {dayNumFmt.format(slotDate)} às {timeFmt.format(slotDate)}
-                  </span>
-                )}
-              </div>
-            </aside>
-          )}
-        </div>
       </main>
 
       <footer className="footer">
