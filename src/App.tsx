@@ -11,6 +11,8 @@ import {
   UserIcon,
   WhatsAppIcon,
 } from './icons'
+import CurvedLoop from './components/reactbits/CurvedLoop'
+import Magnet from './components/reactbits/Magnet'
 
 const TZ = 'America/Sao_Paulo'
 const DAYS_AHEAD = 21
@@ -19,6 +21,9 @@ const WHATSAPP_LABEL = '(11) 92229-7887'
 const INSTAGRAM = 'leidehair_beauty'
 const ENDERECO = 'Rua Silvestre Francisco Puglia, 26'
 const BAIRRO = 'Campininha, São Paulo'
+
+// Faixa de serviços enquanto o banco ainda não respondeu
+const SERVICOS_FAIXA = ['Corte', 'Escova', 'Hidratação', 'Coloração', 'Luzes', 'Progressiva', 'Manicure e pedicure', 'Sobrancelhas']
 
 const brl = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
 const timeFmt = new Intl.DateTimeFormat('pt-BR', { timeZone: TZ, hour: '2-digit', minute: '2-digit' })
@@ -300,15 +305,32 @@ export default function App() {
             Salão de beleza em Campininha, São Paulo. Cabelo, unhas e estética com hora marcada pelo site.
           </p>
           <div className="hero-actions">
-            <a className="btn btn-light" href="#agendar">
-              Agendar horário
-            </a>
+            <Magnet padding={60} magnetStrength={4} maxOffset={14}>
+              <a className="btn btn-gold" href="#agendar">
+                Agendar horário
+              </a>
+            </Magnet>
             <a className="btn btn-outline-light" href={`https://wa.me/${SALAO_WHATSAPP}`} target="_blank" rel="noreferrer">
               <WhatsAppIcon /> Falar no WhatsApp
             </a>
           </div>
         </div>
       </header>
+
+      <div className="faixa">
+        <CurvedLoop
+          marqueeText={(services.length ? services.map((s) => s.name) : SERVICOS_FAIXA).join(' · ')}
+          separator="·"
+          separatorColor="var(--gold)"
+          shape="wave"
+          curveAmount={90}
+          fontSize={78}
+          fontWeight={500}
+          speed={0.9}
+          edgeFade={0.12}
+          className="faixa-texto"
+        />
+      </div>
 
       <main className={`booking ${bookingVisible ? 'in' : ''}`} id="agendar" ref={bookingRef}>
         <div className="booking-side">
@@ -601,6 +623,9 @@ export default function App() {
             </a>
           </div>
         </div>
+        <p className="footer-wordmark" aria-hidden>
+          Leide Hair
+        </p>
         <p className="footer-copy">© {new Date().getFullYear()} Leide Hair</p>
       </footer>
     </>
