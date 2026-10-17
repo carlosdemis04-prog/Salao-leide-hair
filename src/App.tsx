@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
-import GoldDust from './GoldDust'
 import { supabase, type BusinessHours, type Service } from './supabase'
 import {
   CalendarIcon,
@@ -222,7 +221,7 @@ export default function App() {
 
   function goTo(next: Step) {
     setStep(next)
-    window.scrollTo({ top: document.getElementById('agendar')?.offsetTop ?? 0, behavior: 'smooth' })
+    window.scrollTo({ top: (document.getElementById('agendar')?.offsetTop ?? 0) - 40, behavior: 'smooth' })
   }
 
   function chooseService(s: Service) {
@@ -273,45 +272,53 @@ export default function App() {
 
   return (
     <>
+      <nav className="topbar">
+        <a href="#" className="topbar-brand" aria-label="Leide Hair">
+          <img src="/logo-escuro.webp" alt="" width="720" height="619" />
+          <span>Leide Hair</span>
+        </a>
+        <a className="topbar-link" href="#agendar">
+          Agendar
+        </a>
+      </nav>
+
       <header className="hero">
-        <div className="hero-backdrop" aria-hidden>
-          <div className="hero-light hero-light-a" />
-          <div className="hero-light hero-light-b" />
-        </div>
-        <GoldDust />
-        <div className="hero-content">
-          <div className="hero-logo-wrap">
-            <img className="hero-logo" src="/logo.webp" alt="Leide Hair" width="720" height="619" />
-            <span className="hero-logo-shine" aria-hidden />
-          </div>
-          <p className="hero-kicker reveal-up" style={{ '--d': '1.1s' } as CSSProperties}>
+        <div className="hero-text">
+          <p className="eyebrow reveal-up" style={{ '--d': '0.1s' } as CSSProperties}>
             Salão de beleza · Campininha
           </p>
-          <h1 className="hero-title reveal-up" style={{ '--d': '1.3s' } as CSSProperties}>
-            Sua beleza, <em>no seu horário</em>
+          <h1 className="hero-title reveal-up" style={{ '--d': '0.2s' } as CSSProperties}>
+            Sua beleza,
+            <br />
+            <em>no seu horário.</em>
           </h1>
-          <p className="hero-sub reveal-up" style={{ '--d': '1.5s' } as CSSProperties}>
-            Escolha o serviço, o dia e a hora. Leva menos de um minuto.
+          <p className="hero-sub reveal-up" style={{ '--d': '0.35s' } as CSSProperties}>
+            Cabelo, unhas e estética com o cuidado da Leide. Escolha o serviço, o dia e a hora em menos de um minuto.
           </p>
-          <div className="hero-actions reveal-up" style={{ '--d': '1.7s' } as CSSProperties}>
-            <a className="btn btn-primary btn-hero" href="#agendar">
-              <CalendarIcon /> Agendar agora
+          <div className="hero-actions reveal-up" style={{ '--d': '0.5s' } as CSSProperties}>
+            <a className="btn btn-primary" href="#agendar">
+              Agendar horário
+            </a>
+            <a className="btn btn-ghost" href={`https://wa.me/${SALAO_WHATSAPP}`} target="_blank" rel="noreferrer">
+              <WhatsAppIcon /> Falar no WhatsApp
             </a>
           </div>
-          <ul className="hero-info reveal-up" style={{ '--d': '1.9s' } as CSSProperties}>
+          <ul className="hero-info reveal-up" style={{ '--d': '0.65s' } as CSSProperties}>
             {hours.length > 0 && (
               <li>
                 <ClockIcon /> {hoursLabel(hours)}
               </li>
             )}
             <li>
-              <InstagramIcon /> @{INSTAGRAM}
+              <PinIcon /> {ENDERECO}
             </li>
           </ul>
         </div>
-        <a className="scroll-cue" href="#agendar" aria-label="Ir para o agendamento">
-          <span />
-        </a>
+        <div className="hero-art reveal-fade" style={{ '--d': '0.2s' } as CSSProperties} aria-hidden>
+          <div className="arch">
+            <img src="/logo-escuro.webp" alt="" width="720" height="619" />
+          </div>
+        </div>
       </header>
 
       <main className={`booking ${bookingVisible ? 'in' : ''}`} id="agendar" ref={bookingRef}>
