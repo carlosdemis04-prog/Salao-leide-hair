@@ -1,5 +1,6 @@
 -- Serviços e horário do Salão Leide Hair.
--- Pode rodar de novo sempre que quiser: atualiza o que já existe.
+-- Rode só na primeira configuração. Depois, ajuste tudo pelo painel (/painel): rodar de novo
+-- volta o horário para seg a sáb, 9h às 18h, e esconde serviços criados no painel.
 -- Preço em centavos (R$ 60,00 = 6000). null = "Valor a consultar".
 -- Duração em minutos: define quanto tempo o horário fica ocupado na agenda.
 
@@ -16,10 +17,8 @@ insert into public.services (name, description, price_cents, duration_min, sort_
   ('Depilação', null, null, 60, 10),
   ('Design de sobrancelhas', null, null, 30, 11),
   ('Estética facial e corporal', null, null, 60, 12)
+-- Se o serviço já existe, mantém o preço e a duração que a Leide ajustou no painel
 on conflict (name) do update set
-  description = excluded.description,
-  price_cents = excluded.price_cents,
-  duration_min = excluded.duration_min,
   sort_order = excluded.sort_order,
   active = true;
 

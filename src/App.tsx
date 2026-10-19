@@ -113,10 +113,18 @@ function hoursLabel(hours: BusinessHours[]) {
   if (hours.length === 0) return ''
   const names = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
   const days = [...new Set(hours.map((h) => h.weekday))].sort()
-  const first = hours[0]
+  // Com pausa de almoço o dia tem duas linhas: vale a abertura mais cedo e o fechamento mais tarde
+  const open = hours.map((h) => h.open_time).sort()[0]
+  const close = hours.map((h) => h.close_time).sort().at(-1)!
   const t = (s: string) => `${Number(s.slice(0, 2))}h${s.slice(3, 5) === '00' ? '' : s.slice(3, 5)}`
-  const range = days.length > 1 ? `${names[days[0]]} a ${names[days[days.length - 1]]}` : names[days[0]]
-  return `${range}, das ${t(first.open_time)} às ${t(first.close_time)}`
+  const contiguous = days.every((d, i) => i === 0 || d === days[i - 1] + 1)
+  const range =
+    days.length === 1
+      ? names[days[0]]
+      : contiguous
+        ? `${names[days[0]]} a ${names[days[days.length - 1]]}`
+        : days.map((d) => names[d]).join(', ')
+  return `${range}, das ${t(open)} às ${t(close)}`
 }
 
 export default function App() {
