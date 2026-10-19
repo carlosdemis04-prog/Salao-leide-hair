@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
-import { supabase, type BusinessHours, type Service } from './supabase'
+import { avisarGoogle, supabase, type BusinessHours, type Service } from './supabase'
 import {
   CalendarIcon,
   CheckIcon,
@@ -264,6 +264,7 @@ export default function App() {
       }
       return
     }
+    avisarGoogle()
     goTo('feito')
   }
 

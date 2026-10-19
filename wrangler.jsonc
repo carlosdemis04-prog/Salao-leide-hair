@@ -11,8 +11,12 @@
     "directory": "./dist",
     "binding": "ASSETS",
     "not_found_handling": "single-page-application",
-    // Só o link da agenda passa pelo worker; o resto vem direto dos arquivos do site
-    "run_worker_first": ["/agenda.ics"]
+    // Só o link da agenda e o aviso para o Google passam pelo worker; o resto vem direto dos arquivos do site
+    "run_worker_first": ["/agenda.ics", "/google/*"]
+  },
+  // Sincroniza com o Google Agenda a cada 5 minutos (só faz algo depois que os segredos do Google forem colocados)
+  "triggers": {
+    "crons": ["*/5 * * * *"]
   },
   // Endereço e chave pública do Supabase (as mesmas do .env.production, não são segredo)
   "vars": {

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { supabase } from '../supabase'
+import { avisarGoogle, supabase } from '../supabase'
 import { CalendarIcon, CheckIcon, ChevronLeftIcon, ChevronRightIcon, ClockIcon, WhatsAppIcon } from '../icons'
 import './painel.css'
 
@@ -266,6 +266,7 @@ function Agenda({ services }: { services: AdminService[] }) {
     setError('')
     const { error } = await supabase!.from('appointments').update({ status }).eq('id', a.id)
     if (error) setError(dbError(error))
+    else avisarGoogle()
     load()
   }
 
@@ -435,6 +436,7 @@ function NewAppointment({ services, day, onDone }: { services: AdminService[]; d
     })
     setSending(false)
     if (error) return setError(dbError(error))
+    avisarGoogle()
     onDone()
   }
 
@@ -876,7 +878,8 @@ function Ajustes() {
         <h2>Google Agenda</h2>
         <p className="pn-muted">
           Coloque este link no Google Agenda uma vez e os agendamentos do site aparecem lá sozinhos. O Google atualiza a
-          cada poucas horas; para ver um agendamento na hora, use a aba Agenda deste painel.
+          cada poucas horas; para ver um agendamento na hora, use a aba Agenda deste painel. Depois que a ligação direta
+          com o Google estiver feita (passo a passo no README), este link não é mais necessário.
         </p>
         {feedUrl ? (
           <>
