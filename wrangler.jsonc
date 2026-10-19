@@ -6,8 +6,17 @@
   "build": {
     "command": "npm run build"
   },
+  "main": "worker/index.js",
   "assets": {
     "directory": "./dist",
-    "not_found_handling": "single-page-application"
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    // Só o link da agenda passa pelo worker; o resto vem direto dos arquivos do site
+    "run_worker_first": ["/agenda.ics"]
+  },
+  // Endereço e chave pública do Supabase (as mesmas do .env.production, não são segredo)
+  "vars": {
+    "SUPABASE_URL": "https://rxozyjdtnkzdsrafizxu.supabase.co",
+    "SUPABASE_ANON_KEY": "sb_publishable_kWdOHQRId4Ast0bUgJr5vg_Z2C21pAU"
   }
 }
