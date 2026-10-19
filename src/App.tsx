@@ -11,8 +11,6 @@ import {
   UserIcon,
   WhatsAppIcon,
 } from './icons'
-import CurvedLoop from './components/reactbits/CurvedLoop'
-import Magnet from './components/reactbits/Magnet'
 
 const TZ = 'America/Sao_Paulo'
 const DAYS_AHEAD = 21
@@ -295,29 +293,18 @@ export default function App() {
           </a>
         </nav>
 
-        <div className="hero-logo" aria-hidden>
+        {/* A cena abre como uma tela de cinema: uma fresta que se alarga até o quadro inteiro */}
+        <div className="hero-frame" aria-hidden>
           <img src="/logo.webp" alt="" width="720" height="619" />
         </div>
 
-        <h1 className="hero-title">
-          <span className="line">
-            <span style={{ '--d': '0.15s' } as CSSProperties}>Leide</span>
-          </span>
-          <span className="line">
-            <span style={{ '--d': '0.3s' } as CSSProperties}>Hair</span>
-          </span>
-        </h1>
-
-        <div className="hero-foot">
-          <p className="hero-sub">
-            Salão de beleza em Campininha, São Paulo. Cabelo, unhas e estética com hora marcada pelo site.
-          </p>
+        <div className="hero-copy">
+          <h1 className="hero-title">Leide Hair</h1>
+          <p className="hero-sub">Salão de beleza em Campininha, São Paulo. Cabelo, unhas e estética com hora marcada.</p>
           <div className="hero-actions">
-            <Magnet padding={60} magnetStrength={4} maxOffset={14}>
-              <a className="btn btn-gold" href="#agendar">
-                Agendar horário
-              </a>
-            </Magnet>
+            <a className="btn btn-gold" href="#agendar">
+              Agendar horário
+            </a>
             <a className="btn btn-outline-light" href={`https://wa.me/${SALAO_WHATSAPP}`} target="_blank" rel="noreferrer">
               <WhatsAppIcon /> Falar no WhatsApp
             </a>
@@ -325,19 +312,17 @@ export default function App() {
         </div>
       </header>
 
-      <div className="faixa">
-        <CurvedLoop
-          marqueeText={(services.length ? services.map((s) => s.name) : SERVICOS_FAIXA).join(' · ')}
-          separator="·"
-          separatorColor="var(--gold)"
-          shape="wave"
-          curveAmount={90}
-          fontSize={78}
-          fontWeight={500}
-          speed={0.9}
-          edgeFade={0.12}
-          className="faixa-texto"
-        />
+      <div className="faixa" aria-label="Serviços do salão">
+        {/* Duas cópias iguais: a animação anda metade da largura e recomeça sem emenda */}
+        <div className="faixa-trilho">
+          {[0, 1].map((copy) => (
+            <ul key={copy} className="faixa-lista" aria-hidden={copy === 1}>
+              {(services.length ? services.map((s) => s.name) : SERVICOS_FAIXA).map((name) => (
+                <li key={name}>{name}</li>
+              ))}
+            </ul>
+          ))}
+        </div>
       </div>
 
       <main className={`booking ${bookingVisible ? 'in' : ''}`} id="agendar" ref={bookingRef}>
