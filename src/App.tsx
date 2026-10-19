@@ -11,6 +11,7 @@ import {
   UserIcon,
   WhatsAppIcon,
 } from './icons'
+import { abertura, atualizarCenas, cenas, cursor, rolagemSuave, scrollToY } from './cinema'
 
 const TZ = 'America/Sao_Paulo'
 const DAYS_AHEAD = 21
@@ -22,6 +23,38 @@ const BAIRRO = 'Campininha, São Paulo'
 
 // Faixa de serviços enquanto o banco ainda não respondeu
 const SERVICOS_FAIXA = ['Corte', 'Escova', 'Hidratação', 'Coloração', 'Luzes', 'Progressiva', 'Manicure e pedicure', 'Sobrancelhas']
+
+const MANIFESTO =
+  'Na cadeira da Leide cada cliente tem hora marcada e atenção inteira. Corte, cor, tratamento, unhas e sobrancelhas, feitos com calma aqui em Campininha.'
+
+// Cenas de serviços enquanto o banco ainda não respondeu (duração zero esconde o preço)
+const CENAS_PADRAO = [
+  { key: 'cabelo', title: 'Cabelo', items: ['Corte', 'Escova', 'Hidratação', 'Coloração', 'Luzes', 'Progressiva'] },
+  { key: 'unhas', title: 'Unhas', items: ['Manicure e pedicure'] },
+  { key: 'estetica', title: 'Estética', items: ['Sobrancelhas'] },
+].map((g) => ({
+  ...g,
+  items: g.items.map((name): Service => ({ id: `padrao-${name}`, name, description: null, price_cents: null, duration_min: 0 })),
+}))
+
+// Cada letra numa caixa própria, para a animação subir uma de cada vez
+function Letras({ texto }: { texto: string }) {
+  return (
+    <>
+      {[...texto].map((c, i) =>
+        c === ' ' ? (
+          <span key={i} className="espaco">
+            {' '}
+          </span>
+        ) : (
+          <span key={i} className="letra">
+            {c}
+          </span>
+        ),
+      )}
+    </>
+  )
+}
 
 const brl = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
 const timeFmt = new Intl.DateTimeFormat('pt-BR', { timeZone: TZ, hour: '2-digit', minute: '2-digit' })
@@ -158,6 +191,19 @@ export default function App() {
     })
   }, [])
 
+  const rootRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const root = rootRef.current!
+    const pararRolagem = rolagemSuave()
+    const pararAbertura = abertura(root)
+    const pararCursor = cursor()
+    return () => {
+      pararAbertura()
+      pararCursor()
+      pararRolagem()
+    }
+  }, [])
+
   const bookingRef = useRef<HTMLElement>(null)
   const [bookingVisible, setBookingVisible] = useState(false)
   useEffect(() => {
@@ -197,6 +243,18 @@ export default function App() {
     return result
   }, [services])
 
+  const cenasServicos = grouped.length ? grouped : CENAS_PADRAO
+
+  // As cenas dependem de quantos serviços existem, então são montadas de novo quando eles chegam
+  useEffect(() => {
+    const parar = cenas(rootRef.current!)
+    const t = window.setTimeout(atualizarCenas, 300)
+    return () => {
+      window.clearTimeout(t)
+      parar()
+    }
+  }, [cenasServicos])
+
   const order = useMemo(() => {
     const m = new Map<string, number>()
     grouped.flatMap((g) => g.items).forEach((s, i) => m.set(s.id, i))
@@ -232,7 +290,12 @@ export default function App() {
     // No celular o título da agenda fica em cima do painel; pula direto para as etapas
     const target = (window.innerWidth < 960 && document.querySelector('.stepper')) || document.getElementById('agendar')
     const top = (target?.getBoundingClientRect().top ?? 0) + window.scrollY - 24
-    window.scrollTo({ top, behavior: 'smooth' })
+    scrollToY(top)
+  }
+
+  function escolherNaCena(s: Service) {
+    if (s.duration_min > 0) chooseService(s)
+    else goTo('servico')
   }
 
   function chooseService(s: Service) {
@@ -282,35 +345,103 @@ export default function App() {
       : 'Olá! Gostaria de agendar um horário.'
 
   return (
-    <>
-      <header className="hero">
-        <nav className="topbar">
-          <a href="#" className="topbar-brand" aria-label="Leide Hair, início">
-            <img src="/logo.webp" alt="" width="720" height="619" />
-          </a>
-          <a className="topbar-link" href="#agendar">
-            Agendar horário
-          </a>
-        </nav>
-
-        {/* A cena abre como uma tela de cinema: uma fresta que se alarga até o quadro inteiro */}
-        <div className="hero-frame" aria-hidden>
-          <img src="/logo.webp" alt="" width="720" height="619" />
+    <div ref={rootRef}>
+      <div className="loader" aria-hidden>
+        <div className="loader-inner">
+          <span className="loader-name">
+            <Letras texto="Leide Hair" />
+          </span>
+          <span className="loader-count">0</span>
+          <span className="loader-bar" />
         </div>
+      </div>
+      <div className="cursor" aria-hidden />
 
-        <div className="hero-copy">
-          <h1 className="hero-title">Leide Hair</h1>
-          <p className="hero-sub">Salão de beleza em Campininha, São Paulo. Cabelo, unhas e estética com hora marcada.</p>
-          <div className="hero-actions">
-            <a className="btn btn-gold" href="#agendar">
-              Agendar horário
-            </a>
-            <a className="btn btn-outline-light" href={`https://wa.me/${SALAO_WHATSAPP}`} target="_blank" rel="noreferrer">
-              <WhatsAppIcon /> Falar no WhatsApp
-            </a>
+      <nav className="topbar">
+        <a href="#" className="topbar-brand">
+          Leide Hair
+        </a>
+        <a className="topbar-link" href="#agendar" data-cursor="Agendar">
+          Agendar horário
+        </a>
+      </nav>
+
+      <header className="hero">
+        <div className="hero-stage">
+          <div className="hero-figure" aria-hidden>
+            <img src="/figura.webp" alt="" width="698" height="409" />
+          </div>
+          <h1 className="hero-title" aria-label="Leide Hair">
+            <span className="linha linha-1" aria-hidden>
+              <Letras texto="Leide" />
+            </span>
+            <span className="linha linha-2" aria-hidden>
+              <Letras texto="Hair" />
+            </span>
+          </h1>
+          <div className="hero-foot">
+            <p className="hero-sub">Salão de beleza em Campininha, São Paulo. Cabelo, unhas e estética com hora marcada.</p>
+            <div className="hero-actions">
+              <a className="btn btn-gold" href="#agendar" data-cursor="Agendar">
+                Agendar horário
+              </a>
+              <a
+                className="btn btn-outline-light"
+                href={`https://wa.me/${SALAO_WHATSAPP}`}
+                target="_blank"
+                rel="noreferrer"
+                data-cursor="Conversar"
+              >
+                <WhatsAppIcon /> Falar no WhatsApp
+              </a>
+            </div>
+            <span className="hero-scroll" aria-hidden>
+              Role para conhecer
+            </span>
           </div>
         </div>
       </header>
+
+      <section className="manifesto" aria-label="Sobre o salão">
+        <p className="manifesto-texto">
+          {MANIFESTO.split(' ').map((w, i) => (
+            <span key={i} className="palavra">
+              {w}{' '}
+            </span>
+          ))}
+        </p>
+      </section>
+
+      <section className="servicos" aria-labelledby="servicos-titulo">
+        <div className="servicos-trilho">
+          <div className="servicos-intro">
+            <h2 id="servicos-titulo" className="surge" aria-label="Serviços">
+              <span className="linha" aria-hidden>
+                <Letras texto="Serviços" />
+              </span>
+            </h2>
+            <p>Toque em um serviço e escolha o seu horário logo abaixo.</p>
+          </div>
+          {cenasServicos.map((g, i) => (
+            <article key={g.key} className="cena">
+              <span className="cena-num" aria-hidden>
+                {String(i + 1).padStart(2, '0')}
+              </span>
+              <h3 className="cena-titulo">{g.title}</h3>
+              <ul className="cena-lista">
+                {g.items.map((s) => (
+                  <li key={s.id} className="cena-item">
+                    <button className="cena-servico" onClick={() => escolherNaCena(s)} data-cursor="Agendar">
+                      <span>{s.name}</span>
+                      <span className="cena-preco">{s.duration_min > 0 && formatPrice(s.price_cents)}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </article>
+          ))}
+        </div>
+      </section>
 
       <div className="faixa" aria-label="Serviços do salão">
         {/* Duas cópias iguais: a animação anda metade da largura e recomeça sem emenda */}
@@ -582,6 +713,19 @@ export default function App() {
       </main>
 
       <footer className="footer">
+        <div className="footer-cta">
+          <h2 className="surge" aria-label="Até logo na cadeira da Leide">
+            <span className="linha" aria-hidden>
+              <Letras texto="Até logo na" />
+            </span>
+            <span className="linha" aria-hidden>
+              <Letras texto="cadeira da Leide" />
+            </span>
+          </h2>
+          <a className="footer-botao" href="#agendar" data-cursor="Agendar">
+            Agendar
+          </a>
+        </div>
         <div className="footer-grid">
           <div>
             <span className="footer-title">Endereço</span>
@@ -617,10 +761,12 @@ export default function App() {
           </div>
         </div>
         <p className="footer-wordmark" aria-hidden>
-          Leide Hair
+          <span className="linha">
+            <Letras texto="Leide Hair" />
+          </span>
         </p>
         <p className="footer-copy">© {new Date().getFullYear()} Leide Hair</p>
       </footer>
-    </>
+    </div>
   )
 }
