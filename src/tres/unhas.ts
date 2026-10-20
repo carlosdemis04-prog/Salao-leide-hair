@@ -7,7 +7,7 @@ import { ESMALTES } from './dados'
 
 export { ESMALTES }
 
-const PELE = 0xb57856
+const PELE = 0xd29a78
 
 // Unha: grade (u ao longo do dedo, v de lado a lado) curvada sobre um cilindro do tamanho do dedo
 function unhaGeo(largura: number, comprimento: number, curva: number, folga: number) {

@@ -192,7 +192,7 @@ export default function App() {
   // A barra do topo ganha fundo quando a página sai do começo
   const [rolou, setRolou] = useState(false)
   useEffect(() => {
-    const ver = () => setRolou(window.scrollY > window.innerHeight * 0.6)
+    const ver = () => setRolou(window.scrollY > 40)
     ver()
     window.addEventListener('scroll', ver, { passive: true })
     return () => window.removeEventListener('scroll', ver)
@@ -351,6 +351,11 @@ export default function App() {
         </div>
       </div>
       <div className="cursor" aria-hidden />
+      <div className="tarjas" aria-hidden>
+        <span />
+        <span />
+      </div>
+      <div className="grao" aria-hidden />
 
       <nav className={`topbar ${rolou ? 'rolou' : ''}`}>
         <a href="#" className="topbar-brand">
@@ -370,7 +375,7 @@ export default function App() {
         <div className="hero-stage">
           <div className="hero-disco" aria-hidden />
           <div className="hero-figure" aria-hidden>
-            <img src="/figura-escura.webp" alt="" width="698" height="409" />
+            <img src="/figura.webp" alt="" width="698" height="409" />
           </div>
           <h1 className="hero-title" aria-label="Leide Hair">
             <span className="linha linha-1" aria-hidden>
@@ -383,11 +388,11 @@ export default function App() {
           <div className="hero-foot">
             <p className="hero-sub">Salão de beleza em Campininha, São Paulo. Cabelo, unhas e estética com hora marcada.</p>
             <div className="hero-actions">
-              <a className="btn btn-vinho" href="#agendar" data-cursor="Agendar">
+              <a className="btn btn-gold" href="#agendar" data-cursor="Agendar">
                 Agendar horário
               </a>
               <a
-                className="btn btn-outline"
+                className="btn btn-outline-claro"
                 href={`https://wa.me/${SALAO_WHATSAPP}`}
                 target="_blank"
                 rel="noreferrer"

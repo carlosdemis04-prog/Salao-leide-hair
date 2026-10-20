@@ -1,13 +1,13 @@
 // Cena do cabelo: secador profissional e tesoura.
 // Tocar no secador liga e desliga (a hélice gira e sai vento); tocar na tesoura dá um corte.
 import * as THREE from 'three'
-import { CORES, liberar, malha, metal, ouro, plastico, torno, varredura } from './formas'
+import { CORES, liberar, malha, ouro, plastico, torno, varredura } from './formas'
 import type { Peca } from './palco'
 
 function criarSecador() {
   const g = new THREE.Group()
   g.name = 'secador'
-  const corpoMat = plastico(CORES.marfim, 0.28)
+  const corpoMat = plastico(0xd9c8b0, 0.32)
   const escuro = plastico(CORES.cafe, 0.45)
   const dourado = ouro(0.2)
 
@@ -131,12 +131,14 @@ function criarSecador() {
   )
   g.add(fio)
 
-  // Vento: riscos claros saindo do bico quando ligado
+  // Vento: fios de luz quente saindo do bico quando ligado (somam luz, como poeira num facho)
   const vento = new THREE.InstancedMesh(
-    new THREE.CapsuleGeometry(0.02, 0.3, 4, 6),
-    new THREE.MeshBasicMaterial({ color: 0xfffaf2, transparent: true, opacity: 0.85, depthWrite: false }),
+    new THREE.CapsuleGeometry(0.007, 0.42, 4, 6),
+    new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }),
     36,
   )
+  const corVento = new THREE.Color()
+  const brilhoVento = new THREE.Color(0xffd29a)
   vento.name = 'vento'
   vento.castShadow = false
   const sementes = Array.from({ length: 36 }, (_, i) => ({ fase: i / 36, y: (Math.random() - 0.5) * 0.4, z: (Math.random() - 0.5) * 0.16 }))
@@ -166,11 +168,14 @@ function criarSecador() {
         const s = sementes[i]
         const f = (s.fase + t * 1.6) % 1
         const x = 1.45 + f * 1.4
-        const esc = forca * (1 - f) * 1.2
-        m.compose(new THREE.Vector3(x, s.y * (1 + f * 1.4), s.z * (1 + f * 2)), q, new THREE.Vector3(esc, esc, esc))
+        const esc = forca > 0.01 ? 1 : 0
+        m.compose(new THREE.Vector3(x, s.y * (1 + f * 1.4), s.z * (1 + f * 2)), q, new THREE.Vector3(esc, 1 + f, esc))
         vento.setMatrixAt(i, m)
+        // Acende ao sair do bico e apaga longe dele
+        vento.setColorAt(i, corVento.copy(brilhoVento).multiplyScalar(forca * Math.sin(f * Math.PI) * 0.9))
       }
       vento.instanceMatrix.needsUpdate = true
+      if (vento.instanceColor) vento.instanceColor.needsUpdate = true
     },
   }
 }
@@ -178,7 +183,8 @@ function criarSecador() {
 function criarTesoura() {
   const g = new THREE.Group()
   g.name = 'tesoura'
-  const aco = metal(CORES.aco, 0.18)
+  // Lâminas douradas, como a tesoura da logo
+  const aco = ouro(0.26)
   const dourado = ouro(0.22)
 
   // Lâmina: perfil com fio reto em x=0 e dorso curvo; o fio afina até quase zero (amolado de verdade)
@@ -297,7 +303,7 @@ export function criarCabelo(reduzido: boolean, aoMudar: (ligado: boolean) => voi
 
   return {
     grupo,
-    enquadramento: { distancia: 7.2, alvoY: 1.3 },
+    enquadramento: { distancia: 7.9, alvoY: 1.2 },
     ligarSecador: () => {
       const ligado = secador.alternar()
       aoMudar(ligado)

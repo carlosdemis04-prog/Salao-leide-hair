@@ -113,7 +113,7 @@ export function plastico(cor: number, rugosidade = 0.32) {
 }
 
 export function metal(cor = CORES.aco, rugosidade = 0.22) {
-  return new THREE.MeshPhysicalMaterial({ color: cor, metalness: 1, roughness: rugosidade })
+  return new THREE.MeshPhysicalMaterial({ color: cor, metalness: 1, roughness: rugosidade, envMapIntensity: 2.2 })
 }
 
 export function malha(nome: string, g: THREE.BufferGeometry, m: THREE.Material) {

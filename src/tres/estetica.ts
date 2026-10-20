@@ -1,7 +1,7 @@
 // Cena da estética: uma estatueta dourada no estilo da logo, com o cabelo longo esvoaçando para trás.
 // Tocar troca a pose; o cabelo balança sozinho e dá um sacudida a cada troca.
 import * as THREE from 'three'
-import { CORES, liberar, malha, ouro, plastico, torno, varredura } from './formas'
+import { liberar, malha, ouro, plastico, torno, varredura } from './formas'
 import type { Peca } from './palco'
 
 type V = [number, number, number]
@@ -153,7 +153,7 @@ export function criarEstetica(reduzido: boolean, aoMudar: (pose: number) => void
         64,
         false,
       ),
-      plastico(CORES.marfim, 0.4),
+      plastico(0xe4d6c3, 0.35),
     ),
   )
   const aro = malha('pedestal-aro', new THREE.TorusGeometry(0.51, 0.014, 12, 96), brilho)
