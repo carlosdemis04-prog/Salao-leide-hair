@@ -1,6 +1,7 @@
 // Cena das unhas: uma mão com o pincel do esmalte passando unha por unha.
 // Tocar ou arrastar em cima de uma unha pinta; trocar a cor limpa e pinta de novo.
 import * as THREE from 'three'
+import { microtexturas } from './texturas'
 import { liberar, malha, ouro, torno } from './formas'
 import type { Peca } from './palco'
 import { ESMALTES } from './dados'
@@ -60,10 +61,30 @@ function esmalteMaterial(cor: number) {
   return { m, progresso }
 }
 
+// Pele: fosca com o veludo do sheen e um calor vermelho bem fraco nas sombras, que imita a luz
+// passando por dentro da pele (as sombras de pele nunca ficam cinzas)
+function materialPele() {
+  const t = microtexturas()
+  return new THREE.MeshPhysicalMaterial({
+    color: PELE,
+    roughness: 0.58,
+    roughnessMap: t.rugosidade,
+    normalMap: t.metal,
+    normalScale: new THREE.Vector2(0.12, 0.12),
+    sheen: 0.55,
+    sheenRoughness: 0.45,
+    sheenColor: new THREE.Color(0xffb9a0),
+    emissive: new THREE.Color(0x5a1a0c),
+    emissiveIntensity: 0.18,
+    clearcoat: 0.08,
+    clearcoatRoughness: 0.5,
+  })
+}
+
 function criarDedo(nome: string, comprimento: number, raio: number, corEsmalte: number) {
   const g = new THREE.Group()
   g.name = nome
-  const pele = new THREE.MeshPhysicalMaterial({ color: PELE, roughness: 0.55, sheen: 0.4, sheenColor: new THREE.Color(0xffc2b0) })
+  const pele = materialPele()
   const L = comprimento
   const dedo = malha(
     `${nome}-pele`,
@@ -104,7 +125,7 @@ export function criarUnhas(reduzido: boolean): Peca & { mudarCor: (cor: number) 
   // Mão deitada com o dorso para cima; dedos saem da palma no eixo +Y local
   const mao = new THREE.Group()
   mao.name = 'mao'
-  const pele = new THREE.MeshPhysicalMaterial({ color: PELE, roughness: 0.55, sheen: 0.4, sheenColor: new THREE.Color(0xffc2b0) })
+  const pele = materialPele()
   const palma = malha('palma', new THREE.SphereGeometry(1, 40, 24), pele)
   palma.scale.set(0.62, 0.72, 0.2)
   mao.add(palma)

@@ -6,6 +6,8 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js'
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js'
+import { Reflector } from 'three/examples/jsm/objects/Reflector.js'
+import { estudio } from './estudio'
 
 export type Peca = {
   grupo: THREE.Group
@@ -32,27 +34,6 @@ export type Palco = {
 }
 
 const FUNDO = 0x0a0807
-
-// Estúdio usado só para os reflexos: sala escura com softboxes, como numa foto de joia
-function estudio() {
-  const s = new THREE.Scene()
-  s.add(new THREE.Mesh(new THREE.BoxGeometry(24, 14, 24), new THREE.MeshBasicMaterial({ color: 0x050403, side: THREE.BackSide })))
-  const painel = (w: number, h: number, cor: number, forca: number, x: number, y: number, z: number) => {
-    const m = new THREE.Mesh(
-      new THREE.PlaneGeometry(w, h),
-      new THREE.MeshBasicMaterial({ color: new THREE.Color(cor).multiplyScalar(forca), side: THREE.DoubleSide }),
-    )
-    m.position.set(x, y, z)
-    m.lookAt(0, 1, 0)
-    s.add(m)
-  }
-  painel(7, 3, 0xfff0da, 4, 0, 9, 2) // caixa grande em cima
-  painel(1.4, 8, 0xffd29a, 3, -8, 3, 2) // faixa quente à esquerda
-  painel(1.4, 8, 0xfff6ee, 2.2, 8, 3, -2) // faixa fria à direita
-  painel(6, 2, 0xf3b8b4, 0.6, 0, 2.5, -10) // rosado atrás
-  painel(9, 4, 0xfff4e6, 1.3, 2, 3, 11) // rebatedor grande atrás da câmera
-  return s
-}
 
 // Fundo infinito de estúdio: chão que curva e vira parede, para a luz fazer uma poça atrás da peça
 function ciclorama() {
@@ -110,6 +91,50 @@ const Acabamento = {
       c.rgb += (ruido(vUv * 900.0 + uTempo) - 0.5) * uGrao;
       c.rgb *= 1.0 - uEscuro;
       gl_FragColor = c;
+    }
+  `,
+}
+
+// Reflexo do tampo laqueado: a peça aparece de cabeça para baixo no preto, nítida no ponto de contato
+// e cada vez mais borrada e apagada para a borda, como num tampo de verniz de verdade
+const ReflexoTampo = {
+  name: 'ReflexoTampo',
+  uniforms: {
+    color: { value: null },
+    tDiffuse: { value: null },
+    textureMatrix: { value: null },
+    uRaio: { value: 1.3 },
+    uForca: { value: 0.6 },
+  },
+  vertexShader: /* glsl */ `
+    uniform mat4 textureMatrix;
+    varying vec4 vUv;
+    varying vec2 vLocal;
+    void main() {
+      vUv = textureMatrix * vec4(position, 1.0);
+      vLocal = position.xy;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  `,
+  fragmentShader: /* glsl */ `
+    uniform sampler2D tDiffuse;
+    uniform float uRaio;
+    uniform float uForca;
+    varying vec4 vUv;
+    varying vec2 vLocal;
+    void main() {
+      vec2 uv = vUv.xy / vUv.w;
+      float r = length(vLocal) / uRaio;
+      float borrao = mix(0.002, 0.016, smoothstep(0.0, 0.9, r));
+      vec3 soma = texture2D(tDiffuse, uv).rgb * 0.2;
+      for (int i = 0; i < 8; i++) {
+        float a = float(i) * 0.785398 + 0.39;
+        vec2 o = vec2(cos(a), sin(a)) * borrao;
+        soma += texture2D(tDiffuse, uv + o).rgb * 0.07;
+        soma += texture2D(tDiffuse, uv + o * 0.45).rgb * 0.03;
+      }
+      float some = 1.0 - smoothstep(0.35, 1.0, r);
+      gl_FragColor = vec4(soma * uForca * some, 1.0);
     }
   `,
 }
@@ -175,7 +200,7 @@ export function criarPalco(canvas: HTMLCanvasElement, opcoes: { reduzido: boolea
   const pedestal = new THREE.Group()
   const base = new THREE.Mesh(
     new THREE.CylinderGeometry(1.35, 1.42, 0.14, 128),
-    new THREE.MeshStandardMaterial({ color: 0x070505, roughness: 0.5, envMapIntensity: 0.2 }),
+    new THREE.MeshStandardMaterial({ color: 0x060404, roughness: 0.5, envMapIntensity: 0.2 }),
   )
   base.position.y = -0.07
   base.receiveShadow = true
@@ -188,10 +213,27 @@ export function criarPalco(canvas: HTMLCanvasElement, opcoes: { reduzido: boolea
   aro.rotation.x = Math.PI / 2
   aro.position.y = -0.002
   pedestal.add(aro)
+  // O reflexo é somado por cima do verniz, então a sombra da peça no tampo continua aparecendo
+  const qualidadeReflexo = celular ? 0.4 : 0.6
+  const tampo = new Reflector(new THREE.CircleGeometry(1.34, 96), {
+    shader: ReflexoTampo,
+    textureWidth: 512,
+    textureHeight: 512,
+    clipBias: 0.002,
+  })
+  const tampoMat = tampo.material as THREE.ShaderMaterial
+  tampoMat.transparent = true
+  tampoMat.blending = THREE.AdditiveBlending
+  tampoMat.depthWrite = false
+  tampo.rotation.x = -Math.PI / 2
+  tampo.position.y = 0.001
+  pedestal.add(tampo)
   cena.add(pedestal)
 
   // Pós: brilho suave nos realces do dourado, conversão de cor e o acabamento de filme
-  const composer = new EffectComposer(renderer)
+  // Bordas sem serrilhado: o compositor desenha com multiamostragem no computador
+  const alvoPos = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: celular ? 0 : 4 })
+  const composer = new EffectComposer(renderer, alvoPos)
   composer.addPass(new RenderPass(cena, camera))
   const brilho = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.28, 0.5, 0.9)
   composer.addPass(brilho)
@@ -286,6 +328,8 @@ export function criarPalco(canvas: HTMLCanvasElement, opcoes: { reduzido: boolea
     altura = h
     renderer.setSize(w, h, false)
     composer.setSize(w, h)
+    const dpr = renderer.getPixelRatio()
+    tampo.getRenderTarget().setSize(Math.round(w * dpr * qualidadeReflexo), Math.round(h * dpr * qualidadeReflexo))
     camera.aspect = w / h
     aplicarDeslocamento()
   }
@@ -330,14 +374,16 @@ export function criarPalco(canvas: HTMLCanvasElement, opcoes: { reduzido: boolea
   let escuro = 1
   function quadro(agora: number) {
     const dt = Math.min((agora - ultimo) / 1000, 0.05)
+    // Cortes e travelling seguem o relógio: num aparelho lento eles não se arrastam
+    const dtCorte = Math.min((agora - ultimo) / 1000, 0.25)
     ultimo = agora
     if (!pausado) {
       tempo += dt
       // Corte para preto, troca a peça e volta
       if (proxima) {
-        escuro = Math.min(1, escuro + dt * (opcoes.reduzido ? 100 : 3.2))
+        escuro = Math.min(1, escuro + dtCorte * (opcoes.reduzido ? 100 : 3.2))
         if (escuro >= 1) trocar(proxima)
-      } else escuro = Math.max(0, escuro - dt * (opcoes.reduzido ? 100 : 1.6))
+      } else escuro = Math.max(0, escuro - dtCorte * (opcoes.reduzido ? 100 : 1.6))
       acabamento.uniforms.uEscuro.value = escuro
       acabamento.uniforms.uTempo.value = tempo % 100
       if (atual) {
@@ -351,7 +397,7 @@ export function criarPalco(canvas: HTMLCanvasElement, opcoes: { reduzido: boolea
         if (giroFixo !== null) rotY = giroFixo
         pivo.rotation.y = rotY
         pivo.rotation.x = rotX
-        if (entrada < 1) entrada = Math.min(1, entrada + dt / 2.6)
+        if (entrada < 1) entrada = Math.min(1, entrada + dtCorte / 2.6)
         colocarCamera(tempo)
         atual.atualizar(dt, tempo)
       }
@@ -422,6 +468,7 @@ export function criarPalco(canvas: HTMLCanvasElement, opcoes: { reduzido: boolea
         }
       })
       composer.dispose()
+      tampo.dispose()
       ambiente.dispose()
       pmrem.dispose()
       renderer.dispose()
