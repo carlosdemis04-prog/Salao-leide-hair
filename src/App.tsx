@@ -12,6 +12,8 @@ import {
   WhatsAppIcon,
 } from './icons'
 import { abertura, atualizarCenas, cenas, cursor, rolagemSuave, scrollToY } from './cinema'
+import { Letras } from './Letras'
+import { Servicos } from './Servicos'
 
 const TZ = 'America/Sao_Paulo'
 const DAYS_AHEAD = 21
@@ -26,6 +28,8 @@ const SERVICOS_FAIXA = ['Corte', 'Escova', 'Hidratação', 'Coloração', 'Luzes
 
 const MANIFESTO =
   'Na cadeira da Leide cada cliente tem hora marcada e atenção inteira. Corte, cor, tratamento, unhas e sobrancelhas, feitos com calma aqui em Campininha.'
+// Palavras do manifesto que saem em vinho
+const DESTAQUES = new Set(['Leide', 'Campininha.'])
 
 // Cenas de serviços enquanto o banco ainda não respondeu (duração zero esconde o preço)
 const CENAS_PADRAO = [
@@ -36,25 +40,6 @@ const CENAS_PADRAO = [
   ...g,
   items: g.items.map((name): Service => ({ id: `padrao-${name}`, name, description: null, price_cents: null, duration_min: 0 })),
 }))
-
-// Cada letra numa caixa própria, para a animação subir uma de cada vez
-function Letras({ texto }: { texto: string }) {
-  return (
-    <>
-      {[...texto].map((c, i) =>
-        c === ' ' ? (
-          <span key={i} className="espaco">
-            {' '}
-          </span>
-        ) : (
-          <span key={i} className="letra">
-            {c}
-          </span>
-        ),
-      )}
-    </>
-  )
-}
 
 const brl = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
 const timeFmt = new Intl.DateTimeFormat('pt-BR', { timeZone: TZ, hour: '2-digit', minute: '2-digit' })
@@ -202,6 +187,15 @@ export default function App() {
       pararCursor()
       pararRolagem()
     }
+  }, [])
+
+  // A barra do topo ganha fundo quando a página sai do começo
+  const [rolou, setRolou] = useState(false)
+  useEffect(() => {
+    const ver = () => setRolou(window.scrollY > window.innerHeight * 0.6)
+    ver()
+    window.addEventListener('scroll', ver, { passive: true })
+    return () => window.removeEventListener('scroll', ver)
   }, [])
 
   const bookingRef = useRef<HTMLElement>(null)
@@ -358,19 +352,25 @@ export default function App() {
       </div>
       <div className="cursor" aria-hidden />
 
-      <nav className="topbar">
+      <nav className={`topbar ${rolou ? 'rolou' : ''}`}>
         <a href="#" className="topbar-brand">
           Leide Hair
         </a>
-        <a className="topbar-link" href="#agendar" data-cursor="Agendar">
-          Agendar horário
-        </a>
+        <div className="topbar-nav">
+          <a className="topbar-link secundario" href="#servicos">
+            Serviços
+          </a>
+          <a className="topbar-link" href="#agendar" data-cursor="Agendar">
+            Agendar horário
+          </a>
+        </div>
       </nav>
 
       <header className="hero">
         <div className="hero-stage">
+          <div className="hero-disco" aria-hidden />
           <div className="hero-figure" aria-hidden>
-            <img src="/figura.webp" alt="" width="698" height="409" />
+            <img src="/figura-escura.webp" alt="" width="698" height="409" />
           </div>
           <h1 className="hero-title" aria-label="Leide Hair">
             <span className="linha linha-1" aria-hidden>
@@ -383,11 +383,11 @@ export default function App() {
           <div className="hero-foot">
             <p className="hero-sub">Salão de beleza em Campininha, São Paulo. Cabelo, unhas e estética com hora marcada.</p>
             <div className="hero-actions">
-              <a className="btn btn-gold" href="#agendar" data-cursor="Agendar">
+              <a className="btn btn-vinho" href="#agendar" data-cursor="Agendar">
                 Agendar horário
               </a>
               <a
-                className="btn btn-outline-light"
+                className="btn btn-outline"
                 href={`https://wa.me/${SALAO_WHATSAPP}`}
                 target="_blank"
                 rel="noreferrer"
@@ -406,43 +406,19 @@ export default function App() {
       <section className="manifesto" aria-label="Sobre o salão">
         <p className="manifesto-texto">
           {MANIFESTO.split(' ').map((w, i) => (
-            <span key={i} className="palavra">
+            <span key={i} className={`palavra ${DESTAQUES.has(w) ? 'destaque' : ''}`}>
               {w}{' '}
             </span>
           ))}
         </p>
       </section>
 
-      <section className="servicos" aria-labelledby="servicos-titulo">
-        <div className="servicos-trilho">
-          <div className="servicos-intro">
-            <h2 id="servicos-titulo" className="surge" aria-label="Serviços">
-              <span className="linha" aria-hidden>
-                <Letras texto="Serviços" />
-              </span>
-            </h2>
-            <p>Toque em um serviço e escolha o seu horário logo abaixo.</p>
-          </div>
-          {cenasServicos.map((g, i) => (
-            <article key={g.key} className="cena">
-              <span className="cena-num" aria-hidden>
-                {String(i + 1).padStart(2, '0')}
-              </span>
-              <h3 className="cena-titulo">{g.title}</h3>
-              <ul className="cena-lista">
-                {g.items.map((s) => (
-                  <li key={s.id} className="cena-item">
-                    <button className="cena-servico" onClick={() => escolherNaCena(s)} data-cursor="Agendar">
-                      <span>{s.name}</span>
-                      <span className="cena-preco">{s.duration_min > 0 && formatPrice(s.price_cents)}</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </article>
-          ))}
-        </div>
-      </section>
+      <Servicos
+        grupos={cenasServicos}
+        preco={(s) => formatPrice(s.price_cents)}
+        duracao={(s) => formatDuration(s.duration_min)}
+        escolher={escolherNaCena}
+      />
 
       <div className="faixa" aria-label="Serviços do salão">
         {/* Duas cópias iguais: a animação anda metade da largura e recomeça sem emenda */}

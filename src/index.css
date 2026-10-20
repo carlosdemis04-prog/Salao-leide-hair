@@ -1,17 +1,21 @@
 :root {
-  --black: #000;
-  --white: #fff;
-  --beige: #e9ddcc;
-  --beige-soft: #f4ede3;
-  --taupe: #75675a;
-  --ink-2: #3a332d;
-  --line: rgba(0, 0, 0, 0.12);
-  --line-light: rgba(255, 255, 255, 0.22);
+  /* Paleta clara tirada do salão: fundo de papel quente, champanhe, rosa de esmalte, vinho e o dourado da logo */
+  --fundo: #fcf8f4;
+  --creme: #f6eee6;
+  --areia: #e8d5c2;
+  --champanhe: #efdcb6;
+  --blush: #f6d6d3;
+  --pessego: #f1cdb5;
+  --rosa: #c7536a;
+  --vinho: #6e1f33;
+  --ouro: #e2b04e;
+  --ouro-claro: #f0cd7f;
+  --ouro-escuro: #8c6418;
+  --tinta: #2b1e19;
+  --tinta-2: #6a5850;
+  --branco: #fffdfb;
+  --linha: rgba(43, 30, 25, 0.14);
   --error: #9b2c2c;
-  /* Dourado tirado da logo: só nos botões principais e nos detalhes da faixa */
-  --gold: #ecbe55;
-  --gold-hover: #f5d27c;
-  --ink: #0d0c0b;
   --serif: 'Instrument Serif', 'Times New Roman', serif;
   --sans: 'Geist', 'Helvetica Neue', system-ui, sans-serif;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
@@ -41,8 +45,8 @@ html.lenis body {
 body {
   margin: 0;
   overflow-x: clip;
-  background: var(--white);
-  color: var(--black);
+  background: var(--fundo);
+  color: var(--tinta);
   font-family: var(--sans);
   font-size: 1.0625rem;
   line-height: 1.6;
@@ -58,8 +62,8 @@ h3 {
 }
 
 ::selection {
-  background: var(--gold);
-  color: var(--black);
+  background: var(--ouro);
+  color: var(--tinta);
 }
 
 img {
@@ -115,8 +119,8 @@ svg {
   position: fixed;
   inset: 0;
   z-index: 100;
-  background: var(--ink);
-  color: var(--beige-soft);
+  background: var(--blush);
+  color: var(--vinho);
   /* Se o script não rodar, a cortina sai sozinha */
   animation: loader-fim 0.01s 6s forwards;
 }
@@ -145,7 +149,7 @@ svg {
   font-size: clamp(5rem, 20vw, 15rem);
   line-height: 0.8;
   font-variant-numeric: tabular-nums;
-  color: var(--beige);
+  color: var(--branco);
 }
 
 .loader-bar {
@@ -153,8 +157,8 @@ svg {
   left: var(--gutter);
   right: var(--gutter);
   bottom: var(--gutter);
-  height: 1px;
-  background: var(--beige);
+  height: 2px;
+  background: var(--vinho);
   transform: scaleX(0);
   transform-origin: left;
 }
@@ -176,8 +180,7 @@ svg {
   height: 12px;
   margin: -6px 0 0 -6px;
   border-radius: 50%;
-  background: var(--white);
-  mix-blend-mode: difference;
+  background: var(--vinho);
   pointer-events: none;
   opacity: 0;
   display: grid;
@@ -197,15 +200,14 @@ svg {
   width: 92px;
   height: 92px;
   margin: -46px 0 0 -46px;
-  background: var(--gold);
-  mix-blend-mode: normal;
+  background: var(--ouro);
 }
 
 .cursor::after {
   content: attr(data-label);
   font-size: 0.82rem;
   font-weight: 500;
-  color: var(--ink);
+  color: var(--tinta);
   opacity: 0;
   transition: opacity 0.2s;
 }
@@ -225,10 +227,18 @@ svg {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px var(--gutter);
-  color: var(--white);
-  /* Inverte a cor sozinha: branca no preto, preta no bege */
-  mix-blend-mode: difference;
+  gap: 24px;
+  padding: 18px var(--gutter);
+  color: var(--tinta);
+  transition:
+    background 0.4s,
+    padding 0.4s var(--ease);
+}
+
+/* Depois do topo a barra ganha o fundo de papel para ler bem em cima de qualquer seção */
+.topbar.rolou {
+  background: var(--fundo);
+  padding-block: 12px;
 }
 
 .topbar-brand {
@@ -236,13 +246,20 @@ svg {
   font-size: 1.6rem;
   line-height: 1;
   text-decoration: none;
+  color: var(--vinho);
+}
+
+.topbar-nav {
+  display: flex;
+  align-items: center;
+  gap: clamp(16px, 2.4vw, 32px);
 }
 
 .topbar-link {
   font-size: 0.95rem;
   font-weight: 500;
   text-decoration: none;
-  background: linear-gradient(currentColor, currentColor) left bottom / 100% 1px no-repeat;
+  background: linear-gradient(currentColor, currentColor) left bottom / 100% 1px no-repeat; /* taste-skill-ignore */
   padding-bottom: 3px;
   transition: background-size 0.4s var(--ease);
 }
@@ -252,13 +269,28 @@ svg {
   background-position: right bottom;
 }
 
+.topbar-link.secundario {
+  background-size: 0% 1px;
+}
+
+.topbar-link.secundario:hover {
+  background-size: 100% 1px;
+  background-position: left bottom;
+}
+
+@media (max-width: 599px) {
+  .topbar-link.secundario {
+    display: none;
+  }
+}
+
 /* ---------- Topo ---------- */
 
 .hero {
   position: relative;
   height: 100svh;
-  min-height: 600px;
-  background: var(--beige-soft);
+  min-height: 620px;
+  background: var(--fundo);
 }
 
 .hero-stage {
@@ -267,8 +299,8 @@ svg {
   display: grid;
   grid-template-rows: minmax(0, 1fr) auto auto;
   padding: 76px var(--gutter) clamp(22px, 3vw, 36px);
-  background: var(--ink);
-  color: var(--beige-soft);
+  background: var(--blush);
+  color: var(--tinta);
   overflow: hidden;
   isolation: isolate;
   will-change: transform;
@@ -281,8 +313,31 @@ svg {
   inset: 0;
   z-index: 3;
   pointer-events: none;
-  opacity: 0.08;
+  opacity: 0.06;
+  mix-blend-mode: multiply;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* O disco de cabelo da logo, enorme, atrás de tudo */
+.hero-disco {
+  position: absolute;
+  z-index: -1;
+  --d: min(118vh, 96vw);
+  left: calc(50% - var(--d) / 2);
+  top: calc(46% - var(--d) / 2);
+  width: var(--d);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--champanhe);
+}
+
+.hero-disco::after {
+  content: '';
+  position: absolute;
+  inset: 14%;
+  border-radius: 50%;
+  background: var(--ouro-claro);
+  opacity: 0.55;
 }
 
 .hero-figure {
@@ -290,13 +345,13 @@ svg {
   justify-self: center;
   width: min(100%, 760px, calc((100svh - 330px) * 1.7));
   min-width: 260px;
-  /* O pé da figura some no escuro, sem corte seco */
-  mask-image: linear-gradient(#000 78%, transparent);
 }
 
 .hero-figure img {
   width: 100%;
   height: auto;
+  /* O pé da figura some no fundo, sem corte seco */
+  mask-image: linear-gradient(#000 80%, transparent); /* taste-skill-ignore */
 }
 
 .hero-title {
@@ -309,7 +364,7 @@ svg {
   font-size: clamp(5.5rem, 19vw, 24rem);
   line-height: 0.82;
   letter-spacing: -0.01em;
-  color: var(--white);
+  color: var(--vinho);
   position: relative;
   z-index: 2;
 }
@@ -320,16 +375,14 @@ svg {
   align-items: center;
   gap: 20px 32px;
   margin-top: clamp(16px, 2.4vw, 28px);
-  padding-top: clamp(16px, 2vw, 24px);
-  border-top: 1px solid var(--line-light);
 }
 
 .hero-sub {
   margin: 0;
   max-width: 40ch;
-  font-size: 0.98rem;
+  font-size: 1.02rem;
   line-height: 1.5;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--tinta);
 }
 
 .hero-actions {
@@ -355,30 +408,47 @@ svg {
     gap: 12px;
     margin-left: 12px;
     font-size: 0.85rem;
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--tinta-2);
   }
 
-  /* Risco que desce sem parar, convidando a rolar */
+  /* Bolinha que desce sem parar, convidando a rolar */
   .hero-scroll::after {
     content: '';
-    width: 1px;
-    height: 34px;
-    background: linear-gradient(transparent, var(--beige), transparent) 0 -34px / 1px 34px no-repeat;
-    background-color: rgba(255, 255, 255, 0.18);
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--vinho);
     animation: descer 1.8s var(--ease) infinite;
+  }
+
+  /* As palavras sobem por cima do pé da figura */
+  .hero-title {
+    margin-top: -0.3em;
   }
 }
 
 @keyframes descer {
+  from {
+    transform: translateY(-12px);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
   to {
-    background-position: 0 34px;
+    transform: translateY(12px);
+    opacity: 0;
   }
 }
 
 @media (max-width: 899px) {
   .hero-stage {
-    grid-template-rows: minmax(0, 1fr) auto auto;
     padding-top: 70px;
+  }
+
+  .hero-disco {
+    --d: 150vw;
+    top: calc(40% - var(--d) / 2);
   }
 
   .hero-figure {
@@ -408,7 +478,7 @@ svg {
 /* ---------- Manifesto ---------- */
 
 .manifesto {
-  background: var(--beige-soft);
+  background: var(--fundo);
   padding: clamp(96px, 15vw, 220px) var(--gutter);
 }
 
@@ -419,159 +489,301 @@ svg {
   font-size: clamp(2.3rem, 5.4vw, 5.6rem);
   line-height: 1.02;
   letter-spacing: -0.01em;
-  color: var(--ink);
+  color: var(--tinta);
   text-wrap: pretty;
+}
+
+/* As palavras do salão saem em vinho */
+.manifesto-texto .destaque {
+  color: var(--vinho);
 }
 
 /* ---------- Serviços ---------- */
 
 .servicos {
-  background: var(--ink);
-  color: var(--beige-soft);
-  overflow: hidden;
+  --disco: var(--champanhe);
+  display: grid;
+  gap: clamp(32px, 5vw, 72px);
+  align-items: center;
+  padding: clamp(72px, 10vw, 140px) var(--gutter);
+  background: var(--creme);
 }
 
-.servicos-trilho {
-  display: flex;
-  flex-direction: column;
+.servicos[data-aba='unhas'] {
+  --disco: var(--blush);
 }
 
-.servicos-intro {
-  padding: clamp(72px, 12vw, 120px) var(--gutter) 24px;
+.servicos[data-aba='estetica'] {
+  --disco: var(--pessego);
 }
 
-.servicos-intro h2 {
-  margin: 0;
+.servicos-texto h2 {
+  margin: 0 0 clamp(20px, 3vw, 36px);
   font-family: var(--serif);
   font-weight: 400;
-  font-size: clamp(4.5rem, 13vw, 13rem);
-  line-height: 0.9;
-  color: var(--white);
+  font-size: clamp(4.2rem, 10vw, 9.5rem);
+  line-height: 0.88;
+  color: var(--tinta);
 }
 
-.servicos-intro p {
-  max-width: 30ch;
-  margin: 20px 0 0;
-  color: rgba(255, 255, 255, 0.66);
-}
-
-.cena {
-  position: relative;
+.abas {
   display: flex;
-  flex-direction: column;
-  padding: 56px var(--gutter) 72px;
-  border-top: 1px solid var(--line-light);
-  background: var(--ink);
-  overflow: hidden;
+  flex-wrap: wrap;
+  gap: 4px clamp(18px, 2.4vw, 32px);
 }
 
-/* Número enorme vazado, que passa por trás como um letreiro */
-.cena-num {
-  position: absolute;
-  top: 12px;
-  right: var(--gutter);
-  font-family: var(--serif);
-  font-size: clamp(9rem, 44vw, 30rem);
-  line-height: 0.8;
-  color: transparent;
-  -webkit-text-stroke: 1px rgba(233, 221, 204, 0.32);
-  pointer-events: none;
-}
-
-.cena-titulo {
-  position: relative;
-  margin: 0 0 32px;
-  font-family: var(--serif);
-  font-weight: 400;
-  font-size: clamp(3.4rem, 9vw, 7.5rem);
-  line-height: 0.9;
-  color: var(--beige);
-}
-
-.cena-lista {
-  position: relative;
-  list-style: none;
-  margin: 0;
+.aba {
+  display: inline-flex;
+  align-items: center;
   padding: 0;
-  max-width: 760px;
+  border: 0;
+  background: none;
+  font-family: var(--serif);
+  font-size: clamp(2rem, 3.4vw, 3.1rem);
+  line-height: 1.1;
+  color: var(--tinta-2);
+  transition: color 0.3s;
 }
 
-.cena-servico {
+/* Disco dourado marca a categoria aberta, o mesmo círculo da logo */
+.aba::before {
+  content: '';
+  width: 0;
+  height: 0.3em;
+  margin-right: 0;
+  border-radius: 50%;
+  background: var(--ouro);
+  transform: scale(0);
+  transition:
+    transform 0.45s var(--ease),
+    width 0.45s var(--ease),
+    margin 0.45s var(--ease);
+}
+
+.aba:hover {
+  color: var(--tinta);
+}
+
+.aba.ativa {
+  color: var(--vinho);
+}
+
+.aba.ativa::before {
+  width: 0.3em;
+  margin-right: 0.28em;
+  transform: scale(1);
+}
+
+.servicos-painel {
+  animation: fade-up 0.55s var(--ease);
+}
+
+.servicos-frase {
+  margin: 18px 0 0;
+  max-width: 34ch;
+  font-size: 1.15rem;
+  line-height: 1.45;
+}
+
+.controles {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 24px 0 8px;
+}
+
+.controle {
+  padding: 10px 18px;
+  border: 1px solid var(--tinta);
+  border-radius: 999px;
+  background: transparent;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition:
+    background 0.25s,
+    color 0.25s;
+}
+
+.controle:hover,
+.controle[aria-pressed='true'],
+.controle[aria-checked='true'] {
+  background: var(--tinta);
+  color: var(--fundo);
+}
+
+.poses,
+.esmaltes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.esmalte {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  outline: 2px solid transparent;
+  outline-offset: 3px;
+  transition:
+    outline-color 0.25s,
+    transform 0.3s var(--ease);
+}
+
+.esmalte:hover {
+  transform: scale(1.08);
+}
+
+.esmalte[aria-checked='true'] {
+  outline-color: var(--tinta);
+}
+
+.esmalte-nome {
+  margin-left: 6px;
+  font-weight: 500;
+}
+
+.servicos-lista {
+  list-style: none;
+  margin: 20px 0 0;
+  padding: 0;
+  max-width: 560px;
+}
+
+.servico-linha {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
   gap: 20px;
   width: 100%;
-  padding: 16px 0;
+  padding: 12px 0;
   border: 0;
-  border-bottom: 1px solid var(--line-light);
   background: none;
-  color: var(--white);
-  font-family: var(--serif);
-  font-size: clamp(1.55rem, 2.6vw, 2.25rem);
-  line-height: 1.1;
   text-align: left;
   transition:
     color 0.3s,
     padding 0.5s var(--ease);
 }
 
-.cena-servico:hover {
-  color: var(--gold);
-  padding-left: 14px;
+.servico-linha:hover {
+  color: var(--vinho);
+  padding-left: 12px;
 }
 
-.cena-preco {
+.servico-nome {
+  font-family: var(--serif);
+  font-size: clamp(1.45rem, 2.2vw, 1.9rem);
+  line-height: 1.1;
+}
+
+.servico-info {
   flex-shrink: 0;
-  font-family: var(--sans);
   font-size: 0.92rem;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--tinta-2);
 }
 
-@media (min-width: 900px) and (prefers-reduced-motion: no-preference) {
-  /* No computador vira um travelling: tudo numa fileira que passa de lado */
-  .servicos {
-    height: 100vh;
-  }
-
-  .servicos-trilho {
-    flex-direction: row;
-    width: max-content;
-    height: 100%;
-  }
-
-  .servicos-intro {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    width: 56vw;
-    padding: 0 var(--gutter) 12vh;
-  }
-
-  .cena {
-    justify-content: flex-end;
-    width: min(72vw, 1040px);
-    height: 100%;
-    padding: 0 clamp(40px, 5vw, 80px) 12vh;
-    border-top: 0;
-    border-left: 1px solid var(--line-light);
-  }
-
-  .cena-num {
-    top: 8vh;
-    font-size: 44vh;
-  }
-
-  .servicos-intro h2 {
-    font-size: min(10.5vw, 22vh);
-  }
+.palco {
+  position: relative;
+  width: 100%;
+  max-width: 760px;
+  aspect-ratio: 1;
+  justify-self: center;
 }
 
 @media (min-width: 900px) {
-  /* As palavras sobem ao lado da tesoura, por cima do pé da figura */
-  .hero-title {
-    margin-top: -0.3em;
+  .palco {
+    justify-self: end;
   }
+}
+
+.palco-disco {
+  position: absolute;
+  inset: 5%;
+  border-radius: 50%;
+  background: var(--disco);
+  transition: background 0.7s var(--ease);
+}
+
+.palco-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  opacity: 0;
+  transition: opacity 0.8s var(--ease);
+  /* Deixa a página rolar na vertical; o arrasto de lado gira a peça */
+  touch-action: pan-y;
+}
+
+.palco.pronto .palco-canvas {
+  opacity: 1;
+}
+
+.palco-figura {
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.palco-dica {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: 0;
+  text-align: center;
+  font-size: 0.88rem;
+  color: var(--tinta-2);
+}
+
+@media (min-width: 900px) {
+  .servicos {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    min-height: 100svh;
+  }
+}
+
+/* No celular a peça 3D vem logo depois das categorias, antes da lista */
+@media (max-width: 899px) {
+  .servicos {
+    gap: 0;
+  }
+
+  .servicos-texto {
+    display: contents;
+  }
+
+  .servicos-texto h2 {
+    order: 1;
+  }
+
+  .abas {
+    order: 2;
+  }
+
+  .palco {
+    order: 3;
+    margin-top: 12px;
+  }
+
+  .servicos-painel {
+    order: 4;
+  }
+}
+
+.sr {
+  position: absolute;
+  width: 1px; /* taste-skill-ignore */
+  height: 1px; /* taste-skill-ignore */
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 /* ---------- Botões ---------- */
@@ -606,53 +818,62 @@ svg {
 }
 
 .btn-gold {
-  background: var(--gold);
-  color: var(--black);
+  background: var(--ouro);
+  color: var(--tinta);
 }
 
 .btn-gold:hover {
-  background: var(--gold-hover);
+  background: var(--ouro-claro);
 }
 
-.btn-outline-light {
-  border-color: var(--line-light);
-  color: var(--white);
+.btn-vinho {
+  background: var(--vinho);
+  color: var(--blush);
 }
 
-.btn-outline-light:hover {
-  border-color: var(--gold);
-  color: var(--gold);
+.btn-vinho:hover {
+  background: var(--tinta);
+}
+
+.btn-outline {
+  border-color: var(--tinta);
+  color: var(--tinta);
+}
+
+.btn-outline:hover {
+  background: var(--tinta);
+  color: var(--blush);
 }
 
 .btn-primary {
-  background: var(--black);
-  color: var(--white);
+  background: var(--tinta);
+  color: var(--branco);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: var(--gold);
-  color: var(--black);
+  background: var(--ouro);
+  color: var(--tinta);
 }
 
 .btn-primary:disabled {
-  background: var(--beige);
-  color: var(--taupe);
+  background: var(--areia);
+  color: var(--tinta-2);
   cursor: not-allowed;
 }
 
 .btn-ghost {
-  border-color: var(--black);
+  border-color: var(--tinta);
   background: transparent;
 }
 
 .btn-ghost:hover {
-  background: var(--beige-soft);
+  background: var(--creme);
 }
 
 .btn-link {
   background: none;
   border: 0;
-  color: var(--taupe);
+  color: var(--tinta-2);
   font-weight: 500;
   text-decoration: underline;
   text-underline-offset: 4px;
@@ -712,7 +933,7 @@ svg {
 .booking-lead {
   margin: 16px 0 0;
   max-width: 32ch;
-  color: var(--taupe);
+  color: var(--tinta-2);
 }
 
 /* Etapas */
@@ -730,8 +951,8 @@ svg {
   align-items: center;
   gap: 8px;
   padding-top: 12px;
-  border-top: 2px solid var(--beige);
-  color: var(--taupe);
+  border-top: 2px solid var(--areia);
+  color: var(--tinta-2);
   font-size: 0.85rem;
   transition:
     border-color 0.4s,
@@ -740,8 +961,8 @@ svg {
 
 .stepper li.done,
 .stepper li.current {
-  border-color: var(--black);
-  color: var(--black);
+  border-color: var(--tinta);
+  color: var(--tinta);
 }
 
 .stepper-dot {
@@ -776,7 +997,7 @@ svg {
   }
 
   .stepper li.current {
-    background: var(--beige-soft);
+    background: var(--creme);
   }
 
   .stepper li.current .stepper-label {
@@ -792,7 +1013,7 @@ svg {
 .summary {
   margin-top: 24px;
   padding: 20px 22px;
-  background: var(--beige-soft);
+  background: var(--creme);
   border-radius: 14px;
   animation: fade-up 0.5s var(--ease);
 }
@@ -813,7 +1034,7 @@ svg {
 
 .summary-price {
   font-size: 0.9rem;
-  color: var(--taupe);
+  color: var(--tinta-2);
   white-space: nowrap;
 }
 
@@ -823,7 +1044,7 @@ svg {
   gap: 6px 18px;
   margin-top: 10px;
   font-size: 0.92rem;
-  color: var(--ink-2);
+  color: var(--tinta);
 }
 
 .summary-meta span {
@@ -861,7 +1082,7 @@ svg {
 
 .muted {
   margin: 8px 0 0;
-  color: var(--taupe);
+  color: var(--tinta-2);
 }
 
 .back {
@@ -872,13 +1093,13 @@ svg {
   padding: 4px;
   border: 0;
   background: none;
-  color: var(--taupe);
+  color: var(--tinta-2);
   font-size: 0.92rem;
   font-weight: 500;
 }
 
 .back:hover {
-  color: var(--black);
+  color: var(--tinta);
 }
 
 .notice,
@@ -891,8 +1112,8 @@ svg {
 
 .notice,
 .empty {
-  background: var(--beige-soft);
-  color: var(--ink-2);
+  background: var(--creme);
+  color: var(--tinta);
 }
 
 .error {
@@ -911,7 +1132,7 @@ svg {
   font-weight: 400;
   font-size: clamp(1.5rem, 3vw, 1.9rem);
   line-height: 1.1;
-  color: var(--taupe);
+  color: var(--tinta-2);
 }
 
 .services {
@@ -943,7 +1164,7 @@ svg {
 
 .service:hover,
 .service:focus-visible {
-  background: var(--beige-soft);
+  background: var(--creme);
   padding-left: 24px;
   padding-right: 12px;
 }
@@ -964,7 +1185,7 @@ svg {
 }
 
 .service-desc {
-  color: var(--taupe);
+  color: var(--tinta-2);
   font-size: 0.95rem;
 }
 
@@ -979,19 +1200,19 @@ svg {
   align-items: center;
   gap: 6px;
   font-size: 0.88rem;
-  color: var(--taupe);
+  color: var(--tinta-2);
 }
 
 .service-price {
   font-size: 0.88rem;
-  color: var(--taupe);
+  color: var(--tinta-2);
   white-space: nowrap;
 }
 
 .service-chevron {
   width: 20px;
   height: 20px;
-  color: var(--taupe);
+  color: var(--tinta-2);
   transition:
     transform 0.3s var(--ease),
     color 0.2s;
@@ -999,7 +1220,7 @@ svg {
 
 .service:hover .service-chevron {
   transform: translateX(3px);
-  color: var(--black);
+  color: var(--tinta);
 }
 
 .skeleton-list {
@@ -1010,7 +1231,7 @@ svg {
 .skeleton {
   height: 72px;
   border-radius: 12px;
-  background: var(--beige-soft);
+  background: var(--creme);
   animation: pulse 1.4s ease-in-out infinite alternate;
 }
 
@@ -1063,19 +1284,19 @@ svg {
   padding: 12px 0;
   border: 1px solid transparent;
   border-radius: 14px;
-  background: var(--beige-soft);
+  background: var(--creme);
   transition:
     background 0.2s,
     color 0.2s;
 }
 
 .day:hover {
-  background: var(--beige);
+  background: var(--areia);
 }
 
 .day.selected {
-  background: var(--black);
-  color: var(--white);
+  background: var(--tinta);
+  color: var(--branco);
 }
 
 .day-week {
@@ -1100,7 +1321,7 @@ svg {
   display: block;
   margin-bottom: 8px;
   font-size: 0.88rem;
-  color: var(--taupe);
+  color: var(--tinta-2);
 }
 
 .slots {
@@ -1113,7 +1334,7 @@ svg {
   min-height: 48px;
   border: 1px solid transparent;
   border-radius: 12px;
-  background: var(--beige-soft);
+  background: var(--creme);
   font-variant-numeric: tabular-nums;
   font-weight: 500;
   transition:
@@ -1123,13 +1344,13 @@ svg {
 }
 
 .slot:hover {
-  background: var(--beige);
+  background: var(--areia);
 }
 
 .slot.selected {
-  background: var(--black);
-  border-color: var(--black);
-  color: var(--white);
+  background: var(--tinta);
+  border-color: var(--tinta);
+  color: var(--branco);
 }
 
 .slot-skeleton {
@@ -1180,16 +1401,16 @@ svg {
   align-items: center;
   gap: 10px;
   padding: 0 16px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--linha);
   border-radius: 12px;
-  background: var(--white);
-  color: var(--taupe);
+  background: var(--branco);
+  color: var(--tinta-2);
   transition: border-color 0.2s;
 }
 
 .input-wrap:focus-within {
-  border-color: var(--black);
-  color: var(--black);
+  border-color: var(--tinta);
+  color: var(--tinta);
 }
 
 .input-wrap input {
@@ -1199,7 +1420,7 @@ svg {
   border: 0;
   outline: 0;
   background: none;
-  color: var(--black);
+  color: var(--tinta);
 }
 
 /* Confirmação */
@@ -1214,8 +1435,8 @@ svg {
   height: 56px;
   margin-bottom: 24px;
   border-radius: 50%;
-  background: var(--black);
-  color: var(--white);
+  background: var(--tinta);
+  color: var(--branco);
   animation: pop 0.6s var(--ease);
 }
 
@@ -1234,7 +1455,7 @@ svg {
 .ticket {
   margin: 28px 0 0;
   padding: 10px 22px;
-  background: var(--beige-soft);
+  background: var(--creme);
   border-radius: 14px;
 }
 
@@ -1246,7 +1467,7 @@ svg {
 }
 
 .ticket dt {
-  color: var(--taupe);
+  color: var(--tinta-2);
 }
 
 .ticket dd {
@@ -1258,9 +1479,10 @@ svg {
 /* ---------- Rodapé ---------- */
 
 .footer {
-  background: var(--ink);
-  color: rgba(255, 255, 255, 0.78);
+  background: var(--champanhe);
+  color: var(--tinta);
   padding: clamp(72px, 10vw, 140px) var(--gutter) 28px;
+  overflow: hidden;
 }
 
 .footer-cta {
@@ -1271,8 +1493,6 @@ svg {
   gap: 32px;
   max-width: 1240px;
   margin: 0 auto clamp(56px, 8vw, 96px);
-  padding-bottom: clamp(48px, 6vw, 80px);
-  border-bottom: 1px solid var(--line-light);
 }
 
 .footer-cta h2 {
@@ -1281,7 +1501,7 @@ svg {
   font-weight: 400;
   font-size: clamp(3.2rem, 8vw, 8rem);
   line-height: 0.95;
-  color: var(--white);
+  color: var(--tinta);
 }
 
 .footer-cta .linha {
@@ -1294,8 +1514,8 @@ svg {
   width: clamp(120px, 14vw, 172px);
   aspect-ratio: 1;
   border-radius: 50%;
-  background: var(--gold);
-  color: var(--ink);
+  background: var(--vinho);
+  color: var(--blush);
   font-family: var(--serif);
   font-size: clamp(1.3rem, 1.8vw, 1.6rem);
   text-decoration: none;
@@ -1324,7 +1544,7 @@ svg {
   font-family: var(--serif);
   font-weight: 400;
   font-size: 1.5rem;
-  color: var(--white);
+  color: var(--vinho);
 }
 
 .footer a,
@@ -1336,12 +1556,12 @@ svg {
 }
 
 .footer-grid a:hover {
-  color: var(--white);
+  color: var(--vinho);
 }
 
 .footer svg {
   margin-top: 0.3em;
-  color: var(--beige);
+  color: var(--ouro-escuro);
 }
 
 .footer-wordmark {
@@ -1352,14 +1572,14 @@ svg {
   font-size: clamp(5rem, 23vw, 22rem);
   line-height: 0.8;
   white-space: nowrap;
-  color: var(--beige);
+  color: var(--vinho);
 }
 
 .footer-copy {
   max-width: 1240px;
   margin: 20px auto 0;
   font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.62);
+  color: var(--tinta-2);
 }
 
 /* ---------- Faixa de serviços ---------- */
@@ -1370,9 +1590,8 @@ svg {
   width: 110%;
   margin: clamp(-28px, -2vw, -16px) 0 clamp(-28px, -2vw, -16px) -5%;
   overflow: hidden;
-  background: var(--beige);
-  color: var(--ink);
-  border-block: 1px solid var(--ink);
+  background: var(--vinho);
+  color: var(--blush);
 }
 
 .faixa-trilho {
@@ -1398,11 +1617,13 @@ svg {
   white-space: nowrap;
 }
 
-/* Estrela dourada entre os serviços */
+/* Disco dourado entre os serviços */
 .faixa-lista li::after {
-  content: '✦';
-  font-size: 0.45em;
-  color: #9a7a2c;
+  content: '';
+  width: 0.32em;
+  height: 0.32em;
+  border-radius: 50%;
+  background: var(--ouro);
 }
 
 /* ---------- Movimento reduzido ---------- */

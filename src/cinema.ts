@@ -34,12 +34,18 @@ export function rolagemSuave() {
 export function abertura(root: HTMLElement) {
   const reduzido = window.matchMedia(REDUZIDO).matches
   const ctx = gsap.context(() => {
+    // Quem pediu menos movimento entra direto no site pronto, sem cortina
+    if (reduzido) {
+      gsap.set('.loader', { autoAlpha: 0 })
+      return
+    }
     const contador = root.querySelector<HTMLElement>('.loader-count')!
     const n = { v: 0 }
     lenis?.stop()
     gsap.set('.hero-title .letra', { yPercent: reduzido ? 0 : 115, opacity: reduzido ? 0 : 1 })
     gsap.set('.hero-figure', { clipPath: 'inset(50% 0% 50% 0%)' })
     gsap.set('.hero-figure img', { scale: reduzido ? 1 : 1.3 })
+    gsap.set('.hero-disco', { scale: reduzido ? 1 : 0 })
     gsap.set('.loader-name .letra', { opacity: 0, yPercent: reduzido ? 0 : 100 })
     gsap.set(['.hero-sub', '.hero-actions', '.hero-scroll', '.topbar'], { opacity: 0, y: reduzido ? 0 : 24 })
 
@@ -56,6 +62,7 @@ export function abertura(root: HTMLElement) {
       .to('.loader-bar', { scaleX: 1, duration: 1.5, ease: 'power2.inOut' }, 0)
       .to('.loader-inner', { opacity: 0, duration: 0.35 }, 1.6)
       .to('.loader', { yPercent: -100, duration: 1.1, ease: 'expo.inOut' }, 1.75)
+      .to('.hero-disco', { scale: 1, duration: 2, ease: 'expo.out' }, 1.95)
       .to('.hero-figure', { clipPath: 'inset(0% 0% 0% 0%)', duration: 1.6, ease: 'expo.inOut' }, 2.1)
       .to('.hero-figure img', { scale: 1, duration: 2.4, ease: 'expo.out' }, 2.1)
       .to('.hero-title .letra', {
@@ -112,6 +119,7 @@ export function cenas(root: HTMLElement) {
     saida
       .to('.hero-stage', { scale: computador ? 0.84 : 0.9, borderRadius: 28, ease: 'none' }, 0)
       .to('.hero-figure', { yPercent: 14, scale: 1.1, ease: 'none' }, 0)
+      .to('.hero-disco', { scale: 1.3, ease: 'none' }, 0)
       .to('.hero-title .linha-1', { xPercent: -16, ease: 'none' }, 0)
       .to('.hero-title .linha-2', { xPercent: 16, ease: 'none' }, 0)
       .to('.hero-foot', { opacity: 0, ease: 'none' }, 0)
@@ -158,64 +166,21 @@ export function cenas(root: HTMLElement) {
     })
   })
 
-  // Computador: os serviços passam de lado, como um travelling de câmera
-  mm.add(`(min-width: 900px) and (prefers-reduced-motion: no-preference)`, () => {
-    const trilho = root.querySelector<HTMLElement>('.servicos-trilho')
-    if (!trilho) return
-    const distancia = () => trilho.scrollWidth - window.innerWidth
-    const anda = gsap.to(trilho, {
-      x: () => -distancia(),
-      ease: 'none',
-      scrollTrigger: {
-        trigger: '.servicos',
-        start: 'top top',
-        end: () => `+=${distancia()}`,
-        pin: true,
-        scrub: 1,
-        invalidateOnRefresh: true,
-      },
+  // Serviços: o disco cresce do centro quando a área aparece
+  mm.add('(prefers-reduced-motion: no-preference)', () => {
+    gsap.from('.palco-disco', {
+      scale: 0.4,
+      ease: 'expo.out',
+      duration: 1.6,
+      scrollTrigger: { trigger: '.palco', start: 'top 80%' },
     })
-    gsap.utils.toArray<HTMLElement>('.cena').forEach((cena) => {
-      gsap.fromTo(
-        cena.querySelector('.cena-num'),
-        { xPercent: 40 },
-        {
-          xPercent: -40,
-          ease: 'none',
-          scrollTrigger: { trigger: cena, containerAnimation: anda, start: 'left right', end: 'right left', scrub: true },
-        },
-      )
-      gsap.from(cena.querySelectorAll('.cena-item'), {
-        opacity: 0,
-        y: 30,
-        stagger: 0.06,
-        duration: 0.8,
-        ease: 'power3.out',
-        scrollTrigger: { trigger: cena, containerAnimation: anda, start: 'left 70%' },
-      })
-    })
-  })
-
-  // Celular: cada grupo de serviços abre como uma cortina ao aparecer
-  mm.add(`(max-width: 899px) and (prefers-reduced-motion: no-preference)`, () => {
-    gsap.utils.toArray<HTMLElement>('.cena').forEach((cena) => {
-      gsap.fromTo(
-        cena,
-        { clipPath: 'inset(18% 6% 18% 6% round 24px)' },
-        {
-          clipPath: 'inset(0% 0% 0% 0% round 0px)',
-          ease: 'none',
-          scrollTrigger: { trigger: cena, start: 'top 95%', end: 'top 35%', scrub: true },
-        },
-      )
-      gsap.from(cena.querySelectorAll('.cena-item'), {
-        opacity: 0,
-        y: 24,
-        stagger: 0.05,
-        duration: 0.7,
-        ease: 'power3.out',
-        scrollTrigger: { trigger: cena, start: 'top 70%' },
-      })
+    gsap.from('.abas .aba', {
+      yPercent: 60,
+      opacity: 0,
+      stagger: 0.08,
+      duration: 0.9,
+      ease: 'expo.out',
+      scrollTrigger: { trigger: '.abas', start: 'top 88%' },
     })
   })
 
