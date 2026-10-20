@@ -45,7 +45,8 @@ export function abertura(root: HTMLElement) {
     gsap.set('.hero-title .letra', { yPercent: reduzido ? 0 : 115, opacity: reduzido ? 0 : 1 })
     gsap.set('.hero-figure', { clipPath: 'inset(50% 0% 50% 0%)' })
     gsap.set('.hero-figure img', { scale: reduzido ? 1 : 1.3 })
-    gsap.set('.hero-disco', { scale: reduzido ? 1 : 0 })
+    gsap.set('.hero-disco', { scale: 0 })
+    gsap.set('.tarjas span', { scaleY: 1 })
     gsap.set('.loader-name .letra', { opacity: 0, yPercent: reduzido ? 0 : 100 })
     gsap.set(['.hero-sub', '.hero-actions', '.hero-scroll', '.topbar'], { opacity: 0, y: reduzido ? 0 : 24 })
 
@@ -62,6 +63,8 @@ export function abertura(root: HTMLElement) {
       .to('.loader-bar', { scaleX: 1, duration: 1.5, ease: 'power2.inOut' }, 0)
       .to('.loader-inner', { opacity: 0, duration: 0.35 }, 1.6)
       .to('.loader', { yPercent: -100, duration: 1.1, ease: 'expo.inOut' }, 1.75)
+      // As tarjas de cinema se abrem devagar, revelando a tela inteira
+      .to('.tarjas span', { scaleY: 0, duration: 1.8, ease: 'expo.inOut' }, 3.1)
       .to('.hero-disco', { scale: 1, duration: 2, ease: 'expo.out' }, 1.95)
       .to('.hero-figure', { clipPath: 'inset(0% 0% 0% 0%)', duration: 1.6, ease: 'expo.inOut' }, 2.1)
       .to('.hero-figure img', { scale: 1, duration: 2.4, ease: 'expo.out' }, 2.1)
@@ -166,22 +169,17 @@ export function cenas(root: HTMLElement) {
     })
   })
 
-  // Serviços: o disco cresce do centro quando a área aparece
+  // Serviços: a tela do estúdio abre como uma íris quando a área chega
   mm.add('(prefers-reduced-motion: no-preference)', () => {
-    gsap.from('.palco-disco', {
-      scale: 0.4,
-      ease: 'expo.out',
-      duration: 1.6,
-      scrollTrigger: { trigger: '.palco', start: 'top 80%' },
-    })
-    gsap.from('.abas .aba', {
-      yPercent: 60,
-      opacity: 0,
-      stagger: 0.08,
-      duration: 0.9,
-      ease: 'expo.out',
-      scrollTrigger: { trigger: '.abas', start: 'top 88%' },
-    })
+    gsap.fromTo(
+      '.servicos-cena',
+      { clipPath: 'inset(9% 7% 9% 7% round 28px)' },
+      {
+        clipPath: 'inset(0% 0% 0% 0% round 0px)',
+        ease: 'none',
+        scrollTrigger: { trigger: '.servicos', start: 'top bottom', end: 'top top', scrub: true },
+      },
+    )
   })
 
   return () => mm.revert()

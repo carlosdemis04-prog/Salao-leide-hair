@@ -1,20 +1,23 @@
 :root {
-  /* Paleta clara tirada do salão: fundo de papel quente, champanhe, rosa de esmalte, vinho e o dourado da logo */
-  --fundo: #fcf8f4;
-  --creme: #f6eee6;
-  --areia: #e8d5c2;
+  /* Preto, dourado e bege do salão, com o vinho, o rosa do esmalte e o champanhe de apoio */
+  --preto: #0a0807;
+  --bege: #e9ddcc;
+  --bege-claro: #f4ede3;
+  --bege-2: #a8998a;
+  --fundo: #f4ede3;
+  --creme: #ebe0d1;
+  --areia: #e2d3bf;
   --champanhe: #efdcb6;
   --blush: #f6d6d3;
-  --pessego: #f1cdb5;
   --rosa: #c7536a;
   --vinho: #6e1f33;
   --ouro: #e2b04e;
   --ouro-claro: #f0cd7f;
   --ouro-escuro: #8c6418;
-  --tinta: #2b1e19;
-  --tinta-2: #6a5850;
+  --tinta: #14100e;
+  --tinta-2: #6a5d52;
   --branco: #fffdfb;
-  --linha: rgba(43, 30, 25, 0.14);
+  --linha: rgba(20, 16, 14, 0.14);
   --error: #9b2c2c;
   --serif: 'Instrument Serif', 'Times New Roman', serif;
   --sans: 'Geist', 'Helvetica Neue', system-ui, sans-serif;
@@ -119,8 +122,8 @@ svg {
   position: fixed;
   inset: 0;
   z-index: 100;
-  background: var(--blush);
-  color: var(--vinho);
+  background: var(--preto);
+  color: var(--bege);
   /* Se o script não rodar, a cortina sai sozinha */
   animation: loader-fim 0.01s 6s forwards;
 }
@@ -149,7 +152,7 @@ svg {
   font-size: clamp(5rem, 20vw, 15rem);
   line-height: 0.8;
   font-variant-numeric: tabular-nums;
-  color: var(--branco);
+  color: var(--ouro);
 }
 
 .loader-bar {
@@ -158,7 +161,7 @@ svg {
   right: var(--gutter);
   bottom: var(--gutter);
   height: 2px;
-  background: var(--vinho);
+  background: var(--ouro);
   transform: scaleX(0);
   transform-origin: left;
 }
@@ -166,6 +169,62 @@ svg {
 @keyframes loader-fim {
   to {
     visibility: hidden;
+  }
+}
+
+/* Tarjas de cinema que se abrem depois da cortina */
+.tarjas {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+}
+
+.tarjas span {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 11vh;
+  background: var(--preto);
+  transform: scaleY(0);
+}
+
+.tarjas span:first-child {
+  top: 0;
+  transform-origin: top;
+}
+
+.tarjas span:last-child {
+  bottom: 0;
+  transform-origin: bottom;
+}
+
+/* Grão de filme bem leve por cima de tudo, gerado em SVG para não baixar imagem */
+.grao {
+  position: fixed;
+  inset: -50%;
+  z-index: 70;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: grao 0.9s steps(6) infinite;
+}
+
+@keyframes grao {
+  0% {
+    transform: translate(0, 0);
+  }
+  20% {
+    transform: translate(-3%, 2%);
+  }
+  40% {
+    transform: translate(2%, -3%);
+  }
+  60% {
+    transform: translate(-2%, -1%);
+  }
+  80% {
+    transform: translate(3%, 3%);
   }
 }
 
@@ -180,7 +239,7 @@ svg {
   height: 12px;
   margin: -6px 0 0 -6px;
   border-radius: 50%;
-  background: var(--vinho);
+  background: var(--ouro);
   pointer-events: none;
   opacity: 0;
   display: grid;
@@ -200,14 +259,13 @@ svg {
   width: 92px;
   height: 92px;
   margin: -46px 0 0 -46px;
-  background: var(--ouro);
 }
 
 .cursor::after {
   content: attr(data-label);
   font-size: 0.82rem;
   font-weight: 500;
-  color: var(--tinta);
+  color: var(--preto);
   opacity: 0;
   transition: opacity 0.2s;
 }
@@ -229,15 +287,15 @@ svg {
   justify-content: space-between;
   gap: 24px;
   padding: 18px var(--gutter);
-  color: var(--tinta);
+  color: var(--bege);
   transition:
     background 0.4s,
     padding 0.4s var(--ease);
 }
 
-/* Depois do topo a barra ganha o fundo de papel para ler bem em cima de qualquer seção */
+/* Depois do topo a barra vira uma tarja preta, como a de um filme */
 .topbar.rolou {
-  background: var(--fundo);
+  background: var(--preto);
   padding-block: 12px;
 }
 
@@ -246,7 +304,7 @@ svg {
   font-size: 1.6rem;
   line-height: 1;
   text-decoration: none;
-  color: var(--vinho);
+  color: var(--ouro);
 }
 
 .topbar-nav {
@@ -290,7 +348,7 @@ svg {
   position: relative;
   height: 100svh;
   min-height: 620px;
-  background: var(--fundo);
+  background: var(--bege-claro);
 }
 
 .hero-stage {
@@ -299,45 +357,26 @@ svg {
   display: grid;
   grid-template-rows: minmax(0, 1fr) auto auto;
   padding: 76px var(--gutter) clamp(22px, 3vw, 36px);
-  background: var(--blush);
-  color: var(--tinta);
+  background: var(--preto);
+  color: var(--bege);
   overflow: hidden;
   isolation: isolate;
   will-change: transform;
 }
 
-/* Grão de filme bem leve, gerado em SVG para não baixar imagem */
-.hero-stage::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 3;
-  pointer-events: none;
-  opacity: 0.06;
-  mix-blend-mode: multiply;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-}
-
-/* O disco de cabelo da logo, enorme, atrás de tudo */
+/* O disco de cabelo da logo vira luz: um brilho dourado atrás da figura */
 .hero-disco {
   position: absolute;
   z-index: -1;
-  --d: min(118vh, 96vw);
+  --d: min(96vh, 80vw);
   left: calc(50% - var(--d) / 2);
-  top: calc(46% - var(--d) / 2);
+  top: calc(44% - var(--d) / 2);
   width: var(--d);
   aspect-ratio: 1;
   border-radius: 50%;
-  background: var(--champanhe);
-}
-
-.hero-disco::after {
-  content: '';
-  position: absolute;
-  inset: 14%;
-  border-radius: 50%;
-  background: var(--ouro-claro);
-  opacity: 0.55;
+  background: var(--ouro);
+  opacity: 0.16;
+  filter: blur(70px);
 }
 
 .hero-figure {
@@ -350,8 +389,8 @@ svg {
 .hero-figure img {
   width: 100%;
   height: auto;
-  /* O pé da figura some no fundo, sem corte seco */
-  mask-image: linear-gradient(#000 80%, transparent); /* taste-skill-ignore */
+  /* O pé da figura some no escuro, sem corte seco */
+  mask-image: linear-gradient(#000 78%, transparent); /* taste-skill-ignore */
 }
 
 .hero-title {
@@ -364,7 +403,7 @@ svg {
   font-size: clamp(5.5rem, 19vw, 24rem);
   line-height: 0.82;
   letter-spacing: -0.01em;
-  color: var(--vinho);
+  color: var(--bege-claro);
   position: relative;
   z-index: 2;
 }
@@ -382,7 +421,7 @@ svg {
   max-width: 40ch;
   font-size: 1.02rem;
   line-height: 1.5;
-  color: var(--tinta);
+  color: var(--bege);
 }
 
 .hero-actions {
@@ -408,16 +447,16 @@ svg {
     gap: 12px;
     margin-left: 12px;
     font-size: 0.85rem;
-    color: var(--tinta-2);
+    color: var(--bege-2);
   }
 
-  /* Bolinha que desce sem parar, convidando a rolar */
+  /* Bolinha dourada que desce sem parar, convidando a rolar */
   .hero-scroll::after {
     content: '';
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: var(--vinho);
+    background: var(--ouro);
     animation: descer 1.8s var(--ease) infinite;
   }
 
@@ -447,8 +486,8 @@ svg {
   }
 
   .hero-disco {
-    --d: 150vw;
-    top: calc(40% - var(--d) / 2);
+    --d: 120vw;
+    top: calc(38% - var(--d) / 2);
   }
 
   .hero-figure {
@@ -478,7 +517,7 @@ svg {
 /* ---------- Manifesto ---------- */
 
 .manifesto {
-  background: var(--fundo);
+  background: var(--bege-claro);
   padding: clamp(96px, 15vw, 220px) var(--gutter);
 }
 
@@ -489,41 +528,82 @@ svg {
   font-size: clamp(2.3rem, 5.4vw, 5.6rem);
   line-height: 1.02;
   letter-spacing: -0.01em;
-  color: var(--tinta);
+  color: var(--preto);
   text-wrap: pretty;
 }
 
-/* As palavras do salão saem em vinho */
+/* As palavras do salão saem em dourado */
 .manifesto-texto .destaque {
-  color: var(--vinho);
+  color: var(--ouro-escuro);
 }
 
 /* ---------- Serviços ---------- */
 
 .servicos {
-  --disco: var(--champanhe);
-  display: grid;
-  gap: clamp(32px, 5vw, 72px);
-  align-items: center;
-  padding: clamp(72px, 10vw, 140px) var(--gutter);
-  background: var(--creme);
+  position: relative;
+  background: var(--preto);
+  color: var(--bege);
 }
 
-.servicos[data-aba='unhas'] {
-  --disco: var(--blush);
+.servicos-cena {
+  position: relative;
 }
 
-.servicos[data-aba='estetica'] {
-  --disco: var(--pessego);
+.palco {
+  position: relative;
+  height: 72svh;
+  min-height: 420px;
+  background: var(--preto);
+}
+
+.palco-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  opacity: 0;
+  transition: opacity 1.2s var(--ease);
+  /* Deixa a página rolar na vertical; o arrasto de lado gira a peça */
+  touch-action: pan-y;
+}
+
+.palco.pronto .palco-canvas {
+  opacity: 1;
+}
+
+.palco-figura {
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.palco-dica {
+  position: absolute;
+  left: var(--gutter);
+  right: var(--gutter);
+  bottom: 16px;
+  margin: 0;
+  text-align: center;
+  font-size: 0.86rem;
+  color: var(--bege-2);
+  pointer-events: none;
+}
+
+.servicos-texto {
+  position: relative;
+  padding: 8px var(--gutter) clamp(64px, 10vw, 120px);
 }
 
 .servicos-texto h2 {
-  margin: 0 0 clamp(20px, 3vw, 36px);
+  margin: 0 0 clamp(14px, 2vw, 24px);
   font-family: var(--serif);
   font-weight: 400;
-  font-size: clamp(4.2rem, 10vw, 9.5rem);
+  font-size: clamp(3.6rem, 7vw, 6.6rem);
   line-height: 0.88;
-  color: var(--tinta);
+  color: var(--bege-claro);
 }
 
 .abas {
@@ -539,13 +619,13 @@ svg {
   border: 0;
   background: none;
   font-family: var(--serif);
-  font-size: clamp(2rem, 3.4vw, 3.1rem);
+  font-size: clamp(1.9rem, 2.8vw, 2.7rem);
   line-height: 1.1;
-  color: var(--tinta-2);
+  color: var(--bege-2);
   transition: color 0.3s;
 }
 
-/* Disco dourado marca a categoria aberta, o mesmo círculo da logo */
+/* Disco dourado marca o capítulo aberto, o mesmo círculo da logo */
 .aba::before {
   content: '';
   width: 0;
@@ -561,11 +641,11 @@ svg {
 }
 
 .aba:hover {
-  color: var(--tinta);
+  color: var(--bege-claro);
 }
 
 .aba.ativa {
-  color: var(--vinho);
+  color: var(--ouro);
 }
 
 .aba.ativa::before {
@@ -575,14 +655,15 @@ svg {
 }
 
 .servicos-painel {
-  animation: fade-up 0.55s var(--ease);
+  animation: fade-up 0.7s var(--ease);
 }
 
 .servicos-frase {
-  margin: 18px 0 0;
+  margin: 16px 0 0;
   max-width: 34ch;
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   line-height: 1.45;
+  color: var(--bege-claro);
 }
 
 .controles {
@@ -590,26 +671,29 @@ svg {
   flex-wrap: wrap;
   align-items: center;
   gap: 10px;
-  margin: 24px 0 8px;
+  margin: 20px 0 6px;
 }
 
 .controle {
   padding: 10px 18px;
-  border: 1px solid var(--tinta);
+  border: 1px solid var(--bege-2);
   border-radius: 999px;
   background: transparent;
+  color: var(--bege-claro);
   font-size: 0.95rem;
   font-weight: 500;
   transition:
     background 0.25s,
-    color 0.25s;
+    color 0.25s,
+    border-color 0.25s;
 }
 
 .controle:hover,
 .controle[aria-pressed='true'],
 .controle[aria-checked='true'] {
-  background: var(--tinta);
-  color: var(--fundo);
+  border-color: var(--ouro);
+  background: var(--ouro);
+  color: var(--preto);
 }
 
 .poses,
@@ -638,19 +722,20 @@ svg {
 }
 
 .esmalte[aria-checked='true'] {
-  outline-color: var(--tinta);
+  outline-color: var(--ouro);
 }
 
 .esmalte-nome {
   margin-left: 6px;
   font-weight: 500;
+  color: var(--bege-claro);
 }
 
 .servicos-lista {
   list-style: none;
-  margin: 20px 0 0;
+  margin: 18px 0 0;
   padding: 0;
-  max-width: 560px;
+  max-width: 460px;
 }
 
 .servico-linha {
@@ -659,9 +744,10 @@ svg {
   align-items: baseline;
   gap: 20px;
   width: 100%;
-  padding: 12px 0;
+  padding: 9px 0;
   border: 0;
   background: none;
+  color: var(--bege-claro);
   text-align: left;
   transition:
     color 0.3s,
@@ -669,111 +755,85 @@ svg {
 }
 
 .servico-linha:hover {
-  color: var(--vinho);
+  color: var(--ouro);
   padding-left: 12px;
 }
 
 .servico-nome {
   font-family: var(--serif);
-  font-size: clamp(1.45rem, 2.2vw, 1.9rem);
+  font-size: clamp(1.35rem, 1.8vw, 1.65rem);
   line-height: 1.1;
 }
 
 .servico-info {
   flex-shrink: 0;
-  font-size: 0.92rem;
-  color: var(--tinta-2);
+  font-size: 0.9rem;
+  color: var(--bege-2);
 }
 
-.palco {
-  position: relative;
-  width: 100%;
-  max-width: 760px;
-  aspect-ratio: 1;
-  justify-self: center;
-}
+/* Computador: a área fica presa na tela e a rolagem passa pelos três capítulos */
+@media (min-width: 900px) and (prefers-reduced-motion: no-preference) {
+  .servicos {
+    height: 330vh;
+  }
 
-@media (min-width: 900px) {
+  .servicos-cena {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    overflow: hidden;
+  }
+
   .palco {
-    justify-self: end;
+    position: absolute;
+    inset: 0;
+    height: auto;
+  }
+
+  .palco-dica {
+    left: auto;
+    right: var(--gutter);
+    bottom: 28px;
+    max-width: 320px;
+    text-align: right;
+  }
+
+  /* O texto fica por cima do filme, na coluna da esquerda; o vão deixa o arrasto chegar na peça */
+  .servicos-texto {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: min(520px, 42vw);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 90px 0 40px var(--gutter);
+    pointer-events: none;
+  }
+
+  .servicos-texto > * {
+    pointer-events: auto;
   }
 }
 
-.palco-disco {
-  position: absolute;
-  inset: 5%;
-  border-radius: 50%;
-  background: var(--disco);
-  transition: background 0.7s var(--ease);
-}
-
-.palco-canvas {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  cursor: grab;
-  opacity: 0;
-  transition: opacity 0.8s var(--ease);
-  /* Deixa a página rolar na vertical; o arrasto de lado gira a peça */
-  touch-action: pan-y;
-}
-
-.palco.pronto .palco-canvas {
-  opacity: 1;
-}
-
-.palco-figura {
-  position: absolute;
-  left: 10%;
-  right: 10%;
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-.palco-dica {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  margin: 0;
-  text-align: center;
-  font-size: 0.88rem;
-  color: var(--tinta-2);
-}
-
-@media (min-width: 900px) {
-  .servicos {
+/* Computador com menos movimento: o palco ao lado do texto, sem prender a rolagem */
+@media (min-width: 900px) and (prefers-reduced-motion: reduce) {
+  .servicos-cena {
+    display: grid;
     grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    align-items: center;
     min-height: 100svh;
   }
-}
 
-/* No celular a peça 3D vem logo depois das categorias, antes da lista */
-@media (max-width: 899px) {
-  .servicos {
-    gap: 0;
+  .palco {
+    order: 2;
+    height: 100%;
   }
 
   .servicos-texto {
-    display: contents;
-  }
-
-  .servicos-texto h2 {
     order: 1;
-  }
-
-  .abas {
-    order: 2;
-  }
-
-  .palco {
-    order: 3;
-    margin-top: 12px;
-  }
-
-  .servicos-painel {
-    order: 4;
+    padding-top: 90px;
   }
 }
 
@@ -826,23 +886,14 @@ svg {
   background: var(--ouro-claro);
 }
 
-.btn-vinho {
-  background: var(--vinho);
-  color: var(--blush);
+.btn-outline-claro {
+  border-color: var(--bege-2);
+  color: var(--bege-claro);
 }
 
-.btn-vinho:hover {
-  background: var(--tinta);
-}
-
-.btn-outline {
-  border-color: var(--tinta);
-  color: var(--tinta);
-}
-
-.btn-outline:hover {
-  background: var(--tinta);
-  color: var(--blush);
+.btn-outline-claro:hover {
+  border-color: var(--ouro);
+  color: var(--ouro);
 }
 
 .btn-primary {
@@ -1479,8 +1530,8 @@ svg {
 /* ---------- Rodapé ---------- */
 
 .footer {
-  background: var(--champanhe);
-  color: var(--tinta);
+  background: var(--preto);
+  color: var(--bege);
   padding: clamp(72px, 10vw, 140px) var(--gutter) 28px;
   overflow: hidden;
 }
@@ -1501,7 +1552,7 @@ svg {
   font-weight: 400;
   font-size: clamp(3.2rem, 8vw, 8rem);
   line-height: 0.95;
-  color: var(--tinta);
+  color: var(--bege-claro);
 }
 
 .footer-cta .linha {
@@ -1514,8 +1565,8 @@ svg {
   width: clamp(120px, 14vw, 172px);
   aspect-ratio: 1;
   border-radius: 50%;
-  background: var(--vinho);
-  color: var(--blush);
+  background: var(--ouro);
+  color: var(--preto);
   font-family: var(--serif);
   font-size: clamp(1.3rem, 1.8vw, 1.6rem);
   text-decoration: none;
@@ -1544,7 +1595,7 @@ svg {
   font-family: var(--serif);
   font-weight: 400;
   font-size: 1.5rem;
-  color: var(--vinho);
+  color: var(--ouro);
 }
 
 .footer a,
@@ -1556,12 +1607,12 @@ svg {
 }
 
 .footer-grid a:hover {
-  color: var(--vinho);
+  color: var(--ouro);
 }
 
 .footer svg {
   margin-top: 0.3em;
-  color: var(--ouro-escuro);
+  color: var(--ouro);
 }
 
 .footer-wordmark {
@@ -1572,14 +1623,14 @@ svg {
   font-size: clamp(5rem, 23vw, 22rem);
   line-height: 0.8;
   white-space: nowrap;
-  color: var(--vinho);
+  color: var(--ouro);
 }
 
 .footer-copy {
   max-width: 1240px;
   margin: 20px auto 0;
   font-size: 0.875rem;
-  color: var(--tinta-2);
+  color: var(--bege-2);
 }
 
 /* ---------- Faixa de serviços ---------- */
@@ -1590,8 +1641,8 @@ svg {
   width: 110%;
   margin: clamp(-28px, -2vw, -16px) 0 clamp(-28px, -2vw, -16px) -5%;
   overflow: hidden;
-  background: var(--vinho);
-  color: var(--blush);
+  background: var(--ouro);
+  color: var(--preto);
 }
 
 .faixa-trilho {
@@ -1617,13 +1668,13 @@ svg {
   white-space: nowrap;
 }
 
-/* Disco dourado entre os serviços */
+/* Disco vinho entre os serviços */
 .faixa-lista li::after {
   content: '';
   width: 0.32em;
   height: 0.32em;
   border-radius: 50%;
-  background: var(--ouro);
+  background: var(--vinho);
 }
 
 /* ---------- Movimento reduzido ---------- */
