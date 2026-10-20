@@ -23,3 +23,7 @@ dist-ssr
 *.sln
 *.sw?
 .wrangler
+
+# Arquivos de trabalho das skills de design e 3D
+.taste-skill/
+.img2threejs/
