@@ -1,6 +1,7 @@
 // Ferramentas de modelagem usadas pelas peças: varredura afinada (mechas de cabelo, cerdas, cabos),
 // torno (corpos redondos) e os materiais da paleta.
 import * as THREE from 'three'
+import { microtexturas } from './texturas'
 
 // Varre uma seção elíptica ao longo de uma curva, afinando conforme raio(t).
 // Os quadros usam transporte paralelo para a seção não virar 180° numa inflexão da curva.
@@ -98,22 +99,47 @@ export const CORES = {
   aco: 0xd9dde2,
 }
 
+// Ouro com microrrelevo: o reflexo se quebra um pouco, como em metal polido à mão
 export function ouro(rugosidade = 0.24) {
+  const t = microtexturas()
   return new THREE.MeshPhysicalMaterial({
     color: CORES.ouro,
     metalness: 1,
     roughness: rugosidade,
+    roughnessMap: t.rugosidade,
+    normalMap: t.metal,
+    normalScale: new THREE.Vector2(0.35, 0.35),
     clearcoat: 0.4,
     clearcoatRoughness: 0.2,
   })
 }
 
+// Plástico laqueado com a "casca de laranja" bem leve da pintura
 export function plastico(cor: number, rugosidade = 0.32) {
-  return new THREE.MeshPhysicalMaterial({ color: cor, roughness: rugosidade, clearcoat: 0.6, clearcoatRoughness: 0.18 })
+  const t = microtexturas()
+  return new THREE.MeshPhysicalMaterial({
+    color: cor,
+    roughness: rugosidade,
+    roughnessMap: t.rugosidade,
+    normalMap: t.metal,
+    normalScale: new THREE.Vector2(0.08, 0.08),
+    clearcoat: 0.6,
+    clearcoatRoughness: 0.18,
+  })
 }
 
+// Aço escovado: o brilho se estica na direção dos riscos
 export function metal(cor = CORES.aco, rugosidade = 0.22) {
-  return new THREE.MeshPhysicalMaterial({ color: cor, metalness: 1, roughness: rugosidade, envMapIntensity: 2.2 })
+  const t = microtexturas()
+  return new THREE.MeshPhysicalMaterial({
+    color: cor,
+    metalness: 1,
+    roughness: rugosidade,
+    normalMap: t.escovado,
+    normalScale: new THREE.Vector2(0.25, 0.25),
+    anisotropy: 0.6,
+    envMapIntensity: 2.2,
+  })
 }
 
 export function malha(nome: string, g: THREE.BufferGeometry, m: THREE.Material) {

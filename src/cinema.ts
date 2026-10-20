@@ -30,9 +30,10 @@ export function rolagemSuave() {
   }
 }
 
-// Abertura: contador de 0 a 100, a cortina sobe e o título nasce letra por letra.
+// Abertura: contador de 0 a 100, a cortina sobe, a figura abre e o título nasce letra por letra.
 export function abertura(root: HTMLElement) {
   const reduzido = window.matchMedia(REDUZIDO).matches
+  let soltar = () => {}
   const ctx = gsap.context(() => {
     // Quem pediu menos movimento entra direto no site pronto, sem cortina
     if (reduzido) {
@@ -50,40 +51,54 @@ export function abertura(root: HTMLElement) {
     gsap.set('.loader-name .letra', { opacity: 0, yPercent: reduzido ? 0 : 100 })
     gsap.set(['.hero-sub', '.hero-actions', '.hero-scroll', '.topbar'], { opacity: 0, y: reduzido ? 0 : 24 })
 
-    const tl = gsap.timeline({ onComplete: () => lenis?.start() })
-    tl.to('.loader-name .letra', { opacity: 1, yPercent: 0, stagger: 0.05, duration: 0.7, ease: 'power3.out' }, 0)
+    // A abertura é curta: em menos de dois segundos o site já pode ser rolado.
+    // Quem rola, toca ou aperta uma tecla durante a abertura faz ela correr mais rápido.
+    const tl = gsap.timeline()
+    tl.to('.loader-name .letra', { opacity: 1, yPercent: 0, stagger: 0.04, duration: 0.55, ease: 'power3.out' }, 0)
       .to(n, {
         v: 100,
-        duration: 1.5,
+        duration: 0.95,
         ease: 'power2.inOut',
         onUpdate: () => {
           contador.textContent = String(Math.round(n.v))
         },
       }, 0)
-      .to('.loader-bar', { scaleX: 1, duration: 1.5, ease: 'power2.inOut' }, 0)
-      .to('.loader-inner', { opacity: 0, duration: 0.35 }, 1.6)
-      .to('.loader', { yPercent: -100, duration: 1.1, ease: 'expo.inOut' }, 1.75)
-      // As tarjas de cinema se abrem devagar, revelando a tela inteira
-      .to('.tarjas span', { scaleY: 0, duration: 1.8, ease: 'expo.inOut' }, 3.1)
-      .to('.hero-disco', { scale: 1, duration: 2, ease: 'expo.out' }, 1.95)
-      .to('.hero-figure', { clipPath: 'inset(0% 0% 0% 0%)', duration: 1.6, ease: 'expo.inOut' }, 2.1)
-      .to('.hero-figure img', { scale: 1, duration: 2.4, ease: 'expo.out' }, 2.1)
+      .to('.loader-bar', { scaleX: 1, duration: 0.95, ease: 'power2.inOut' }, 0)
+      .to('.loader-inner', { opacity: 0, duration: 0.25 }, 0.95)
+      .to('.loader', { yPercent: -100, duration: 0.9, ease: 'expo.inOut' }, 1.0)
+      .add(() => lenis?.start(), 1.6)
+      .to('.hero-disco', { scale: 1, duration: 2, ease: 'expo.out' }, 1.15)
+      .to('.hero-figure', { clipPath: 'inset(0% 0% 0% 0%)', duration: 1.3, ease: 'expo.inOut', clearProps: 'clipPath' }, 1.2)
+      .to('.hero-figure img', { scale: 1, duration: 2, ease: 'expo.out' }, 1.2)
       .to('.hero-title .letra', {
         yPercent: 0,
         opacity: 1,
-        duration: 1.3,
-        stagger: 0.045,
+        duration: 1.2,
+        stagger: 0.04,
         ease: 'expo.out',
-      }, 2.45)
+      }, 1.45)
       .to(['.topbar', '.hero-sub', '.hero-actions', '.hero-scroll'], {
         opacity: 1,
         y: 0,
-        duration: 1,
-        stagger: 0.1,
+        duration: 0.9,
+        stagger: 0.08,
         ease: 'power3.out',
-      }, 3)
+      }, 1.85)
+      // As tarjas de cinema se abrem por último, revelando a tela inteira
+      .to('.tarjas span', { scaleY: 0, duration: 1.4, ease: 'expo.inOut' }, 2.0)
+    const pressa = () => tl.timeScale(3.5)
+    const eventos = ['wheel', 'touchstart', 'keydown', 'pointerdown'] as const
+    eventos.forEach((e) => window.addEventListener(e, pressa, { once: true, passive: true }))
+    soltar = () => eventos.forEach((e) => window.removeEventListener(e, pressa))
+    tl.eventCallback('onComplete', () => {
+      lenis?.start()
+      soltar()
+    })
   }, root)
-  return () => ctx.revert()
+  return () => {
+    soltar()
+    ctx.revert()
+  }
 }
 
 // As cenas que acompanham a rolagem.

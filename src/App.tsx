@@ -14,6 +14,7 @@ import {
 import { abertura, atualizarCenas, cenas, cursor, rolagemSuave, scrollToY } from './cinema'
 import { Letras } from './Letras'
 import { Servicos } from './Servicos'
+import { HeroFigura } from './HeroFigura'
 
 const TZ = 'America/Sao_Paulo'
 const DAYS_AHEAD = 21
@@ -374,9 +375,7 @@ export default function App() {
       <header className="hero">
         <div className="hero-stage">
           <div className="hero-disco" aria-hidden />
-          <div className="hero-figure" aria-hidden>
-            <img src="/figura.webp" alt="" width="698" height="409" />
-          </div>
+          <HeroFigura />
           <h1 className="hero-title" aria-label="Leide Hair">
             <span className="linha linha-1" aria-hidden>
               <Letras texto="Leide" />
