@@ -93,3 +93,41 @@ export function microtexturas() {
   }
   return cache
 }
+
+let cacheFuros: { cor: THREE.DataTexture; normal: THREE.DataTexture } | null = null
+
+// Chapa perfurada (grade de filtro): furos redondos em colmeia, com a borda do furo chanfrada
+export function chapaPerfurada() {
+  if (cacheFuros) return cacheFuros
+  const altura = new Float32Array(N * N)
+  const cor = new Uint8Array(N * N * 4)
+  // 8 furos por linha; linhas alternadas deslocadas meio passo, e a altura da célula fecha a repetição
+  const colunas = 8
+  const passo = N / colunas
+  const linhas = 8
+  const passoY = N / linhas
+  for (let y = 0; y < N; y++)
+    for (let x = 0; x < N; x++) {
+      let d = 1e9
+      for (let ly = -1; ly <= linhas; ly++) {
+        const cy = (ly + 0.5) * passoY
+        const desl = ly % 2 === 0 ? 0 : passo / 2
+        for (let lx = -1; lx <= colunas; lx++) {
+          const cx = (lx + 0.5) * passo + desl
+          d = Math.min(d, Math.hypot(x - cx, y - cy))
+        }
+      }
+      const r = passo * 0.32
+      // 0 no fundo do furo, 1 na chapa, com uma rampa curta que vira o chanfro
+      const k = Math.min(1, Math.max(0, (d - r) / (passo * 0.08)))
+      altura[y * N + x] = k
+      const v = d < r ? 6 : 255
+      const i = (y * N + x) * 4
+      cor[i] = cor[i + 1] = cor[i + 2] = v
+      cor[i + 3] = 255
+    }
+  const c = textura(cor, 4, false)
+  c.colorSpace = THREE.SRGBColorSpace
+  cacheFuros = { cor: c, normal: textura(normais(altura, 3), 4) }
+  return cacheFuros
+}

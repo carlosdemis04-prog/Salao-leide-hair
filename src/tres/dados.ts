@@ -7,4 +7,9 @@ export const ESMALTES = [
   { nome: 'Dourado', cor: 0xd4a43c },
 ]
 
-export const POSES_NOMES = ['Clássica', 'Braços abertos', 'Mãos na cintura']
+// Acabamentos do ouro da figura na cena da estética
+export const ACABAMENTOS = [
+  { nome: 'Ouro', cor: 0xe2b04e, rugosidade: 0.16 },
+  { nome: 'Ouro rosé', cor: 0xe7a487, rugosidade: 0.18 },
+  { nome: 'Champanhe', cor: 0xe8d2a4, rugosidade: 0.28 },
+]

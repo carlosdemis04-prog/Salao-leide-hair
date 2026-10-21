@@ -18,8 +18,10 @@ export type Peca = {
   // Arrastar em cima da peça, quando a peça quer o gesto para si
   arrastar?: (ponto: THREE.Vector3 | null) => boolean
   // Distância da câmera e altura do alvo
-  enquadramento: { distancia: number; alvoY: number; fov?: number }
+  enquadramento: { distancia: number; alvoY: number; fov?: number; elevacao?: number }
   descartar?: () => void
+  // Chamada uma vez quando a peça entra em cena, para quem precisa do renderizador (mapas de reflexo próprios)
+  preparar?: (renderer: THREE.WebGLRenderer) => void
 }
 
 export type Palco = {
@@ -347,13 +349,13 @@ export function criarPalco(canvas: HTMLCanvasElement, opcoes: { reduzido: boolea
   const alvoCamera = new THREE.Vector3()
   function colocarCamera(t: number) {
     if (!atual) return
-    const { distancia, alvoY, fov = 28 } = atual.enquadramento
+    const { distancia, alvoY, fov = 28, elevacao = 0.14 } = atual.enquadramento
     if (camera.fov !== fov) {
       camera.fov = fov
       camera.updateProjectionMatrix()
     }
     // Em tela estreita a câmera recua para a peça caber de lado a lado
-    const recuo = camera.aspect < 1 ? 1 / Math.max(camera.aspect, 0.62) : 1
+    const recuo = camera.aspect < 1 ? 1 / Math.max(camera.aspect, 0.8) : 1
     const k = 1 - Math.pow(1 - entrada, 4)
     const d = distancia * recuo * THREE.MathUtils.lerp(1.5, 1, k)
     const az = THREE.MathUtils.lerp(0.55, 0, k)
@@ -361,7 +363,7 @@ export function criarPalco(canvas: HTMLCanvasElement, opcoes: { reduzido: boolea
     miraSuave.lerp(mira, 0.04)
     const px = (Math.sin(t * 0.31) * 0.06 + miraSuave.x * 0.28) * respira
     const py = (Math.sin(t * 0.23) * 0.04 - miraSuave.y * 0.16) * respira
-    const y = alvoY + distancia * 0.14 + THREE.MathUtils.lerp(-0.5, 0, k) + py
+    const y = alvoY + distancia * elevacao + THREE.MathUtils.lerp(-0.5, 0, k) + py
     posCamera.set(Math.sin(az) * d + px, y, Math.cos(az) * d)
     alvoCamera.set(px * 0.3, alvoY + py * 0.3, 0)
     camera.position.copy(posCamera)
@@ -414,6 +416,7 @@ export function criarPalco(canvas: HTMLCanvasElement, opcoes: { reduzido: boolea
       atual.descartar?.()
     }
     atual = peca
+    peca.preparar?.(renderer)
     peca.grupo.traverse((o) => {
       if ((o as THREE.Mesh).isMesh) {
         o.castShadow = true
