@@ -19,5 +19,6 @@ export function estudio() {
   painel(1.4, 8, 0xfff6ee, 2.2, 8, 3, -2) // faixa fria à direita
   painel(6, 2, 0xf3b8b4, 0.6, 0, 2.5, -10) // rosado atrás
   painel(9, 4, 0xfff4e6, 1.3, 2, 3, 11) // rebatedor grande atrás da câmera
+  painel(12, 4, 0xffe9d2, 0.9, 0, -1.5, 10) // rebatedor baixo na frente, para as faces de pé não refletirem só o chão escuro
   return s
 }

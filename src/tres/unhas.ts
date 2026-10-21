@@ -1,320 +1,510 @@
-// Cena das unhas: uma mão com o pincel do esmalte passando unha por unha.
+// Cena das unhas: frascos de esmalte de vidro grosso e um leque de unhas postiças no pedestal.
+// O pincel sai do frasco aberto, pinta as unhas uma por uma e volta a fechar o frasco.
 // Tocar ou arrastar em cima de uma unha pinta; trocar a cor limpa e pinta de novo.
-import * as THREE from 'three'
-import { microtexturas } from './texturas'
-import { liberar, malha, ouro, torno } from './formas'
-import type { Peca } from './palco'
-import { ESMALTES } from './dados'
+import * as THREE from "three";
+import {
+  letreiro,
+  liberar,
+  malha,
+  ouro,
+  torno,
+  tornoQuadrado,
+  vidro,
+} from "./formas";
+import type { Peca } from "./palco";
+import { ESMALTES } from "./dados";
 
-export { ESMALTES }
+export { ESMALTES };
 
-const PELE = 0xd29a78
-
-// Unha: grade (u ao longo do dedo, v de lado a lado) curvada sobre um cilindro do tamanho do dedo
-function unhaGeo(largura: number, comprimento: number, curva: number, folga: number) {
-  const nu = 24
-  const nv = 16
-  const pos: number[] = []
-  const pinta: number[] = []
-  const idx: number[] = []
-  for (let i = 0; i <= nu; i++) {
-    const u = i / nu
-    // Formato amendoado: base arredondada na cutícula, ponta oval
-    const meia =
-      u < 0.18 ? largura * Math.sqrt(Math.max(u / 0.18, 0.02)) * 0.92 + largura * 0.08 : u > 0.72 ? largura * Math.sqrt(Math.max(1 - ((u - 0.72) / 0.28) ** 2, 0.0004)) : largura
-    for (let j = 0; j <= nv; j++) {
-      const v = (j / nv) * 2 - 1
-      const x = v * meia
-      const a = x / curva
-      const y = u * comprimento
-      // A ponta livre desce um pouco, como uma unha de verdade
-      const queda = u > 0.8 ? -(((u - 0.8) / 0.2) ** 2) * 0.02 : 0
-      pos.push(Math.sin(a) * (curva + folga), y, Math.cos(a) * (curva + folga) - curva + queda)
-      pinta.push(u)
+// Unha postiça amendoada: casca fina curvada de lado a lado, com a ponta caindo de leve.
+// A camada de cima carrega "pinta" (0 na cutícula, 1 na ponta) para o esmalte avançar.
+const COMP = 0.46;
+const LARG = 0.095;
+const CURVA = 0.11;
+function unhaGeo(folga: number, espessura: number) {
+  const nu = 40;
+  const nv = 24;
+  const pos: number[] = [];
+  const pinta: number[] = [];
+  const idx: number[] = [];
+  const meia = (u: number) =>
+    u < 0.12
+      ? LARG * (0.82 + 0.18 * Math.sqrt(u / 0.12))
+      : u > 0.55
+        ? LARG * Math.sqrt(Math.max(1 - ((u - 0.55) / 0.45) ** 2, 0))
+        : LARG;
+  // Uma superfície da casca a uma distância r do eixo da curva
+  const camada = (r: number) => {
+    const ini = pos.length / 3;
+    for (let i = 0; i <= nu; i++) {
+      const u = i / nu;
+      const m = Math.max(meia(u), 0.0015);
+      const queda = -Math.pow(Math.max(0, u - 0.35) / 0.65, 2) * 0.035;
+      for (let j = 0; j <= nv; j++) {
+        const v = (j / nv) * 2 - 1;
+        const a = (v * m) / CURVA;
+        pos.push(Math.sin(a) * r, u * COMP, Math.cos(a) * r - CURVA + queda);
+        pinta.push(u);
+      }
     }
-  }
+    return ini;
+  };
+  const cima = camada(CURVA + folga);
+  const linha = nv + 1;
   for (let i = 0; i < nu; i++)
     for (let j = 0; j < nv; j++) {
-      const a = i * (nv + 1) + j
-      const b = a + nv + 1
-      idx.push(a, b, a + 1, b, b + 1, a + 1)
+      const a = cima + i * linha + j;
+      idx.push(a, a + 1, a + linha, a + linha, a + 1, a + linha + 1);
     }
-  const g = new THREE.BufferGeometry()
-  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3))
-  g.setAttribute('pinta', new THREE.Float32BufferAttribute(pinta, 1))
-  g.setIndex(idx)
-  g.computeVertexNormals()
-  return g
+  if (espessura > 0) {
+    const baixo = camada(CURVA + folga - espessura);
+    for (let i = 0; i < nu; i++)
+      for (let j = 0; j < nv; j++) {
+        const a = baixo + i * linha + j;
+        idx.push(a, a + linha, a + 1, a + linha, a + linha + 1, a + 1);
+      }
+    // Bordas: as duas laterais e a base da cutícula
+    for (let i = 0; i < nu; i++) {
+      [0, nv].forEach((j, k) => {
+        const a = cima + i * linha + j;
+        const b = baixo + i * linha + j;
+        if (k === 0) idx.push(a, a + linha, b, b, a + linha, b + linha);
+        else idx.push(a, b, a + linha, b, b + linha, a + linha);
+      });
+    }
+    for (let j = 0; j < nv; j++) {
+      const a = cima + j;
+      const b = baixo + j;
+      idx.push(a, b, a + 1, b, b + 1, a + 1);
+    }
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute("pinta", new THREE.Float32BufferAttribute(pinta, 1));
+  g.setIndex(idx);
+  g.computeVertexNormals();
+  return g;
 }
 
 // Esmalte: mesma unha, um fio acima, que só aparece até onde o pincel já passou
 function esmalteMaterial(cor: number) {
-  const progresso = { value: 0 }
-  const m = new THREE.MeshPhysicalMaterial({ color: cor, roughness: 0.1, clearcoat: 1, clearcoatRoughness: 0.05, side: THREE.DoubleSide })
+  const progresso = { value: 0 };
+  const m = new THREE.MeshPhysicalMaterial({
+    color: cor,
+    roughness: 0.12,
+    clearcoat: 1,
+    clearcoatRoughness: 0.03,
+  });
   m.onBeforeCompile = (sh) => {
-    sh.uniforms.uProgresso = progresso
-    sh.vertexShader = 'attribute float pinta;\nvarying float vPinta;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\nvPinta = pinta;')
+    sh.uniforms.uProgresso = progresso;
+    sh.vertexShader =
+      "attribute float pinta;\nvarying float vPinta;\n" +
+      sh.vertexShader.replace(
+        "#include <begin_vertex>",
+        "#include <begin_vertex>\nvPinta = pinta;",
+      );
     sh.fragmentShader =
-      'uniform float uProgresso;\nvarying float vPinta;\n' +
-      sh.fragmentShader.replace('#include <clipping_planes_fragment>', '#include <clipping_planes_fragment>\nif (vPinta > uProgresso) discard;')
-  }
-  return { m, progresso }
+      "uniform float uProgresso;\nvarying float vPinta;\n" +
+      sh.fragmentShader.replace(
+        "#include <clipping_planes_fragment>",
+        "#include <clipping_planes_fragment>\nif (vPinta > uProgresso) discard;",
+      );
+  };
+  return { m, progresso };
 }
 
-// Pele: fosca com o veludo do sheen e um calor vermelho bem fraco nas sombras, que imita a luz
-// passando por dentro da pele (as sombras de pele nunca ficam cinzas)
-function materialPele() {
-  const t = microtexturas()
-  return new THREE.MeshPhysicalMaterial({
-    color: PELE,
-    roughness: 0.58,
-    roughnessMap: t.rugosidade,
-    normalMap: t.metal,
-    normalScale: new THREE.Vector2(0.12, 0.12),
-    sheen: 0.55,
-    sheenRoughness: 0.45,
-    sheenColor: new THREE.Color(0xffb9a0),
-    emissive: new THREE.Color(0x5a1a0c),
-    emissiveIntensity: 0.18,
-    clearcoat: 0.08,
-    clearcoatRoughness: 0.5,
-  })
-}
-
-function criarDedo(nome: string, comprimento: number, raio: number, corEsmalte: number) {
-  const g = new THREE.Group()
-  g.name = nome
-  const pele = materialPele()
-  const L = comprimento
-  const dedo = malha(
-    `${nome}-pele`,
-    torno([
-      [raio * 1.05, -0.1],
-      [raio * 1.08, L * 0.3],
-      [raio * 1.02, L * 0.55],
-      [raio * 1.04, L * 0.62],
-      [raio * 0.94, L * 0.85],
-      [raio * 0.78, L * 0.96],
-      [raio * 0.4, L * 1.01],
-      [0.001, L * 1.02],
-    ]),
-    pele,
-  )
-  dedo.scale.z = 0.82
-  g.add(dedo)
-  // A unha cobre o último terço do dedo e passa um pouco da ponta
-  const largura = raio * 0.62
-  const compUnha = L * 0.34
-  const base = new THREE.Mesh(unhaGeo(largura, compUnha, raio * 0.82, 0.004), new THREE.MeshPhysicalMaterial({ color: 0xd49488, roughness: 0.32, clearcoat: 0.3, side: THREE.DoubleSide }))
-  base.name = `${nome}-unha`
-  base.position.set(0, L * 0.71, raio * 0.82)
-  g.add(base)
-  const { m, progresso } = esmalteMaterial(corEsmalte)
-  const camada = new THREE.Mesh(unhaGeo(largura * 1.01, compUnha, raio * 0.82, 0.012), m)
-  camada.name = `${nome}-esmalte`
-  camada.userData.explodeWithParent = true
-  camada.position.copy(base.position)
-  g.add(camada)
-  return { grupo: g, progresso, material: m, unhaY: L * 0.71, compUnha, raio }
-}
-
-export function criarUnhas(reduzido: boolean): Peca & { mudarCor: (cor: number) => void; pintar: () => void } {
-  const grupo = new THREE.Group()
-  let cor = ESMALTES[0].cor
-
-  // Mão deitada com o dorso para cima; dedos saem da palma no eixo +Y local
-  const mao = new THREE.Group()
-  mao.name = 'mao'
-  const pele = materialPele()
-  const palma = malha('palma', new THREE.SphereGeometry(1, 40, 24), pele)
-  palma.scale.set(0.62, 0.72, 0.2)
-  mao.add(palma)
-  const punho = malha('punho', torno([[0.001, -1.12], [0.3, -1.1], [0.4, -1.0], [0.44, -0.8], [0.5, -0.4], [0.55, -0.1]]), pele)
-  punho.scale.z = 0.5
-  mao.add(punho)
-  // Pulseira dourada fina no pulso, como a joia da logo
-  const pulseira = malha('pulseira', new THREE.TorusGeometry(0.445, 0.035, 16, 64), ouro(0.2))
-  pulseira.rotation.x = Math.PI / 2
-  pulseira.scale.y = 0.52
-  pulseira.position.y = -0.78
-  mao.add(pulseira)
-  const dedos = [
-    criarDedo('indicador', 0.92, 0.13, cor),
-    criarDedo('medio', 1.02, 0.135, cor),
-    criarDedo('anelar', 0.95, 0.128, cor),
-    criarDedo('minimo', 0.75, 0.112, cor),
-  ]
-  const xs = [-0.42, -0.14, 0.14, 0.4]
-  const abre = [0.1, 0.03, -0.04, -0.12]
-  dedos.forEach((d, i) => {
-    d.grupo.position.set(xs[i], 0.55, 0.02)
-    d.grupo.rotation.z = abre[i]
-    mao.add(d.grupo)
-  })
-  const polegar = criarDedo('polegar', 0.78, 0.15, cor)
-  polegar.grupo.position.set(-0.55, -0.15, 0.04)
-  polegar.grupo.rotation.z = 0.95
-  polegar.grupo.rotation.y = -0.35
-  mao.add(polegar.grupo)
-  const todos = [...dedos, polegar]
-  // O mínimo e o polegar já chegam pintados, para a cena mostrar o esmalte logo de cara
-  dedos[3].progresso.value = 1
-  polegar.progresso.value = 1
-
-  mao.rotation.set(-1.0, 0, -0.55)
-  mao.scale.setScalar(0.8)
-  mao.position.set(-0.15, 1.15, 0)
-  grupo.add(mao)
-
-  // Vidro de esmalte com o pincel fora
-  const vidro = new THREE.Group()
-  vidro.name = 'vidro'
-  const vidroMat = new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.04, transmission: 0.9, thickness: 0.4, ior: 1.45 })
-  const corpo = malha(
-    'frasco',
-    torno([
-      [0.001, 0],
-      [0.34, 0.01],
-      [0.38, 0.08],
-      [0.38, 0.5],
-      [0.3, 0.68],
-      [0.12, 0.76],
-      [0.12, 0.86],
-    ]),
-    vidroMat,
-  )
-  vidro.add(corpo)
-  const liquidoMat = new THREE.MeshPhysicalMaterial({ color: cor, roughness: 0.18, clearcoat: 1 })
+// Frasco de vidro grosso de cantos arredondados, com o fundo pesado e o esmalte dentro
+function criarFrasco(cor: number, escala: number) {
+  const g = new THREE.Group();
+  g.name = "frasco";
+  const casco = malha(
+    "vidro",
+    tornoQuadrado(
+      [
+        [0.001, 0],
+        [0.29, 0.0],
+        [0.325, 0.015],
+        [0.34, 0.055],
+        [0.342, 0.4],
+        [0.338, 0.6],
+        [0.322, 0.665],
+        [0.27, 0.71],
+        [0.15, 0.735],
+        [0.001, 0.74],
+      ],
+      4.2,
+      96,
+    ),
+    vidro(0.6),
+  );
+  g.add(casco);
+  const liquidoMat = new THREE.MeshPhysicalMaterial({
+    color: cor,
+    roughness: 0.2,
+    clearcoat: 1,
+    clearcoatRoughness: 0.08,
+  });
   const liquido = malha(
-    'liquido',
-    torno([
-      [0.001, 0.04],
-      [0.32, 0.05],
-      [0.34, 0.1],
-      [0.34, 0.48],
-      [0.001, 0.5],
-    ], 48, false),
+    "liquido",
+    tornoQuadrado(
+      [
+        [0.001, 0.13],
+        [0.27, 0.13],
+        [0.292, 0.15],
+        [0.298, 0.2],
+        [0.298, 0.5],
+        [0.29, 0.52],
+        [0.001, 0.525],
+      ],
+      4.2,
+      96,
+      false,
+    ),
     liquidoMat,
-  )
-  vidro.add(liquido)
-  const rosca = malha('rosca', new THREE.CylinderGeometry(0.125, 0.125, 0.08, 32), ouro(0.25))
-  rosca.position.y = 0.84
-  vidro.add(rosca)
-  vidro.scale.setScalar(0.78)
-  vidro.position.set(1.15, 0, 0.55)
-  grupo.add(vidro)
+  );
+  liquido.userData.explodeWithParent = true;
+  g.add(liquido);
+  // Gargalo redondo com a rosca de vidro
+  const gargalo = malha(
+    "gargalo",
+    torno(
+      [
+        [0.112, 0.73],
+        [0.112, 0.85],
+        [0.098, 0.862],
+        [0.001, 0.862],
+      ],
+      48,
+      false,
+    ),
+    vidro(0.2),
+  );
+  gargalo.userData.explodeWithParent = true;
+  g.add(gargalo);
+  [0.77, 0.8, 0.83].forEach((y) => {
+    const r = malha(
+      "rosca",
+      new THREE.TorusGeometry(0.113, 0.006, 8, 48),
+      vidro(0.1),
+    );
+    r.rotation.x = Math.PI / 2;
+    r.position.y = y;
+    r.userData.explodeWithParent = true;
+    g.add(r);
+  });
+  // Nome em dourado na frente do vidro (hot stamping: brilha mesmo longe da luz)
+  const rotuloTex = letreiro("LEIDE", {
+    largura: 512,
+    altura: 128,
+    fonte: '400 92px "Instrument Serif", Georgia, serif',
+    espaco: 20,
+    cor: "#e8c27a",
+  });
+  const rotulo = malha(
+    "rotulo",
+    new THREE.PlaneGeometry(0.5, 0.125),
+    new THREE.MeshPhysicalMaterial({
+      map: rotuloTex,
+      emissiveMap: rotuloTex,
+      emissive: new THREE.Color(0x8a6428),
+      transparent: true,
+      metalness: 0.9,
+      roughness: 0.38,
+      depthWrite: false,
+    }),
+  );
+  rotulo.position.set(0, 0.36, 0.3435);
+  rotulo.userData.explodeWithParent = true;
+  g.add(rotulo);
+  g.scale.setScalar(escala);
+  return { grupo: g, liquidoMat };
+}
 
-  // Pincel: tampa dourada, haste e cerdas com a cor do esmalte
-  const pincel = new THREE.Group()
-  pincel.name = 'pincel'
-  const tampa = malha('tampa', new THREE.CylinderGeometry(0.11, 0.12, 0.7, 32), ouro(0.22))
-  tampa.position.y = 0.95
-  pincel.add(tampa)
-  const haste = malha('haste', new THREE.CylinderGeometry(0.018, 0.018, 0.55, 12), new THREE.MeshPhysicalMaterial({ color: 0x2b211c, roughness: 0.4 }))
-  haste.position.y = 0.33
-  pincel.add(haste)
-  const cerdasMat = new THREE.MeshPhysicalMaterial({ color: cor, roughness: 0.25, clearcoat: 0.8 })
-  const cerdas = malha('cerdas', torno([[0.001, -0.02], [0.03, 0.0], [0.045, 0.08], [0.03, 0.14]], 24), cerdasMat)
-  cerdas.scale.z = 0.45
-  pincel.add(cerdas)
-  pincel.scale.setScalar(0.8)
-  grupo.add(pincel)
+// Tampa alta de metal dourado escovado, com o topo polido; o pincel sai preso nela
+function criarTampa() {
+  const g = new THREE.Group();
+  g.add(
+    malha(
+      "tampa",
+      torno(
+        [
+          [0.001, 0],
+          [0.128, 0],
+          [0.132, 0.01],
+          [0.132, 0.6],
+          [0.126, 0.625],
+          [0.1, 0.632],
+          [0.001, 0.634],
+        ],
+        64,
+        false,
+      ),
+      ouro(0.3),
+    ),
+  );
+  const anel = malha(
+    "tampa-friso",
+    new THREE.TorusGeometry(0.133, 0.006, 8, 64),
+    ouro(0.12),
+  );
+  anel.rotation.x = Math.PI / 2;
+  anel.position.y = 0.06;
+  anel.userData.explodeWithParent = true;
+  g.add(anel);
+  return g;
+}
 
-  // Controle da pintura: dedo atual e quanto da unha já foi pintado
-  let atual = 0
-  let auto = !reduzido
-  let alvo = 0 // progresso pedido para o dedo atual
-  let espera = 0
-  const pontaLocal = new THREE.Vector3()
-  const pontaMundo = new THREE.Vector3()
-  const repouso = new THREE.Vector3(1.15, 1.05, 0.55)
+export function criarUnhas(
+  reduzido: boolean,
+): Peca & { mudarCor: (cor: number) => void; pintar: () => void } {
+  const grupo = new THREE.Group();
+  let cor = ESMALTES[0].cor;
 
-  function pontoNaUnha(d: (typeof todos)[number], u: number) {
-    pontaLocal.set(0, d.unhaY + d.compUnha * u, d.raio * 0.82 + 0.03)
-    return d.grupo.localToWorld(pontaMundo.copy(pontaLocal))
+  // Frasco aberto à esquerda e dois fechados atrás, com as outras cores da paleta
+  const aberto = criarFrasco(cor, 1);
+  aberto.grupo.position.set(-0.55, 0, -0.1);
+  aberto.grupo.rotation.y = 0.35;
+  grupo.add(aberto.grupo);
+  const outros = [
+    criarFrasco(ESMALTES[3].cor, 0.86),
+    criarFrasco(ESMALTES[2].cor, 0.86),
+  ];
+  outros[0].grupo.position.set(0.12, 0, -0.78);
+  outros[0].grupo.rotation.y = -0.25;
+  outros[1].grupo.position.set(0.72, 0, -0.42);
+  outros[1].grupo.rotation.y = -0.6;
+  outros.forEach((o) => {
+    const t = criarTampa();
+    t.position.y = 0.862;
+    o.grupo.add(t);
+    grupo.add(o.grupo);
+  });
+
+  // Pincel: a origem fica na ponta das cerdas, para a posição ser o ponto que toca a unha
+  const pincel = new THREE.Group();
+  pincel.name = "pincel";
+  const cerdasMat = new THREE.MeshPhysicalMaterial({
+    color: cor,
+    roughness: 0.15,
+    clearcoat: 1,
+    clearcoatRoughness: 0.05,
+  });
+  const cerdas = malha(
+    "cerdas",
+    new THREE.SphereGeometry(1, 24, 16),
+    cerdasMat,
+  );
+  cerdas.scale.set(0.048, 0.085, 0.016);
+  cerdas.position.y = 0.075;
+  pincel.add(cerdas);
+  const haste = malha(
+    "haste",
+    new THREE.CylinderGeometry(0.014, 0.016, 0.56, 16),
+    new THREE.MeshPhysicalMaterial({
+      color: 0x1a1412,
+      roughness: 0.3,
+      clearcoat: 0.6,
+    }),
+  );
+  haste.position.y = 0.14 + 0.28;
+  pincel.add(haste);
+  const tampa = criarTampa();
+  tampa.position.y = 0.69;
+  pincel.add(tampa);
+  grupo.add(pincel);
+  // Com o frasco fechado, as cerdas ficam mergulhadas no esmalte e a tampa assenta no gargalo
+  aberto.grupo.updateMatrix();
+  const repouso = new THREE.Vector3(0, 0.862 - 0.69, 0).applyMatrix4(
+    aberto.grupo.matrix,
+  );
+  pincel.position.copy(repouso);
+
+  // Leque de unhas postiças deitadas na frente, com a curva para cima
+  type Dedo = {
+    grupo: THREE.Group;
+    progresso: { value: number };
+    material: THREE.MeshPhysicalMaterial;
+  };
+  const todos: Dedo[] = [];
+  const baseMat = new THREE.MeshPhysicalMaterial({
+    color: 0xf0dccf,
+    roughness: 0.32,
+    clearcoat: 0.6,
+    clearcoatRoughness: 0.2,
+    sheen: 0.3,
+    sheenColor: new THREE.Color(0xffe8dc),
+    side: THREE.DoubleSide,
+  });
+  const casca = unhaGeo(0, 0.012);
+  for (let i = 0; i < 5; i++) {
+    const u = new THREE.Group();
+    u.name = `unha-${i}`;
+    const base = malha(`unha-${i}-base`, casca, baseMat);
+    base.userData.explodeWithParent = true;
+    u.add(base);
+    const { m, progresso } = esmalteMaterial(cor);
+    const camada = malha(`unha-${i}-esmalte`, unhaGeo(0.0035, 0), m);
+    camada.userData.explodeWithParent = true;
+    u.add(camada);
+    // Deitada: o comprimento vai para longe do centro do leque e a curva fica para cima
+    u.rotation.x = -Math.PI / 2;
+    const deitada = new THREE.Group();
+    deitada.add(u);
+    const a = -0.62 + i * 0.31;
+    deitada.rotation.y = a + Math.PI;
+    deitada.position.set(
+      0.25 + Math.sin(a) * 0.3,
+      0.05,
+      0.3 + Math.cos(a) * 0.3,
+    );
+    grupo.add(deitada);
+    todos.push({ grupo: u, progresso, material: m });
+  }
+  // As duas da ponta já chegam pintadas, para a cena mostrar o esmalte logo de cara
+  todos[0].progresso.value = 1;
+  todos[4].progresso.value = 1;
+
+  // Controle da pintura: unha atual e quanto já foi pintado
+  let atual = 1;
+  let auto = !reduzido;
+  let alvo = 0;
+  let espera = reduzido ? 0 : 1.2;
+  const tmp = new THREE.Vector3();
+  const tmp2 = new THREE.Vector3();
+
+  function pontoNaUnha(d: Dedo, u: number, alvoVetor = new THREE.Vector3()) {
+    grupo.updateMatrixWorld(true);
+    return d.grupo.localToWorld(alvoVetor.set(0, u * COMP, 0.006));
   }
 
   function mudarCor(nova: number) {
-    cor = nova
+    cor = nova;
     todos.forEach((d) => {
-      d.material.color.setHex(nova)
-      d.progresso.value = 0
-    })
-    liquidoMat.color.setHex(nova)
-    cerdasMat.color.setHex(nova)
-    atual = 0
-    alvo = 0
-    auto = true
+      d.material.color.setHex(nova);
+      d.progresso.value = 0;
+    });
+    aberto.liquidoMat.color.setHex(nova);
+    cerdasMat.color.setHex(nova);
+    // Os frascos fechados mostram outras duas cores da paleta
+    const resto = ESMALTES.filter((e) => e.cor !== nova);
+    outros[0].liquidoMat.color.setHex(resto[resto.length - 1].cor);
+    outros[1].liquidoMat.color.setHex(resto[1].cor);
+    atual = 0;
+    alvo = 0;
+    espera = 0.3;
+    auto = true;
   }
   function pintar() {
-    // Começa (ou recomeça) a pintar a partir do primeiro dedo sem esmalte
-    if (todos.every((d) => d.progresso.value >= 1)) todos.forEach((d) => (d.progresso.value = 0))
-    atual = todos.findIndex((d) => d.progresso.value < 1)
-    auto = true
+    if (todos.every((d) => d.progresso.value >= 1))
+      todos.forEach((d) => (d.progresso.value = 0));
+    atual = todos.findIndex((d) => d.progresso.value < 1);
+    auto = true;
   }
 
+  const destino = new THREE.Vector3();
+  const cimaPincel = new THREE.Vector3(0, 1, 0);
+  const inclinacao = new THREE.Quaternion();
+  const direcao = new THREE.Vector3();
   return {
     grupo,
-    enquadramento: { distancia: 7.2, alvoY: 1.05 },
+    enquadramento: { distancia: 6.6, alvoY: 0.55, elevacao: 0.2 },
     mudarCor,
     pintar,
     tocar(nome) {
-      const i = todos.findIndex((d) => nome.startsWith(d.grupo.name))
+      const i = todos.findIndex((d) => nome.startsWith(d.grupo.name));
       if (i >= 0) {
-        atual = i
-        todos[i].progresso.value = 0
-        auto = true
-      } else pintar()
+        atual = i;
+        todos[i].progresso.value = 0;
+        auto = true;
+      } else pintar();
     },
     arrastar(ponto) {
-      if (!ponto) return false
+      if (!ponto) return false;
       // Escolhe a unha mais perto do dedo e pinta até a altura do toque
-      let melhor = -1
-      let dist = 0.35
+      let melhor = -1;
+      let dist = 0.25;
       todos.forEach((d, i) => {
-        const p = pontoNaUnha(d, 0.5)
-        const dd = p.distanceTo(ponto)
+        const dd = pontoNaUnha(d, 0.5, tmp).distanceTo(ponto);
         if (dd < dist) {
-          dist = dd
-          melhor = i
+          dist = dd;
+          melhor = i;
         }
-      })
-      if (melhor < 0) return false
-      atual = melhor
-      auto = false
-      const ini = pontoNaUnha(todos[melhor], 0)
-      const fim = pontoNaUnha(todos[melhor], 1)
-      const eixo = fim.clone().sub(ini)
-      const u = THREE.MathUtils.clamp(ponto.clone().sub(ini).dot(eixo) / eixo.lengthSq(), 0, 1)
-      alvo = Math.max(todos[melhor].progresso.value, u + 0.15)
-      return true
+      });
+      if (melhor < 0) return false;
+      atual = melhor;
+      auto = false;
+      const ini = pontoNaUnha(todos[melhor], 0, tmp).clone();
+      const eixo = pontoNaUnha(todos[melhor], 1, tmp2).sub(ini);
+      const u = THREE.MathUtils.clamp(
+        ponto.clone().sub(ini).dot(eixo) / eixo.lengthSq(),
+        0,
+        1,
+      );
+      alvo = Math.max(todos[melhor].progresso.value, u + 0.15);
+      return true;
     },
-    atualizar(dt, t) {
-      const d = todos[atual]
+    atualizar(dt) {
+      const d = atual >= 0 ? todos[atual] : undefined;
       if (auto && d) {
-        if (espera > 0) espera -= dt
-        else {
-          d.progresso.value = Math.min(1, d.progresso.value + dt * 1.1)
+        if (espera > 0) espera -= dt;
+        else if (
+          pincel.position.distanceTo(
+            grupo.worldToLocal(pontoNaUnha(d, d.progresso.value, tmp)),
+          ) < 0.1
+        ) {
+          // Só pinta quando o pincel já chegou na unha
+          d.progresso.value = Math.min(1, d.progresso.value + dt * 0.9);
           if (d.progresso.value >= 1) {
-            espera = 0.35
-            atual = todos.findIndex((x) => x.progresso.value < 1)
-            if (atual < 0) {
-              atual = 0
-              auto = false
-            }
+            espera = 0.25;
+            atual = todos.findIndex((x) => x.progresso.value < 1);
+            if (atual < 0) auto = false;
           }
         }
       } else if (d) {
-        d.progresso.value += (Math.min(alvo, 1) - d.progresso.value) * Math.min(1, dt * 8)
+        d.progresso.value +=
+          (Math.min(alvo, 1) - d.progresso.value) * Math.min(1, dt * 8);
       }
-      // O pincel acompanha a unha que está sendo pintada; sem nada a pintar, volta para perto do vidro
-      const pintando = (auto && atual >= 0 && todos[atual].progresso.value < 1) || (!auto && d && d.progresso.value < alvo - 0.02)
-      // pontoNaUnha devolve coordenadas do mundo; o pincel vive no grupo, que gira junto com o palco
-      const destino = pintando && d ? grupo.worldToLocal(pontoNaUnha(d, Math.min(d.progresso.value + 0.08, 1))) : repouso
-      pincel.position.lerp(destino, Math.min(1, dt * (pintando ? 10 : 3)))
-      pincel.rotation.set(0.25, 0, pintando ? -0.5 : 0.15)
-      mao.position.y = 1.15 + (reduzido ? 0 : Math.sin(t * 0.8) * 0.03)
+      const pintando =
+        !!d &&
+        ((auto && d.progresso.value < 1) ||
+          (!auto && d.progresso.value < alvo - 0.02));
+      // Coordenadas da unha estão no mundo; o pincel vive no grupo, que gira junto com o palco
+      if (pintando && d) {
+        destino.copy(
+          grupo.worldToLocal(
+            pontoNaUnha(d, Math.min(d.progresso.value + 0.04, 1), tmp),
+          ),
+        );
+        // Cabo inclinado para trás, para o lado da cutícula, como quem pinta de verdade
+        const ini = grupo.worldToLocal(pontoNaUnha(d, 0, tmp).clone());
+        const fim = grupo.worldToLocal(pontoNaUnha(d, 1, tmp2));
+        direcao
+          .subVectors(ini, fim)
+          .setY(0)
+          .normalize()
+          .multiplyScalar(0.75)
+          .add(cimaPincel)
+          .normalize();
+      } else {
+        destino.copy(repouso);
+        direcao.copy(cimaPincel);
+      }
+      // Longe do destino, o pincel sobe antes de atravessar a cena (não passa por dentro dos frascos)
+      const longe = Math.hypot(
+        destino.x - pincel.position.x,
+        destino.z - pincel.position.z,
+      );
+      const alvoVoo = destino.clone();
+      if (longe > 0.12) alvoVoo.y = Math.max(destino.y, 1.05);
+      const k = 1 - Math.exp(-dt * (pintando && longe < 0.12 ? 14 : 4.5));
+      pincel.position.lerp(alvoVoo, k);
+      // Em voo o pincel fica em pé; só inclina quando chega na unha
+      inclinacao.setFromUnitVectors(
+        cimaPincel,
+        longe > 0.15 ? cimaPincel : direcao,
+      );
+      pincel.quaternion.slerp(inclinacao, 1 - Math.exp(-dt * 6));
     },
     descartar: () => liberar(grupo),
-  }
+  };
 }

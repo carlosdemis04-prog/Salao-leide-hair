@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 import { scrollToY } from './cinema'
 import type { Service } from './supabase'
 import type { Aba, Vitrine } from './tres/cenas'
-import { ESMALTES, POSES_NOMES } from './tres/dados'
+import { ACABAMENTOS, ESMALTES } from './tres/dados'
 import { Letras } from './Letras'
 
 type Grupo = { key: string; title: string; items: Service[] }
@@ -27,7 +27,7 @@ const ABAS: { key: Aba; titulo: string; frase: string; dica: string }[] = [
     key: 'estetica',
     titulo: 'Estética',
     frase: 'Sobrancelhas, depilação e cuidados com a pele.',
-    dica: 'Toque na modelo para ela mudar de pose. Arraste para girar.',
+    dica: 'Toque no troféu ou escolha o acabamento do ouro. Arraste para girar.',
   },
 ]
 
@@ -50,7 +50,7 @@ export function Servicos({
   const [aba, setAba] = useState<Aba>('cabelo')
   const [ligado, setLigado] = useState(false)
   const [cor, setCor] = useState(ESMALTES[0].cor)
-  const [pose, setPose] = useState(0)
+  const [acabamento, setAcabamento] = useState(0)
   const [semWebGL, setSemWebGL] = useState(false)
   const [pronto, setPronto] = useState(false)
   const secaoRef = useRef<HTMLElement>(null)
@@ -75,7 +75,7 @@ export function Servicos({
         setSemWebGL(true)
         return
       }
-      const v = m.montarVitrine(canvasRef.current!, reduzido, { secador: setLigado, pose: setPose })
+      const v = m.montarVitrine(canvasRef.current!, reduzido, { secador: setLigado, acabamento: setAcabamento })
       vitrine.current = v
       v.mostrar(abaRef.current)
       v.palco.deslocar(window.matchMedia(CAPITULOS).matches ? 0.17 : 0)
@@ -111,7 +111,7 @@ export function Servicos({
     abaRef.current = nova
     setAba(nova)
     setLigado(false)
-    setPose(0)
+    setAcabamento(0)
     setCor(ESMALTES[0].cor)
     vitrine.current?.mostrar(nova)
   }
@@ -164,10 +164,10 @@ export function Servicos({
               role="img"
               aria-label={
                 aba === 'cabelo'
-                  ? 'Secador e tesoura dourada em 3D, num estúdio escuro'
+                  ? 'Secador profissional e tesoura de corte em 3D, num estúdio escuro'
                   : aba === 'unhas'
-                    ? 'Mão com as unhas sendo pintadas de esmalte, em 3D'
-                    : 'Estatueta dourada de uma modelo com o cabelo ao vento, em 3D'
+                    ? 'Frascos de esmalte e unhas postiças sendo pintadas, em 3D'
+                    : 'Troféu de cristal com a figura da logo em ouro, em 3D'
               }
             />
           )}
@@ -233,16 +233,16 @@ export function Servicos({
                   </div>
                 )}
                 {aba === 'estetica' && (
-                  <div className="poses" role="radiogroup" aria-label="Pose da modelo">
-                    {POSES_NOMES.map((n, i) => (
+                  <div className="poses" role="radiogroup" aria-label="Acabamento do ouro">
+                    {ACABAMENTOS.map((a, i) => (
                       <button
-                        key={n}
+                        key={a.nome}
                         role="radio"
-                        aria-checked={pose === i}
+                        aria-checked={acabamento === i}
                         className="controle"
-                        onClick={() => vitrine.current?.mudarPose(i)}
+                        onClick={() => vitrine.current?.mudarAcabamento(i)}
                       >
-                        {n}
+                        {a.nome}
                       </button>
                     ))}
                   </div>
