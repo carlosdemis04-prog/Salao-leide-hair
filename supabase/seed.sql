@@ -28,7 +28,7 @@ where name not in ('Corte', 'Escova', 'Hidratação', 'Coloração', 'Luzes', 'P
                    'Selagem', 'Manicure e pedicure', 'Depilação', 'Design de sobrancelhas',
                    'Estética facial e corporal');
 
--- Segunda a sábado, das 9h às 18h
+-- Terça a sábado, das 9h às 18h
 delete from public.business_hours;
 insert into public.business_hours (weekday, open_time, close_time)
-select d, '09:00', '18:00' from generate_series(1, 6) as d;
+select d, '09:00', '18:00' from generate_series(2, 6) as d;

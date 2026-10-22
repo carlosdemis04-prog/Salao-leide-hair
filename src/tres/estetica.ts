@@ -3,7 +3,7 @@
 // Tocar troca o acabamento do ouro, e uma luz passa por cima a cada troca.
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
-import { desfocar, texturasDaFigura } from './figura'
+import { texturasDaFigura } from './figura'
 import { letreiro, liberar, malha, ouro } from './formas'
 import { salaDoRelevo } from './relevo'
 import type { Peca } from './palco'
@@ -16,10 +16,11 @@ const BASE = { l: 1.96, a: 0.2, p: 0.6 }
 // A figura vira um sólido fino: as duas faces se encontram no contorno (borda arredondada,
 // como peça fundida) e cada mecha ganha volume em cima disso
 async function criarFigura(material: THREE.MeshPhysicalMaterial, celular: boolean) {
-  const t = await texturasDaFigura('/figura.webp', celular ? 700 : 1100, { cinza: true })
-  const { alfa, altura, w, h } = t.campos
-  // Chanfro estreito no contorno; por dentro a peça é chapada, com as mechas em relevo por cima
-  const borda = desfocar(alfa, w, h, w * 0.0045)
+  // Chanfro estreito no contorno (o contorno desfocado vem pronto do worker); por dentro a peça é
+  // chapada, com as mechas em relevo por cima
+  const t = await texturasDaFigura('/figura.webp', celular ? 700 : 1100, { cinza: true, borda: 0.0045 })
+  const { altura, w, h } = t.campos
+  const borda = t.campos.borda!
   const nx = celular ? 220 : 340
   const ny = Math.round(nx / t.aspecto)
   const geo = new THREE.PlaneGeometry(LARGURA, LARGURA / t.aspecto, nx, ny)
@@ -97,11 +98,12 @@ export function criarEstetica(reduzido: boolean, aoMudar: (indice: number) => vo
   const figuraMat = new THREE.MeshPhysicalMaterial({ color: ACABAMENTOS[0].cor, metalness: 1, roughness: 0.16, clearcoat: 0.3, clearcoatRoughness: 0.15, side: THREE.FrontSide })
   let figura: Awaited<ReturnType<typeof criarFigura>> | null = null
   let descartado = false
-  criarFigura(figuraMat, celular)
+  const pronta = criarFigura(figuraMat, celular)
     .then((f) => {
       if (descartado) return f.texturas.forEach((x) => x.dispose())
       figura = f
       f.grupo.position.y = BASE.a + BLOCO.a / 2 + 0.01
+      f.grupo.traverse((o) => (o.castShadow = o.receiveShadow = true))
       grupo.add(f.grupo)
     })
     .catch(() => {})
@@ -131,7 +133,9 @@ export function criarEstetica(reduzido: boolean, aoMudar: (indice: number) => vo
   let salaOuro: THREE.Texture | null = null
   return {
     grupo,
+    pronta,
     preparar(renderer) {
+      if (salaOuro) return
       const pm = new THREE.PMREMGenerator(renderer)
       salaOuro = pm.fromScene(salaDoRelevo(), 0.04).texture
       pm.dispose()
@@ -144,6 +148,14 @@ export function criarEstetica(reduzido: boolean, aoMudar: (indice: number) => vo
     enquadramento: { distancia: 6.8, alvoY: 0.72, elevacao: 0.1 },
     mudarAcabamento,
     tocar: () => mudarAcabamento(),
+    reiniciar() {
+      indice = 0
+      corAlvo.setHex(ACABAMENTOS[0].cor)
+      rugAlvo = ACABAMENTOS[0].rugosidade
+      figuraMat.color.copy(corAlvo)
+      figuraMat.roughness = rugAlvo
+      varredura = 1
+    },
     atualizar(dt) {
       figuraMat.color.lerp(corAlvo, Math.min(1, dt * 3))
       figuraMat.roughness += (rugAlvo - figuraMat.roughness) * Math.min(1, dt * 3)

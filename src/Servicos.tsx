@@ -101,7 +101,7 @@ export function Servicos({
       cancelado = true
       perto.disconnect()
       tela.disconnect()
-      vitrine.current?.palco.descartar()
+      vitrine.current?.descartar()
       vitrine.current = null
     }
   }, [])
