@@ -253,6 +253,10 @@ function criarSecador() {
       ligado = !ligado
       return ligado
     },
+    desligar() {
+      ligado = false
+      forca = 0
+    },
     atualizar(dt: number, t: number) {
       forca += ((ligado ? 1 : 0) - forca) * Math.min(1, dt * 3)
       fendaMat.emissiveIntensity = forca * 2.2
@@ -419,6 +423,9 @@ function criarTesoura() {
       cortando = true
       corte = 0
     },
+    parar() {
+      cortando = false
+    },
     atualizar(dt: number) {
       let abertura = 0.3
       if (cortando) {
@@ -492,6 +499,10 @@ export function criarCabelo(reduzido: boolean, aoMudar: (ligado: boolean) => voi
       return ligado
     },
     cortar: () => tesoura.cortar(),
+    reiniciar() {
+      secador.desligar()
+      tesoura.parar()
+    },
     tocar(nome) {
       const tesouraPartes = ['lamina-direita', 'lamina-esquerda', 'parafuso', 'tesoura']
       let o = grupo.getObjectByName(nome)

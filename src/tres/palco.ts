@@ -20,12 +20,20 @@ export type Peca = {
   // Distância da câmera e altura do alvo
   enquadramento: { distancia: number; alvoY: number; fov?: number; elevacao?: number }
   descartar?: () => void
-  // Chamada uma vez quando a peça entra em cena, para quem precisa do renderizador (mapas de reflexo próprios)
+  // Chamada quando a peça vai entrar em cena, para quem precisa do renderizador (mapas de reflexo próprios).
+  // Pode ser chamada mais de uma vez: a peça faz o trabalho só na primeira
   preparar?: (renderer: THREE.WebGLRenderer) => void
+  // A peça volta ao estado do começo cada vez que entra de novo em cena
+  reiniciar?: () => void
+  // Para peças que terminam de montar depois (a figura da estética vem do worker)
+  pronta?: Promise<void>
 }
 
 export type Palco = {
+  // Quem cria a peça é quem a descarta: o palco só tira de cena, para a peça poder voltar sem ser refeita
   mostrar: (peca: Peca) => void
+  // Prepara a peça antes de ela aparecer (reflexos e shaders), para a troca não engasgar
+  aquecer: (peca: Peca) => Promise<void>
   pausar: (sim: boolean) => void
   // Trava o giro num ângulo (para fotos de conferência); null solta
   fixarGiro: (angulo: number | null) => void
@@ -144,7 +152,8 @@ const ReflexoTampo = {
 export function criarPalco(canvas: HTMLCanvasElement, opcoes: { reduzido: boolean }): Palco {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' })
   const celular = window.matchMedia('(pointer: coarse)').matches
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, celular ? 1.5 : 1.75))
+  // Resolução: começa no teto do aparelho e desce sozinha se os quadros ficarem lentos
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5))
   renderer.outputColorSpace = THREE.SRGBColorSpace
   renderer.toneMapping = THREE.ACESFilmicToneMapping
   renderer.toneMappingExposure = 1
@@ -170,7 +179,7 @@ export function criarPalco(canvas: HTMLCanvasElement, opcoes: { reduzido: boolea
   principal.position.set(-3.2, 7.5, 4.2)
   principal.target = alvo
   principal.castShadow = true
-  principal.shadow.mapSize.set(2048, 2048)
+  principal.shadow.mapSize.set(1024, 1024)
   principal.shadow.bias = -0.0004
   principal.shadow.radius = 5
   principal.shadow.camera.near = 4
@@ -216,7 +225,8 @@ export function criarPalco(canvas: HTMLCanvasElement, opcoes: { reduzido: boolea
   aro.position.y = -0.002
   pedestal.add(aro)
   // O reflexo é somado por cima do verniz, então a sombra da peça no tampo continua aparecendo
-  const qualidadeReflexo = celular ? 0.4 : 0.6
+  // O reflexo é borrado pelo próprio shader, então pode ser desenhado em resolução baixa
+  const qualidadeReflexo = celular ? 0.3 : 0.4
   const tampo = new Reflector(new THREE.CircleGeometry(1.34, 96), {
     shader: ReflexoTampo,
     textureWidth: 512,
@@ -404,18 +414,39 @@ export function criarPalco(canvas: HTMLCanvasElement, opcoes: { reduzido: boolea
         atual.atualizar(dt, tempo)
       }
       composer.render(dt)
+      medirQuadro(agora)
     }
     raf = requestAnimationFrame(quadro)
   }
   let raf = requestAnimationFrame(quadro)
 
-  function trocar(peca: Peca) {
-    proxima = null
-    if (atual) {
-      pivo.remove(atual.grupo)
-      atual.descartar?.()
+  // A cada 1,5 s confere a média dos quadros; abaixo de uns 45 por segundo, baixa a resolução um degrau.
+  // Os quadros das trocas de peça e das pausas (como a aba do navegador escondida) não contam
+  let anterior = 0
+  let soma = 0
+  let quadros = 0
+  let ignorar = 0
+  function medirQuadro(agora: number) {
+    const d = agora - anterior
+    anterior = agora
+    if (ignorar > 0) {
+      ignorar--
+      return
     }
-    atual = peca
+    if (d > 100) return
+    soma += d
+    quadros++
+    if (soma < 1500) return
+    const media = soma / quadros
+    soma = quadros = 0
+    const dpr = renderer.getPixelRatio()
+    if (media > 22 && dpr > 1) {
+      renderer.setPixelRatio(Math.max(1, dpr - 0.25))
+      ajustar()
+    }
+  }
+
+  function aprontar(peca: Peca) {
     peca.preparar?.(renderer)
     peca.grupo.traverse((o) => {
       if ((o as THREE.Mesh).isMesh) {
@@ -423,7 +454,16 @@ export function criarPalco(canvas: HTMLCanvasElement, opcoes: { reduzido: boolea
         o.receiveShadow = true
       }
     })
+  }
+
+  function trocar(peca: Peca) {
+    proxima = null
+    if (atual) pivo.remove(atual.grupo)
+    atual = peca
+    aprontar(peca)
+    peca.reiniciar?.()
     pivo.add(peca.grupo)
+    ignorar = 3
     rotY = -0.5
     velY = 0
     entrada = opcoes.reduzido ? 1 : 0
@@ -438,9 +478,14 @@ export function criarPalco(canvas: HTMLCanvasElement, opcoes: { reduzido: boolea
         trocar(peca)
         return
       }
-      // A peça que estava esperando a troca nunca chegou a aparecer
-      if (proxima && proxima !== peca) proxima.descartar?.()
-      proxima = peca
+      if (peca === atual && !proxima) return
+      proxima = peca === atual ? null : peca
+    },
+    async aquecer(peca) {
+      await peca.pronta
+      aprontar(peca)
+      // Compila os shaders da peça com as luzes deste palco sem travar a página
+      await renderer.compileAsync(peca.grupo, camera, cena)
     },
     fixarGiro(a) {
       giroFixo = a
@@ -452,6 +497,7 @@ export function criarPalco(canvas: HTMLCanvasElement, opcoes: { reduzido: boolea
     pausar(sim) {
       pausado = sim
       ultimo = performance.now()
+      ignorar = 3
     },
     descartar() {
       cancelAnimationFrame(raf)
@@ -461,8 +507,7 @@ export function criarPalco(canvas: HTMLCanvasElement, opcoes: { reduzido: boolea
       canvas.removeEventListener('pointerup', onUp)
       canvas.removeEventListener('pointercancel', onUp)
       canvas.removeEventListener('pointerleave', onLeave)
-      atual?.descartar?.()
-      proxima?.descartar?.()
+      if (atual) pivo.remove(atual.grupo)
       cena.traverse((o) => {
         const m = o as THREE.Mesh
         if (m.isMesh) {
