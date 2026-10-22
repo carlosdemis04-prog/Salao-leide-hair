@@ -14,6 +14,16 @@ No painel do Supabase, abra **SQL Editor** e rode, nesta ordem, o conteúdo de c
 
 4. [`supabase/migrations/0003_painel.sql`](supabase/migrations/0003_painel.sql): cria o acesso ao painel da Leide e o link para o Google Agenda.
 5. [`supabase/migrations/0004_google_agenda.sql`](supabase/migrations/0004_google_agenda.sql): prepara a ligação direta com o Google Agenda (veja abaixo).
+6. [`supabase/migrations/0005_app_celular.sql`](supabase/migrations/0005_app_celular.sql): cria as ofertas e os eventos do app e deixa a cliente ver e cancelar a própria reserva.
+
+## App para celular (`/app`)
+
+No endereço do site com `/app` no final abre a versão de aplicativo: fundo claro, navegação embaixo com **Início, Agendar, Ofertas, Eventos e Contato** e a **Leidinha**, a mascote feita a partir da mulher dourada da logo (`src/app/Mascote.tsx`).
+
+- **Instalar:** no Android, o Chrome mostra "Instalar app" (ou use o botão no topo do Início). No iPhone, no Safari: **Compartilhar** > **Adicionar à Tela de Início**. É um app web instalável (PWA), não um app da Play Store ou da App Store.
+- **Agendar:** usa os mesmos horários livres e a mesma reserva do site. Depois de reservar, o horário aparece no Início com a situação (a confirmar, confirmado ou cancelado), e a cliente pode cancelar pelo app até 2 horas antes.
+- **Ofertas e eventos:** aparecem só os que estiverem cadastrados. Por enquanto o cadastro é no Supabase, em **Table Editor** > `offers` ou `events` (desmarque `active` para esconder). Sem nada cadastrado, as abas mostram um aviso com a Leidinha.
+- **Frase do topo:** fica em `FRASE`, no arquivo `src/app/telas/Inicio.tsx`.
 
 ## Painel da Leide (`/painel`)
 
