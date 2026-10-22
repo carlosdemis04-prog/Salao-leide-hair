@@ -1262,6 +1262,304 @@ a.cartao:active {
   text-align: left;
 }
 
+/* ---------- Corrida das Lady Points ---------- */
+
+.cartao.corrida-cartao {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 18px;
+  padding: 16px 18px;
+  background: linear-gradient(135deg, #fff6e2 0%, #fbe7bd 100%);
+  text-align: left;
+}
+
+.corrida-cartao-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.corrida-rotulo {
+  display: block;
+  color: var(--a-ouro-texto);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.corrida-nome {
+  display: block;
+  font-family: var(--serif);
+  font-size: 1.7rem;
+  line-height: 1.05;
+}
+
+.corrida-total {
+  margin: 0;
+  color: var(--a-tinta-2);
+}
+
+.corrida-total strong {
+  color: var(--a-tinta);
+  font-size: 1.35rem;
+}
+
+.corrida-total.grande strong {
+  font-size: 2.2rem;
+  font-family: var(--serif);
+  font-weight: 400;
+}
+
+.corrida-barra {
+  display: block;
+  height: 10px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.75);
+  overflow: hidden;
+}
+
+.corrida-barra i {
+  display: block;
+  height: 100%;
+  min-width: 10px;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--a-ouro), #d79a2e);
+  transition: width 0.6s var(--a-ease);
+}
+
+.corrida-pe {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.corrida {
+  display: grid;
+  gap: 14px;
+  padding-top: 6px;
+}
+
+.corrida-topo {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.corrida-topo h2 {
+  margin: 4px 0 0;
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 1.9rem;
+  line-height: 1.1;
+}
+
+.corrida-topo p {
+  margin: 0;
+}
+
+.corrida-aviso {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border-radius: var(--a-raio);
+  background: var(--a-blush);
+}
+
+.corrida-aviso p {
+  margin: 0;
+}
+
+.corrida-nota {
+  margin: 0;
+  text-align: center;
+}
+
+/* Trilha das metas, de cima para baixo */
+.trilha {
+  position: relative;
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.trilha::before {
+  content: '';
+  position: absolute;
+  top: 22px;
+  bottom: 22px;
+  left: 21px;
+  width: 3px;
+  border-radius: 3px;
+  background: var(--a-linha);
+}
+
+.meta {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 12px 12px 8px;
+  border-radius: var(--a-raio);
+  background: var(--a-superficie);
+  box-shadow: var(--a-sombra);
+}
+
+.meta-marco {
+  z-index: 1;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin-left: 0;
+  border-radius: 50%;
+  border: 3px solid var(--a-linha);
+  background: var(--a-superficie);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.meta.disponivel .meta-marco,
+.meta.ativa .meta-marco {
+  border-color: var(--a-ouro);
+  background: var(--a-ouro);
+}
+
+.meta.usada .meta-marco {
+  border-color: var(--a-verde);
+  background: var(--a-verde);
+}
+
+.meta-corpo {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+  flex: 1;
+}
+
+.meta-pontos {
+  color: var(--a-ouro-texto);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.meta-titulo {
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.meta-desc {
+  color: var(--a-tinta-2);
+  font-size: 0.85rem;
+}
+
+.meta.bloqueada .meta-titulo,
+.meta.bloqueada .meta-desc {
+  opacity: 0.6;
+}
+
+.meta.usada .meta-titulo {
+  text-decoration: line-through;
+  text-decoration-color: var(--a-tinta-2);
+}
+
+.meta-acao {
+  flex: none;
+}
+
+.meta-falta {
+  color: var(--a-tinta-2);
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.meta.final {
+  background: linear-gradient(135deg, #2b211b 0%, #4a3727 100%);
+  color: #fff;
+}
+
+.meta.final.bloqueada .meta-titulo,
+.meta.final.bloqueada .meta-desc {
+  opacity: 0.85;
+}
+
+.meta.final .meta-pontos {
+  color: var(--a-ouro);
+}
+
+.meta.final .meta-desc,
+.meta.final .meta-falta {
+  color: #e6d9c8;
+}
+
+.meta.final .meta-marco {
+  border-color: var(--a-ouro);
+  background: #2b211b;
+}
+
+.botao.mini {
+  min-height: 38px;
+  padding: 0 14px;
+  font-size: 0.88rem;
+}
+
+.botao.ouro,
+.meta.final .botao.mini {
+  background: var(--a-ouro);
+  color: var(--a-tinta);
+}
+
+/* Código do resgate, como um cupom destacável */
+.cupom {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  width: 100%;
+  padding: 20px 16px;
+  border: 2px dashed var(--a-ouro);
+  border-radius: var(--a-raio);
+  background: #fff8ea;
+}
+
+.cupom-rotulo {
+  color: var(--a-ouro-texto);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.cupom-codigo {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: clamp(2rem, 11vw, 2.8rem);
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  padding-left: 0.18em;
+}
+
+.cupom-tempo {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.cupom.vencido {
+  border-color: var(--a-linha);
+  background: var(--a-creme);
+}
+
+.cupom.vencido .cupom-codigo {
+  opacity: 0.4;
+  text-decoration: line-through;
+}
+
 /* ---------- Telas grandes: o app fica centralizado como um celular ---------- */
 
 @media (min-width: 700px) {

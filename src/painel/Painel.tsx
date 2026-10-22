@@ -35,7 +35,10 @@ type AdminService = {
   sort_order: number
 }
 type Block = { id: string; starts_at: string; ends_at: string; reason: string | null }
-type Tab = 'agenda' | 'folgas' | 'servicos' | 'ajustes'
+type Tab = 'agenda' | 'pontos' | 'folgas' | 'servicos' | 'ajustes'
+type Pendente = { codigo: string; titulo: string; phone: string; nome: string | null; criado_em: string; expira_em: string }
+type Lancamento = { id: string; phone: string; pontos: number; valor_cents: number | null; nota: string | null; created_at: string }
+type Prefill = { phone: string; nome: string; n: number }
 
 const STATUS_LABEL: Record<Status, string> = {
   pendente: 'A confirmar',
@@ -46,6 +49,7 @@ const STATUS_LABEL: Record<Status, string> = {
 
 const TABS: { key: Tab; label: string }[] = [
   { key: 'agenda', label: 'Agenda' },
+  { key: 'pontos', label: 'Pontos' },
   { key: 'folgas', label: 'Folgas' },
   { key: 'servicos', label: 'Serviços' },
   { key: 'ajustes', label: 'Ajustes' },
@@ -199,6 +203,28 @@ function Dashboard() {
     loadServices()
   }, [loadServices])
 
+  // Resgates de Lady Points esperando a Leide. Confere de minuto em minuto e quando ela volta ao painel.
+  const [pendentes, setPendentes] = useState<Pendente[]>([])
+  const loadPendentes = useCallback(async () => {
+    const { data, error } = await supabase!.rpc('lady_pendentes')
+    setPendentes(error ? [] : ((data as Pendente[]) ?? []))
+  }, [])
+  useEffect(() => {
+    loadPendentes()
+    const t = setInterval(loadPendentes, 60_000)
+    const ver = () => document.visibilityState === 'visible' && loadPendentes()
+    document.addEventListener('visibilitychange', ver)
+    return () => (clearInterval(t), document.removeEventListener('visibilitychange', ver))
+  }, [loadPendentes])
+
+  // "+ Lady Points" num atendimento: abre a aba Pontos com o telefone da cliente
+  const [prefill, setPrefill] = useState<Prefill | null>(null)
+  function pontosPara(a: Appointment) {
+    setPrefill((p) => ({ phone: a.client_phone, nome: a.client_name, n: (p?.n ?? 0) + 1 }))
+    setTab('pontos')
+    window.scrollTo({ top: 0 })
+  }
+
   return (
     <div className="pn">
       <header className="pn-top">
@@ -214,11 +240,27 @@ function Dashboard() {
         {TABS.map((t) => (
           <button key={t.key} className={tab === t.key ? 'on' : ''} aria-current={tab === t.key} onClick={() => setTab(t.key)}>
             {t.label}
+            {t.key === 'pontos' && pendentes.length > 0 && (
+              <span className="pn-dot" aria-label={`${pendentes.length} resgates esperando`}>
+                {pendentes.length}
+              </span>
+            )}
           </button>
         ))}
       </nav>
       <main className="pn-main">
-        {tab === 'agenda' && <Agenda services={services} />}
+        {tab !== 'pontos' && pendentes.length > 0 && (
+          <button className="pn-alerta" onClick={() => setTab('pontos')}>
+            <strong>
+              {pendentes.length === 1
+                ? `${pendentes[0].nome?.split(' ')[0] ?? 'Uma cliente'} resgatou: ${pendentes[0].titulo}`
+                : `${pendentes.length} clientes resgataram Lady Points`}
+            </strong>
+            <span>Valide o código quando ela mostrar no salão ›</span>
+          </button>
+        )}
+        {tab === 'agenda' && <Agenda services={services} onPontos={pontosPara} />}
+        {tab === 'pontos' && <LadyPoints pendentes={pendentes} reload={loadPendentes} prefill={prefill} />}
         {tab === 'folgas' && <Folgas />}
         {tab === 'servicos' && <Servicos services={services} reload={loadServices} />}
         {tab === 'ajustes' && <Ajustes />}
@@ -229,7 +271,7 @@ function Dashboard() {
 
 /* ---------------- Agenda ---------------- */
 
-function Agenda({ services }: { services: AdminService[] }) {
+function Agenda({ services, onPontos }: { services: AdminService[]; onPontos: (a: Appointment) => void }) {
   const [day, setDay] = useState(todayIso())
   const [items, setItems] = useState<Appointment[] | null>(null)
   const [pending, setPending] = useState<Appointment[]>([])
@@ -280,7 +322,7 @@ function Agenda({ services }: { services: AdminService[] }) {
           <p className="pn-muted">Clientes que agendaram pelo site e ainda esperam sua confirmação.</p>
           <ul className="pn-list">
             {pending.map((a) => (
-              <AppointmentCard key={a.id} a={a} showDate onStatus={setStatus} />
+              <AppointmentCard key={a.id} a={a} showDate onStatus={setStatus} onPontos={onPontos} />
             ))}
           </ul>
         </section>
@@ -327,7 +369,7 @@ function Agenda({ services }: { services: AdminService[] }) {
         {items?.length === 0 && <p className="pn-empty">Nenhum agendamento neste dia.</p>}
         <ul className="pn-list">
           {items?.map((a) => (
-            <AppointmentCard key={a.id} a={a} onStatus={setStatus} />
+            <AppointmentCard key={a.id} a={a} onStatus={setStatus} onPontos={onPontos} />
           ))}
         </ul>
       </section>
@@ -339,10 +381,12 @@ function AppointmentCard({
   a,
   showDate,
   onStatus,
+  onPontos,
 }: {
   a: Appointment
   showDate?: boolean
   onStatus: (a: Appointment, s: Status) => void
+  onPontos: (a: Appointment) => void
 }) {
   const start = new Date(a.starts_at)
   const firstName = a.client_name.split(' ')[0]
@@ -393,6 +437,11 @@ function AppointmentCard({
           {(a.status === 'pendente' || a.status === 'confirmado') && (
             <button className="pn-btn pn-btn-quiet" onClick={cancel}>
               Cancelar
+            </button>
+          )}
+          {a.status === 'concluido' && (
+            <button className="pn-btn pn-btn-dark" onClick={() => onPontos(a)}>
+              + Lady Points
             </button>
           )}
           {(a.status === 'cancelado' || a.status === 'concluido') && (
@@ -588,6 +637,224 @@ function Folgas() {
         })}
       </ul>
     </section>
+  )
+}
+
+/* ---------------- Lady Points ---------------- */
+
+const LADY_ERRO: Record<string, string> = {
+  codigo_invalido: 'Esse código não existe. Confira as letras com a cliente.',
+  codigo_usado: 'Esse código já foi usado.',
+  codigo_expirado: 'Esse código venceu. Peça para a cliente resgatar de novo no app.',
+  telefone_invalido: 'Confira o telefone (com DDD).',
+  valor_invalido: 'Digite o valor pago.',
+  sem_permissao: 'Sua conta não tem permissão para isso.',
+}
+
+function ladyErro(error: { message?: string }) {
+  return LADY_ERRO[error.message ?? ''] ?? 'Não deu certo. Confira a internet e tente de novo. (Já rodou o arquivo 0008 no Supabase?)'
+}
+
+const pontosFmt = new Intl.NumberFormat('pt-BR')
+
+function LadyPoints({ pendentes, reload, prefill }: { pendentes: Pendente[]; reload: () => void; prefill: Prefill | null }) {
+  const [codigo, setCodigo] = useState('')
+  const [validado, setValidado] = useState<{ titulo: string; nome: string | null; phone: string } | null>(null)
+  const [erroCodigo, setErroCodigo] = useState('')
+
+  const [phone, setPhone] = useState(prefill ? formatPhone(prefill.phone) : '')
+  const [nome, setNome] = useState(prefill?.nome ?? '')
+  const [valor, setValor] = useState('')
+  const [nota, setNota] = useState('')
+  const [lancado, setLancado] = useState('')
+  const [erroLanc, setErroLanc] = useState('')
+  const [enviando, setEnviando] = useState(false)
+  const [extrato, setExtrato] = useState<Lancamento[] | null>(null)
+
+  // Veio do "+ Lady Points" de um atendimento
+  const [vindoDe, setVindoDe] = useState(prefill?.n)
+  if (prefill && prefill.n !== vindoDe) {
+    setVindoDe(prefill.n)
+    setPhone(formatPhone(prefill.phone))
+    setNome(prefill.nome)
+    setLancado('')
+  }
+
+  const loadExtrato = useCallback(async () => {
+    const { data } = await supabase!
+      .from('lady_pontos')
+      .select('id, phone, pontos, valor_cents, nota, created_at')
+      .order('created_at', { ascending: false })
+      .limit(15)
+    setExtrato(data ?? [])
+  }, [])
+
+  useEffect(() => {
+    loadExtrato()
+  }, [loadExtrato])
+
+  async function validar(c: string) {
+    setErroCodigo('')
+    setValidado(null)
+    const { data, error } = await supabase!.rpc('lady_validar', { p_codigo: c })
+    if (error) return setErroCodigo(ladyErro(error))
+    setValidado(data as { titulo: string; nome: string | null; phone: string })
+    setCodigo('')
+    reload()
+  }
+
+  const cents = inputToCents(valor)
+
+  async function lancar(e: FormEvent) {
+    e.preventDefault()
+    setErroLanc('')
+    setLancado('')
+    if (cents === 'erro' || cents === null || cents === 0) return setErroLanc('Digite o valor pago, por exemplo 120,00.')
+    setEnviando(true)
+    const { data, error } = await supabase!.rpc('lady_lancar', {
+      p_phone: phone,
+      p_valor_cents: cents,
+      p_nota: nota.trim() || (nome ? nome : null),
+    })
+    setEnviando(false)
+    if (error) return setErroLanc(ladyErro(error))
+    setLancado(`${pontosFmt.format(cents)} pontos lançados. ${nome ? nome.split(' ')[0] : 'A cliente'} agora tem ${pontosFmt.format(data as number)} pontos.`)
+    setValor('')
+    setNota('')
+    loadExtrato()
+  }
+
+  async function desfazer(l: Lancamento) {
+    if (!window.confirm(`Apagar o lançamento de ${pontosFmt.format(l.pontos)} pontos para ${formatPhone(l.phone)}?`)) return
+    await supabase!.from('lady_pontos').delete().eq('id', l.id)
+    loadExtrato()
+  }
+
+  return (
+    <>
+      <section className="pn-section">
+        <h2>Validar código</h2>
+        <p className="pn-muted">A cliente mostra o código no app. Digite aqui para conferir e dar baixa.</p>
+        <form
+          className="pn-form pn-box"
+          onSubmit={(e) => {
+            e.preventDefault()
+            validar(codigo)
+          }}
+        >
+          <label className="pn-field">
+            <span>Código</span>
+            <input
+              className="pn-codigo"
+              value={codigo}
+              onChange={(e) => setCodigo(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6))}
+              placeholder="ABC123"
+              autoCapitalize="characters"
+              autoComplete="off"
+              required
+              minLength={6}
+            />
+          </label>
+          {erroCodigo && <p className="pn-error">{erroCodigo}</p>}
+          {validado && (
+            <p className="pn-ok">
+              <CheckIcon /> Código válido: <strong>{validado.titulo}</strong>
+              {validado.nome ? ` para ${validado.nome}` : ` para ${formatPhone(validado.phone)}`}. Já demos baixa.
+            </p>
+          )}
+          <button className="btn btn-primary">Validar código</button>
+        </form>
+      </section>
+
+      <section className="pn-section">
+        <h2>Resgates esperando</h2>
+        <p className="pn-muted">Recompensas que as clientes resgataram no app e ainda vão usar no salão.</p>
+        {pendentes.length === 0 && <p className="pn-empty">Nenhum resgate esperando.</p>}
+        <ul className="pn-list">
+          {pendentes.map((r) => (
+            <li key={r.codigo} className="pn-card pn-card-flat">
+              <div className="pn-card-body">
+                <span className="pn-card-service">{r.titulo}</span>
+                <span className="pn-card-client">
+                  {r.nome ?? 'Cliente'} · {formatPhone(r.phone)}
+                </span>
+                <span className="pn-muted-inline">
+                  Código <strong>{r.codigo}</strong> · vale até {timeFmt.format(new Date(r.expira_em))} de{' '}
+                  {shortDateFmt.format(new Date(r.expira_em))}
+                </span>
+              </div>
+              <button className="pn-btn pn-btn-dark" onClick={() => validar(r.codigo)}>
+                <CheckIcon /> Usou
+              </button>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section className="pn-section">
+        <h2>Lançar pontos</h2>
+        <p className="pn-muted">Quando a cliente pagar, lance o valor. Cada R$ 1,00 vale 100 Lady Points.</p>
+        <form className="pn-form pn-box" onSubmit={lancar}>
+          {nome && <p className="pn-muted-inline">Cliente: {nome}</p>}
+          <label className="pn-field">
+            <span>Telefone da cliente (o mesmo do agendamento)</span>
+            <input
+              type="tel"
+              inputMode="tel"
+              value={phone}
+              onChange={(e) => (setPhone(formatPhone(e.target.value)), setNome(''))}
+              placeholder="(11) 90000-0000"
+              required
+            />
+          </label>
+          <label className="pn-field">
+            <span>Valor pago (R$)</span>
+            <input inputMode="decimal" value={valor} onChange={(e) => setValor(e.target.value)} placeholder="120,00" required />
+          </label>
+          {typeof cents === 'number' && cents > 0 && (
+            <p className="pn-muted-inline">= {pontosFmt.format(cents)} Lady Points</p>
+          )}
+          <label className="pn-field">
+            <span>Anotação (opcional)</span>
+            <input value={nota} onChange={(e) => setNota(e.target.value)} placeholder="Escova e hidratação" />
+          </label>
+          {erroLanc && <p className="pn-error">{erroLanc}</p>}
+          {lancado && (
+            <p className="pn-ok">
+              <CheckIcon /> {lancado}
+            </p>
+          )}
+          <button className="btn btn-primary" disabled={enviando}>
+            {enviando ? 'Lançando…' : 'Lançar pontos'}
+          </button>
+        </form>
+      </section>
+
+      <section className="pn-section">
+        <h3>Últimos lançamentos</h3>
+        {extrato?.length === 0 && <p className="pn-empty">Nenhum ponto lançado ainda.</p>}
+        <ul className="pn-list">
+          {extrato?.map((l) => (
+            <li key={l.id} className="pn-card pn-card-flat">
+              <div className="pn-card-body">
+                <span className="pn-card-service">
+                  {l.pontos > 0 ? '+' : ''}
+                  {pontosFmt.format(l.pontos)} pontos
+                </span>
+                <span className="pn-card-client">
+                  {formatPhone(l.phone)}
+                  {l.nota ? ` · ${l.nota}` : ''}
+                </span>
+                <span className="pn-muted-inline">{capitalize(shortDateFmt.format(new Date(l.created_at)))}</span>
+              </div>
+              <button className="pn-btn pn-btn-quiet" onClick={() => desfazer(l)}>
+                Apagar
+              </button>
+            </li>
+          ))}
+        </ul>
+      </section>
+    </>
   )
 }
 

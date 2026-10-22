@@ -1,5 +1,20 @@
 /* Painel da Leide: ferramenta de uso diário no celular, mais quieta que o site */
 
+/* Nomes de cor do painel, ligados à paleta atual do site (index.css) */
+.pn,
+.pn-center,
+.pn-login {
+  --black: var(--preto);
+  --white: var(--branco);
+  --gold: var(--ouro);
+  --beige: var(--bege);
+  --beige-soft: var(--bege-claro);
+  --taupe: var(--tinta-2);
+  --ink-2: var(--tinta-2);
+  --line: var(--linha);
+  --line-light: rgba(255, 255, 255, 0.14);
+}
+
 .pn {
   min-height: 100svh;
   background: var(--beige-soft);
@@ -94,7 +109,7 @@
   top: 0;
   z-index: 5;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   background: var(--black);
   border-top: 1px solid var(--line-light);
 }
@@ -545,4 +560,64 @@
   .pn-main {
     padding: 8px 24px 80px;
   }
+}
+
+/* Lady Points */
+.pn-tabs button {
+  position: relative;
+}
+
+.pn-dot {
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  margin-left: 4px;
+  padding: 0 5px;
+  border-radius: 99px;
+  background: var(--gold);
+  color: var(--black);
+  font-size: 0.72rem;
+  font-weight: 700;
+  vertical-align: 1px;
+}
+
+.pn-alerta {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  margin-top: 16px;
+  padding: 14px 16px;
+  border: 1px solid var(--gold);
+  border-radius: 14px;
+  background: #fbefcf;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.pn-alerta span {
+  font-size: 0.9rem;
+}
+
+.pn-codigo {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 1.4rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.pn-ok {
+  display: block;
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #e3f1e7;
+  color: #24603d;
+  font-size: 0.95rem;
+}
+
+.pn-ok svg {
+  vertical-align: -0.15em;
 }
