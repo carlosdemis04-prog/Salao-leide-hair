@@ -2,43 +2,42 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react
 import type { Session } from '@supabase/supabase-js'
 import { avisarGoogle, supabase } from '../supabase'
 import { CalendarIcon, CheckIcon, ChevronLeftIcon, ChevronRightIcon, ClockIcon, WhatsAppIcon } from '../icons'
+import {
+  addDays,
+  atSaoPaulo,
+  brl,
+  capitalize,
+  centsToInput,
+  dayTitleFmt,
+  dbError,
+  durationLabel,
+  ENDERECO,
+  formatPhone,
+  inputToCents,
+  isoDateFmt,
+  shortDateFmt,
+  timeFmt,
+  todayIso,
+  whatsappLink,
+  type AdminService,
+  type Appointment,
+  type Status,
+} from './util'
+import Inicio, { type Destino } from './Inicio'
+import Clientes from './Clientes'
+import Divulgar from './Divulgar'
+import Despesas from './Despesas'
 import './painel.css'
-
-const TZ = 'America/Sao_Paulo'
-const ENDERECO = 'Rua Silvestre Francisco Puglia, 26'
-
-const timeFmt = new Intl.DateTimeFormat('pt-BR', { timeZone: TZ, hour: '2-digit', minute: '2-digit' })
-const dayTitleFmt = new Intl.DateTimeFormat('pt-BR', { timeZone: TZ, weekday: 'long', day: 'numeric', month: 'long' })
-const shortDateFmt = new Intl.DateTimeFormat('pt-BR', { timeZone: TZ, weekday: 'short', day: 'numeric', month: 'short' })
-const isoDateFmt = new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' })
-const brl = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
 
 const WEEKDAYS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
 const DURATIONS = Array.from({ length: 20 }, (_, i) => (i + 1) * 15)
 
-type Status = 'pendente' | 'confirmado' | 'cancelado' | 'concluido'
-type Appointment = {
-  id: string
-  starts_at: string
-  ends_at: string
-  status: Status
-  client_name: string
-  client_phone: string
-  service: { name: string } | null
-}
-type AdminService = {
-  id: string
-  name: string
-  price_cents: number | null
-  duration_min: number
-  active: boolean
-  sort_order: number
-}
 type Block = { id: string; starts_at: string; ends_at: string; reason: string | null }
-type Tab = 'agenda' | 'pontos' | 'folgas' | 'servicos' | 'ajustes'
+type Tab = Destino | 'inicio'
+type Mais = 'despesas' | 'folgas' | 'servicos' | 'ajustes'
 type Pendente = { codigo: string; titulo: string; phone: string; nome: string | null; criado_em: string; expira_em: string }
 type Lancamento = { id: string; phone: string; pontos: number; valor_cents: number | null; nota: string | null; created_at: string }
-type Prefill = { phone: string; nome: string; n: number }
+type Prefill = { phone: string; nome: string; valor: number | null; n: number }
 
 const STATUS_LABEL: Record<Status, string> = {
   pendente: 'A confirmar',
@@ -48,65 +47,27 @@ const STATUS_LABEL: Record<Status, string> = {
 }
 
 const TABS: { key: Tab; label: string }[] = [
+  { key: 'inicio', label: 'Início' },
   { key: 'agenda', label: 'Agenda' },
   { key: 'pontos', label: 'Pontos' },
-  { key: 'folgas', label: 'Folgas' },
-  { key: 'servicos', label: 'Serviços' },
-  { key: 'ajustes', label: 'Ajustes' },
+  { key: 'clientes', label: 'Clientes' },
+  { key: 'divulgar', label: 'Divulgar' },
+  { key: 'mais', label: 'Mais' },
 ]
 
-function todayIso() {
-  return isoDateFmt.format(new Date())
-}
+const MAIS: { key: Mais; label: string }[] = [
+  { key: 'despesas', label: 'Despesas' },
+  { key: 'folgas', label: 'Folgas' },
+  { key: 'servicos', label: 'Serviços e preços' },
+  { key: 'ajustes', label: 'Horário e Google' },
+]
 
-function addDays(iso: string, n: number) {
-  return isoDateFmt.format(new Date(new Date(`${iso}T12:00:00-03:00`).getTime() + n * 86_400_000))
-}
-
-// São Paulo não tem mais horário de verão, então -03:00 vale o ano todo
-function atSaoPaulo(iso: string, time: string) {
-  return new Date(`${iso}T${time}:00-03:00`).toISOString()
-}
-
-function capitalize(s: string) {
-  return s.charAt(0).toUpperCase() + s.slice(1)
-}
-
-function formatPhone(raw: string) {
-  const d = raw.replace(/\D/g, '').replace(/^55(?=\d{10,11}$)/, '').slice(0, 11)
-  if (d.length <= 2) return d
-  if (d.length <= 7) return `(${d.slice(0, 2)}) ${d.slice(2)}`
-  return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`
-}
-
-function whatsappLink(phone: string, text: string) {
-  const d = phone.replace(/\D/g, '')
-  return `https://wa.me/${d.length <= 11 ? `55${d}` : d}?text=${encodeURIComponent(text)}`
-}
-
-function centsToInput(cents: number | null) {
-  return cents === null ? '' : (cents / 100).toFixed(2).replace('.', ',')
-}
-
-function inputToCents(value: string): number | null | 'erro' {
-  const v = value.trim().replace(/^R\$\s*/, '').replace(/\./g, '').replace(',', '.')
-  if (v === '') return null
-  const n = Number(v)
-  return Number.isFinite(n) && n >= 0 ? Math.round(n * 100) : 'erro'
-}
-
-function durationLabel(min: number) {
-  const h = Math.floor(min / 60)
-  const m = min % 60
-  if (h === 0) return `${m} min`
-  return m === 0 ? `${h}h` : `${h}h${String(m).padStart(2, '0')}`
-}
-
-function dbError(error: { code?: string; message?: string }) {
-  if (error.code === '23P01') return 'Já tem um agendamento nesse horário.'
-  if (error.code === '42501') return 'Sua conta não tem permissão para isso.'
-  return 'Não foi possível salvar. Confira a internet e tente de novo.'
-}
+const PAGAMENTOS: { key: string; label: string }[] = [
+  { key: 'pix', label: 'Pix' },
+  { key: 'dinheiro', label: 'Dinheiro' },
+  { key: 'cartao', label: 'Cartão' },
+  { key: 'outro', label: 'Outro' },
+]
 
 export default function Painel() {
   const [session, setSession] = useState<Session | null>(null)
@@ -188,7 +149,13 @@ function Login() {
 }
 
 function Dashboard() {
-  const [tab, setTab] = useState<Tab>('agenda')
+  const [tab, setTabState] = useState<Tab>('inicio')
+  const [mais, setMais] = useState<Mais>('despesas')
+
+  function setTab(t: Tab) {
+    setTabState(t)
+    window.scrollTo({ top: 0 })
+  }
   const [services, setServices] = useState<AdminService[]>([])
 
   const loadServices = useCallback(async () => {
@@ -220,9 +187,8 @@ function Dashboard() {
   // "+ Lady Points" num atendimento: abre a aba Pontos com o telefone da cliente
   const [prefill, setPrefill] = useState<Prefill | null>(null)
   function pontosPara(a: Appointment) {
-    setPrefill((p) => ({ phone: a.client_phone, nome: a.client_name, n: (p?.n ?? 0) + 1 }))
+    setPrefill((p) => ({ phone: a.client_phone, nome: a.client_name, valor: a.amount_cents, n: (p?.n ?? 0) + 1 }))
     setTab('pontos')
-    window.scrollTo({ top: 0 })
   }
 
   return (
@@ -259,11 +225,26 @@ function Dashboard() {
             <span>Valide o código quando ela mostrar no salão ›</span>
           </button>
         )}
+        {tab === 'inicio' && <Inicio onIr={setTab} resgates={pendentes.length} />}
         {tab === 'agenda' && <Agenda services={services} onPontos={pontosPara} />}
         {tab === 'pontos' && <LadyPoints pendentes={pendentes} reload={loadPendentes} prefill={prefill} />}
-        {tab === 'folgas' && <Folgas />}
-        {tab === 'servicos' && <Servicos services={services} reload={loadServices} />}
-        {tab === 'ajustes' && <Ajustes />}
+        {tab === 'clientes' && <Clientes />}
+        {tab === 'divulgar' && <Divulgar services={services} />}
+        {tab === 'mais' && (
+          <>
+            <nav className="pn-row pn-row-left pn-mais" aria-label="Mais opções">
+              {MAIS.map((m) => (
+                <button key={m.key} className={`pn-chip ${mais === m.key ? 'pn-chip-dark' : ''}`} onClick={() => setMais(m.key)}>
+                  {m.label}
+                </button>
+              ))}
+            </nav>
+            {mais === 'despesas' && <Despesas />}
+            {mais === 'folgas' && <Folgas />}
+            {mais === 'servicos' && <Servicos services={services} reload={loadServices} />}
+            {mais === 'ajustes' && <Ajustes />}
+          </>
+        )}
       </main>
     </div>
   )
@@ -279,7 +260,8 @@ function Agenda({ services, onPontos }: { services: AdminService[]; onPontos: (a
   const [error, setError] = useState('')
 
   const load = useCallback(async () => {
-    const cols = 'id, starts_at, ends_at, status, client_name, client_phone, service:services(name)'
+    const cols =
+      'id, starts_at, ends_at, status, client_name, client_phone, amount_cents, payment_method, service:services(name, price_cents)'
     const [d, p] = await Promise.all([
       supabase!
         .from('appointments')
@@ -304,9 +286,9 @@ function Agenda({ services, onPontos }: { services: AdminService[]; onPontos: (a
     load()
   }, [load])
 
-  async function setStatus(a: Appointment, status: Status) {
+  async function setStatus(a: Appointment, status: Status, pagamento?: Pick<Appointment, 'amount_cents' | 'payment_method'>) {
     setError('')
-    const { error } = await supabase!.from('appointments').update({ status }).eq('id', a.id)
+    const { error } = await supabase!.from('appointments').update({ status, ...pagamento }).eq('id', a.id)
     if (error) setError(dbError(error))
     else avisarGoogle()
     load()
@@ -385,9 +367,10 @@ function AppointmentCard({
 }: {
   a: Appointment
   showDate?: boolean
-  onStatus: (a: Appointment, s: Status) => void
+  onStatus: (a: Appointment, s: Status, pagamento?: Pick<Appointment, 'amount_cents' | 'payment_method'>) => void
   onPontos: (a: Appointment) => void
 }) {
+  const [pagando, setPagando] = useState(false)
   const start = new Date(a.starts_at)
   const firstName = a.client_name.split(' ')[0]
   const when = `${dayTitleFmt.format(start)} às ${timeFmt.format(start)}`
@@ -429,12 +412,12 @@ function AppointmentCard({
               <WhatsAppIcon /> Confirmar
             </button>
           )}
-          {a.status === 'confirmado' && (
-            <button className="pn-btn" onClick={() => onStatus(a, 'concluido')}>
+          {a.status === 'confirmado' && !pagando && (
+            <button className="pn-btn" onClick={() => setPagando(true)}>
               <CheckIcon /> Atendida
             </button>
           )}
-          {(a.status === 'pendente' || a.status === 'confirmado') && (
+          {(a.status === 'pendente' || a.status === 'confirmado') && !pagando && (
             <button className="pn-btn pn-btn-quiet" onClick={cancel}>
               Cancelar
             </button>
@@ -450,8 +433,78 @@ function AppointmentCard({
             </button>
           )}
         </div>
+        {a.status === 'concluido' && a.amount_cents !== null && (
+          <span className="pn-muted-inline">
+            Pagou {brl.format(a.amount_cents / 100)}
+            {a.payment_method && ` · ${PAGAMENTOS.find((p) => p.key === a.payment_method)?.label ?? ''}`}
+          </span>
+        )}
+        {pagando && (
+          <Pagamento
+            a={a}
+            onCancel={() => setPagando(false)}
+            onSave={(pagamento) => {
+              setPagando(false)
+              onStatus(a, 'concluido', pagamento)
+            }}
+          />
+        )}
       </div>
     </li>
+  )
+}
+
+// Ao marcar "Atendida", a Leide anota quanto a cliente pagou. É isso que vira o "Entrou" do Início.
+function Pagamento({
+  a,
+  onCancel,
+  onSave,
+}: {
+  a: Appointment
+  onCancel: () => void
+  onSave: (p: Pick<Appointment, 'amount_cents' | 'payment_method'>) => void
+}) {
+  const [valor, setValor] = useState(centsToInput(a.amount_cents ?? a.service?.price_cents ?? null))
+  const [metodo, setMetodo] = useState(a.payment_method ?? 'pix')
+  const [erro, setErro] = useState('')
+
+  function salvar(e: FormEvent) {
+    e.preventDefault()
+    const c = inputToCents(valor)
+    if (c === 'erro') return setErro('Valor inválido. Use, por exemplo, 80 ou 79,90.')
+    onSave({ amount_cents: c, payment_method: c === null ? null : metodo })
+  }
+
+  return (
+    <form className="pn-form pn-pagamento" onSubmit={salvar}>
+      <label className="pn-field">
+        <span>Quanto ela pagou? (R$)</span>
+        <input inputMode="decimal" value={valor} placeholder="0,00" autoFocus onChange={(e) => setValor(e.target.value)} />
+      </label>
+      <div className="pn-row pn-row-left" role="radiogroup" aria-label="Como pagou">
+        {PAGAMENTOS.map((p) => (
+          <button
+            key={p.key}
+            type="button"
+            role="radio"
+            aria-checked={metodo === p.key}
+            className={`pn-chip ${metodo === p.key ? 'pn-chip-dark' : ''}`}
+            onClick={() => setMetodo(p.key)}
+          >
+            {p.label}
+          </button>
+        ))}
+      </div>
+      {erro && <p className="pn-error">{erro}</p>}
+      <div className="pn-card-actions">
+        <button className="pn-btn pn-btn-dark">
+          <CheckIcon /> Salvar atendimento
+        </button>
+        <button type="button" className="pn-btn pn-btn-quiet" onClick={onCancel}>
+          Voltar
+        </button>
+      </div>
+    </form>
   )
 }
 
@@ -664,7 +717,7 @@ function LadyPoints({ pendentes, reload, prefill }: { pendentes: Pendente[]; rel
 
   const [phone, setPhone] = useState(prefill ? formatPhone(prefill.phone) : '')
   const [nome, setNome] = useState(prefill?.nome ?? '')
-  const [valor, setValor] = useState('')
+  const [valor, setValor] = useState(centsToInput(prefill?.valor ?? null))
   const [nota, setNota] = useState('')
   const [lancado, setLancado] = useState('')
   const [erroLanc, setErroLanc] = useState('')
@@ -677,6 +730,7 @@ function LadyPoints({ pendentes, reload, prefill }: { pendentes: Pendente[]; rel
     setVindoDe(prefill.n)
     setPhone(formatPhone(prefill.phone))
     setNome(prefill.nome)
+    setValor(centsToInput(prefill.valor))
     setLancado('')
   }
 

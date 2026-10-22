@@ -18,6 +18,7 @@ No painel do Supabase, abra **SQL Editor** e rode, nesta ordem, o conteúdo de c
 7. [`supabase/migrations/0006_atendimento_domiciliar.sql`](supabase/migrations/0006_atendimento_domiciliar.sql): permite evento sem data e coloca o "Atendimento domiciliar" em Eventos.
 8. [`supabase/migrations/0007_terca_a_sabado.sql`](supabase/migrations/0007_terca_a_sabado.sql): tira a segunda-feira da agenda (o salão atende de terça a sábado).
 9. [`supabase/migrations/0008_lady_points.sql`](supabase/migrations/0008_lady_points.sql): cria a Corrida das Lady Points (pontos, metas, resgates e códigos).
+10. [`supabase/migrations/0009_painel_admin.sql`](supabase/migrations/0009_painel_admin.sql): guarda quanto cada cliente pagou, cria a lista de clientes e as despesas do painel.
 
 ## App para celular (`/app`)
 
@@ -25,13 +26,21 @@ No endereço do site com `/app` no final abre a versão de aplicativo: fundo cla
 
 - **Instalar:** no Android, o Chrome mostra "Instalar app" (ou use o botão no topo do Início). No iPhone, no Safari: **Compartilhar** > **Adicionar à Tela de Início**. É um app web instalável (PWA), não um app da Play Store ou da App Store.
 - **Agendar:** usa os mesmos horários livres e a mesma reserva do site. Depois de reservar, o horário aparece no Início com a situação (a confirmar, confirmado ou cancelado), e a cliente pode cancelar pelo app até 2 horas antes.
-- **Ofertas e eventos:** aparecem só os que estiverem cadastrados. Por enquanto o cadastro é no Supabase, em **Table Editor** > `offers` ou `events` (desmarque `active` para esconder). Sem nada cadastrado, as abas mostram um aviso com a Leidinha.
+- **Ofertas e eventos:** aparecem só os que estiverem cadastrados. O cadastro é no painel, na aba **Divulgar** (com ou sem o assistente). Sem nada cadastrado, as abas mostram um aviso com a Leidinha.
 - **Corrida das Lady Points:** no topo de Ofertas. Cada R$ 1,00 pago vale 100 pontos, e os pontos nunca são gastos: cada meta alcançada libera uma recompensa, que a cliente resgata uma vez. O resgate mostra um código que vale por 24 horas. A cliente entra na corrida ao agendar pelo app (os pontos ficam ligados ao telefone da reserva). As metas ficam no Supabase, em **Table Editor** > `lady_metas`.
 - **Frase do topo:** fica em `FRASE`, no arquivo `src/app/telas/Inicio.tsx`.
 
 ## Painel da Leide (`/painel`)
 
-No endereço do site com `/painel` no final, a Leide entra com e-mail e senha e:
+No endereço do site com `/painel` no final, a Leide entra com e-mail e senha. As abas são **Início, Agenda, Pontos, Clientes, Divulgar e Mais**:
+
+- **Início:** quantas clientes vêm hoje, quanto entrou, as despesas e quanto sobrou no mês (com a comparação com o mesmo período do mês passado), gráfico dos últimos 6 meses, os serviços que mais renderam, os dias mais cheios e mais vazios, lembretes para quem vem amanhã e aniversários da semana, cada um com a mensagem pronta no WhatsApp;
+- **Agenda:** ao marcar **Atendida**, ela anota quanto a cliente pagou e como (Pix, dinheiro, cartão). É esse valor que entra nas contas do Início; se ficar vazio, conta o preço do serviço;
+- **Clientes:** toda cliente que agenda entra sozinha na lista. Tem busca, filtros (sumidas há mais de 2 meses, aniversário no mês, mais fiéis, novas), a ficha de cada uma (aniversário, como conheceu o salão, anotações, histórico, quanto já gastou, Lady Points), mensagens prontas de WhatsApp e o botão para baixar a lista para o Excel;
+- **Divulgar:** o assistente (veja abaixo) e a lista de ofertas e eventos do app, para criar, editar, esconder ou apagar;
+- **Mais:** despesas do salão, folgas, serviços e preços, horário e Google Agenda.
+
+Além disso, ela:
 
 - vê a agenda do dia e os agendamentos **a confirmar**, e confirma ou cancela com um toque (já abre o WhatsApp da cliente com a mensagem pronta);
 - marca horários de quem agendou pelo WhatsApp ou pessoalmente;
@@ -40,6 +49,18 @@ No endereço do site com `/painel` no final, a Leide entra com e-mail e senha e:
 - ajusta o horário de atendimento, inclusive pausa para almoço;
 - pega o link para ver os agendamentos no Google Agenda;
 - na aba **Pontos**: lança os Lady Points quando a cliente paga (ou pelo botão **+ Lady Points** num atendimento concluído), valida o código que a cliente mostra e vê os resgates esperando. Quando uma cliente resgata, aparece um aviso dourado no topo do painel e um número na aba.
+
+### Assistente da aba Divulgar
+
+A Leide escreve com as palavras dela ("faz uma promoção de escova para terça") e o assistente devolve a oferta ou o evento prontos, com o texto para WhatsApp e Instagram. Nada vai para o app sem ela apertar **Publicar no app**. Ele também conhece os números do Início, então dá para perguntar "como foi meu mês?".
+
+Ele usa o Claude, da Anthropic, pelo worker da Cloudflare ([`worker/assistente.js`](worker/assistente.js)). A chave fica guardada como segredo na Cloudflare e nunca vai para o navegador. Para ligar (uma vez só):
+
+1. Crie uma conta em [console.anthropic.com](https://console.anthropic.com), coloque um cartão em **Billing** (cada conversa custa centavos) e, em **API Keys**, clique em **Create Key**. Copie a chave (começa com `sk-ant-`).
+2. No painel da Cloudflare, abra **Workers & Pages** > **salao-leide-hair** (não mexa no outro projeto) > **Settings** > **Variables and Secrets** > **Add**.
+3. Em **Type** escolha **Secret**, em **Variable name** escreva `ANTHROPIC_API_KEY`, cole a chave em **Value** e clique em **Deploy**.
+
+Não mande a chave por chat nem coloque no código. Sem a chave, o resto do painel funciona normalmente e a aba Divulgar avisa que o assistente ainda não foi ligado.
 
 ### Criar o acesso da Leide (uma vez só)
 

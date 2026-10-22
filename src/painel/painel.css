@@ -109,7 +109,7 @@
   top: 0;
   z-index: 5;
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   background: var(--black);
   border-top: 1px solid var(--line-light);
 }
@@ -620,4 +620,529 @@
 
 .pn-ok svg {
   vertical-align: -0.15em;
+}
+
+/* ---------- Painel admin: Início, Clientes, Divulgar e Despesas ---------- */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.pn-tabs button {
+  position: relative;
+  padding: 0 2px;
+  font-size: 0.84rem;
+}
+
+.pn-tabs .pn-dot {
+  position: absolute;
+  top: 5px;
+  right: 2px;
+  margin: 0;
+}
+
+@media (min-width: 480px) {
+  .pn-tabs button {
+    font-size: 0.95rem;
+  }
+}
+
+.pn-link-dark {
+  margin-top: 10px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--taupe);
+  font-size: 0.92rem;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.pn-mt {
+  margin-top: 16px;
+}
+
+.pn-centro {
+  text-align: center;
+}
+
+.pn-row-left {
+  justify-content: flex-start;
+}
+
+.pn-sub {
+  margin-top: 24px !important;
+}
+
+/* Resumo do dia */
+.pn-hoje {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.pn-hoje-item {
+  display: grid;
+  gap: 2px;
+  padding: 14px 10px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--white);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
+.pn-hoje-item strong {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.pn-hoje-item span {
+  color: var(--taupe);
+  font-size: 0.82rem;
+  line-height: 1.25;
+}
+
+.pn-hoje-item.alerta {
+  border-color: var(--gold);
+  background: #fbefcf;
+}
+
+/* Números */
+.pn-kpis {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.pn-kpi {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  min-width: 0;
+  padding: 14px;
+  border-radius: 14px;
+  background: var(--white);
+}
+
+.pn-kpi span {
+  color: var(--taupe);
+  font-size: 0.84rem;
+}
+
+.pn-kpi strong {
+  font-size: 1.3rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.pn-kpi-main {
+  grid-column: 1 / -1;
+  background: var(--black);
+  color: var(--white);
+}
+
+.pn-kpi-main span {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.pn-kpi-main strong {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 2.4rem;
+  line-height: 1.05;
+}
+
+.pn-kpi.pos strong {
+  color: #2f6b3a;
+}
+
+.pn-kpi.neg strong {
+  color: var(--error);
+}
+
+.pn-kpi .pn-var {
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+
+.pn-var.up {
+  color: #2f6b3a;
+}
+
+.pn-var.down {
+  color: var(--error);
+}
+
+.pn-kpi-main .pn-var.up {
+  color: var(--ouro-claro);
+}
+
+.pn-kpi-main .pn-var.down {
+  color: #f3a7a0;
+}
+
+.pn-nota {
+  margin-bottom: 12px;
+  font-size: 0.85rem;
+}
+
+@media (min-width: 640px) {
+  .pn-kpis {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Gráfico dos meses */
+.pn-legenda {
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+  color: var(--taupe);
+  font-size: 0.85rem;
+}
+
+.pn-legenda i {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 4px;
+  border-radius: 3px;
+  vertical-align: -1px;
+}
+
+.c-entrou {
+  background: var(--black);
+}
+
+.c-sobrou {
+  background: var(--gold);
+}
+
+.pn-meses {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 12px;
+  padding: 16px 10px 12px;
+  border-radius: 14px;
+  background: var(--white);
+}
+
+.pn-mes {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.pn-mes-valor {
+  color: var(--taupe);
+  font-size: 0.68rem;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.pn-mes-barras {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 3px;
+  width: 100%;
+  height: 120px;
+}
+
+.pn-mes-barras i {
+  width: min(14px, 40%);
+  min-height: 2px;
+  border-radius: 4px 4px 0 0;
+}
+
+.pn-mes-nome {
+  font-size: 0.82rem;
+}
+
+.pn-mes.atual .pn-mes-nome {
+  font-weight: 600;
+}
+
+/* Barras deitadas (serviços) */
+.pn-barras {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 14px;
+  display: grid;
+  gap: 12px;
+  border-radius: 14px;
+  background: var(--white);
+}
+
+.pn-barras-txt {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.92rem;
+}
+
+.pn-barras-txt span:last-child {
+  color: var(--taupe);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.pn-barra {
+  height: 10px;
+  margin-top: 6px;
+  border-radius: 99px;
+  background: var(--beige-soft);
+}
+
+.pn-barra i {
+  display: block;
+  height: 100%;
+  min-width: 4px;
+  border-radius: 99px;
+  background: var(--gold);
+}
+
+/* Dias da semana */
+.pn-dias {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  margin: 12px 0;
+  padding: 16px 10px 12px;
+  border-radius: 14px;
+  background: var(--white);
+}
+
+.pn-dia {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+}
+
+.pn-dia-barra {
+  display: flex;
+  align-items: flex-end;
+  width: 22px;
+  height: 80px;
+}
+
+.pn-dia-barra i {
+  width: 100%;
+  min-height: 2px;
+  border-radius: 4px 4px 0 0;
+  background: var(--black);
+}
+
+.pn-dia strong {
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.pn-dia span {
+  color: var(--taupe);
+  font-size: 0.82rem;
+}
+
+/* Clientes */
+.pn-busca {
+  margin-top: 14px;
+}
+
+.pn-cliente {
+  width: 100%;
+  border-top: 0;
+  border-right: 0;
+  border-bottom: 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.pn-seta {
+  color: var(--taupe);
+  font-size: 1.6rem;
+}
+
+.pn-ficha-nome {
+  margin-top: 16px !important;
+}
+
+.pn-field textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--white);
+  font: inherit;
+  color: var(--black);
+  resize: vertical;
+}
+
+.pn-field textarea:focus {
+  outline: 2px solid var(--black);
+  outline-offset: -1px;
+}
+
+a.pn-btn {
+  color: inherit;
+  text-decoration: none;
+}
+
+a.pn-btn-dark {
+  color: var(--white);
+}
+
+/* Pagamento ao marcar atendida */
+.pn-pagamento {
+  width: 100%;
+  margin-top: 12px;
+  padding: 14px;
+  border-radius: 12px;
+  background: var(--beige-soft);
+}
+
+.pn-pagamento .pn-row {
+  margin: 0;
+}
+
+/* Assistente */
+.pn-chat {
+  display: grid;
+  gap: 10px;
+  max-height: min(70svh, 640px);
+  margin-top: 16px;
+  padding: 14px;
+  overflow-y: auto;
+  border-radius: 16px;
+  background: var(--white);
+}
+
+.pn-ideias {
+  display: grid;
+  gap: 8px;
+}
+
+.pn-ideias .pn-chip {
+  justify-content: flex-start;
+  min-height: 46px;
+  border-radius: 14px;
+  text-align: left;
+}
+
+.pn-ideias svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--ouro-escuro);
+}
+
+.pn-bolha {
+  max-width: 92%;
+  padding: 10px 14px;
+  border-radius: 16px;
+  font-size: 0.97rem;
+  line-height: 1.45;
+}
+
+.pn-bolha p {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.pn-bolha.eu {
+  justify-self: end;
+  background: var(--black);
+  color: var(--white);
+  border-bottom-right-radius: 4px;
+}
+
+.pn-bolha.ela {
+  justify-self: start;
+  background: var(--beige-soft);
+  border-bottom-left-radius: 4px;
+}
+
+.pn-pensando p {
+  color: var(--taupe);
+  animation: pn-pisca 1.2s ease-in-out infinite;
+}
+
+@keyframes pn-pisca {
+  50% {
+    opacity: 0.4;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pn-pensando p {
+    animation: none;
+  }
+}
+
+.pn-chat-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.pn-chat-form .btn {
+  min-height: 48px;
+  padding: 0 20px;
+}
+
+.pn-rascunho {
+  display: grid;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 14px;
+  border: 1px solid var(--gold);
+  border-radius: 14px;
+  background: var(--white);
+}
+
+.pn-rascunho p {
+  white-space: normal;
+}
+
+.pn-rascunho-tipo {
+  color: var(--ouro-escuro);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.pn-rascunho blockquote {
+  margin: 4px 0 0;
+  padding: 10px 12px;
+  border-left: 3px solid var(--gold);
+  border-radius: 0 8px 8px 0;
+  background: var(--beige-soft);
+  font-size: 0.92rem;
+  white-space: pre-wrap;
+}
+
+.pn-mais {
+  margin-top: 20px;
+}
+
+.pn-icon:disabled {
+  opacity: 0.35;
 }

@@ -1,7 +1,9 @@
-// Serve o site (arquivos em ./dist), o link da agenda (.ics) e a ligação com o Google Agenda.
+// Serve o site (arquivos em ./dist), o link da agenda (.ics), a ligação com o Google Agenda
+// e o assistente do painel (/api/assistente, ver assistente.js).
 // /agenda.ics?token=... busca os agendamentos no Supabase pela função calendar_feed,
 // que confere o token secreto antes de devolver qualquer coisa.
 import { enviarAgendamentos, googleConfigurado, sincronizar } from './google.js'
+import { assistente } from './assistente.js'
 
 async function agendaIcs(url, env) {
   const res = await fetch(`${env.SUPABASE_URL}/rest/v1/rpc/calendar_feed`, {
@@ -26,6 +28,7 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url)
     if (url.pathname === '/agenda.ics') return agendaIcs(url, env)
+    if (url.pathname === '/api/assistente') return assistente(request, env)
 
     // O site avisa logo depois de cada agendamento, para ele aparecer no Google sem esperar
     // os 5 minutos. Só manda o que estiver pendente; não devolve nenhum dado.
