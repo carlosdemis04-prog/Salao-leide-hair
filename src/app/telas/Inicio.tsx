@@ -182,7 +182,9 @@ export function Inicio(p: Props) {
             {p.eventos.slice(0, 2).map((e) => (
               <li key={e.id}>
                 <button className="cartao novidade" onClick={() => p.abrirEvento(e)}>
-                  <span className="novidade-tipo">Evento · {dataCurtaFmt.format(new Date(e.starts_at)).replace('.', '')}</span>
+                  <span className="novidade-tipo">
+                    {e.starts_at ? `Evento · ${dataCurtaFmt.format(new Date(e.starts_at)).replace('.', '')}` : 'Evento'}
+                  </span>
                   <span className="novidade-titulo">{e.title}</span>
                 </button>
               </li>
