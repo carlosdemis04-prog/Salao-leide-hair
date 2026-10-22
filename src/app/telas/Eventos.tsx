@@ -1,9 +1,11 @@
 import { CalendarIcon, PinIcon, WhatsAppIcon } from '../../icons'
 import { linkWhats, type Evento } from '../dados'
 import { dataCurtaFmt, dataLongaFmt, horaFmt, maiuscula } from '../formato'
+import { Mascote } from '../Mascote'
 import { Cabecalho, Esqueleto, Folha, Vazio } from '../ui'
 
 function quando(e: Evento) {
+  if (!e.starts_at) return 'Com hora marcada pelo WhatsApp'
   const ini = new Date(e.starts_at)
   const fim = e.ends_at ? ` às ${horaFmt.format(new Date(e.ends_at))}` : ''
   return `${maiuscula(dataLongaFmt.format(ini))}, ${horaFmt.format(ini)}${fim}`
@@ -19,16 +21,20 @@ export function Eventos({ eventos, carregando, abrir }: { eventos: Evento[]; car
       )}
       <ul className="lista-cartoes">
         {eventos.map((e) => {
-          const d = dataCurtaFmt.format(new Date(e.starts_at)).replace('.', '').split(' ')
+          const d = e.starts_at ? dataCurtaFmt.format(new Date(e.starts_at)).replace('.', '').split(' ') : null
           return (
             <li key={e.id}>
               <button className="cartao evento" onClick={() => abrir(e)}>
                 {e.image_url ? (
                   <img src={e.image_url} alt="" loading="lazy" className="cartao-capa" />
-                ) : (
+                ) : d ? (
                   <span className="cartao-capa data-capa" aria-hidden>
                     <strong>{d[0]}</strong>
                     <span>{d.slice(2).join(' ') || d[1]}</span>
+                  </span>
+                ) : (
+                  <span className="cartao-capa sem-foto" aria-hidden>
+                    <Mascote humor="agendar" mini size={56} />
                   </span>
                 )}
                 <span className="cartao-corpo">
@@ -49,6 +55,7 @@ export function Eventos({ eventos, carregando, abrir }: { eventos: Evento[]; car
 
 export function EventoFolha({ evento, fechar }: { evento: Evento; fechar: () => void }) {
   const esgotado = evento.spots === 0
+  const semData = !evento.starts_at
   return (
     <Folha titulo={evento.title} aoFechar={fechar}>
       <div className="detalhe">
@@ -67,16 +74,18 @@ export function EventoFolha({ evento, fechar }: { evento: Evento; fechar: () => 
         <a
           className="botao"
           href={linkWhats(
-            esgotado
+            semData
+              ? `Olá! Quero saber sobre "${evento.title}".`
+              : esgotado
               ? `Olá! Quero saber se abre vaga no evento "${evento.title}".`
               : `Olá! Quero participar do evento "${evento.title}".`,
           )}
           target="_blank"
           rel="noreferrer"
         >
-          <WhatsAppIcon /> {esgotado ? 'Entrar na lista de espera' : 'Quero participar'}
+          <WhatsAppIcon /> {semData ? 'Combinar pelo WhatsApp' : esgotado ? 'Entrar na lista de espera' : 'Quero participar'}
         </a>
-        <p className="suave">A inscrição é confirmada pela Leide no WhatsApp.</p>
+        <p className="suave">{semData ? 'A Leide combina tudo com você pelo WhatsApp.' : 'A inscrição é confirmada pela Leide no WhatsApp.'}</p>
       </div>
     </Folha>
   )

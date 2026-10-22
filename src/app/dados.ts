@@ -31,7 +31,8 @@ export type Evento = {
   title: string
   description: string | null
   image_url: string | null
-  starts_at: string
+  // Sem data: evento que fica sempre no app, como o atendimento domiciliar
+  starts_at: string | null
   ends_at: string | null
   location: string | null
   spots: number | null
@@ -61,7 +62,7 @@ export function useSalao() {
       supabase
         .from('events')
         .select('id, title, description, image_url, starts_at, ends_at, location, spots')
-        .order('starts_at'),
+        .order('starts_at', { nullsFirst: true }),
     ]).then(([s, h, o, e]) => {
       if (s.error || h.error) setErro('Não foi possível carregar os serviços. Confira a internet e tente de novo.')
       setServices(s.data ?? [])
