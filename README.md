@@ -17,6 +17,7 @@ No painel do Supabase, abra **SQL Editor** e rode, nesta ordem, o conteúdo de c
 6. [`supabase/migrations/0005_app_celular.sql`](supabase/migrations/0005_app_celular.sql): cria as ofertas e os eventos do app e deixa a cliente ver e cancelar a própria reserva.
 7. [`supabase/migrations/0006_atendimento_domiciliar.sql`](supabase/migrations/0006_atendimento_domiciliar.sql): permite evento sem data e coloca o "Atendimento domiciliar" em Eventos.
 8. [`supabase/migrations/0007_terca_a_sabado.sql`](supabase/migrations/0007_terca_a_sabado.sql): tira a segunda-feira da agenda (o salão atende de terça a sábado).
+9. [`supabase/migrations/0008_lady_points.sql`](supabase/migrations/0008_lady_points.sql): cria a Corrida das Lady Points (pontos, metas, resgates e códigos).
 
 ## App para celular (`/app`)
 
@@ -25,6 +26,7 @@ No endereço do site com `/app` no final abre a versão de aplicativo: fundo cla
 - **Instalar:** no Android, o Chrome mostra "Instalar app" (ou use o botão no topo do Início). No iPhone, no Safari: **Compartilhar** > **Adicionar à Tela de Início**. É um app web instalável (PWA), não um app da Play Store ou da App Store.
 - **Agendar:** usa os mesmos horários livres e a mesma reserva do site. Depois de reservar, o horário aparece no Início com a situação (a confirmar, confirmado ou cancelado), e a cliente pode cancelar pelo app até 2 horas antes.
 - **Ofertas e eventos:** aparecem só os que estiverem cadastrados. Por enquanto o cadastro é no Supabase, em **Table Editor** > `offers` ou `events` (desmarque `active` para esconder). Sem nada cadastrado, as abas mostram um aviso com a Leidinha.
+- **Corrida das Lady Points:** no topo de Ofertas. Cada R$ 1,00 pago vale 100 pontos, e os pontos nunca são gastos: cada meta alcançada libera uma recompensa, que a cliente resgata uma vez. O resgate mostra um código que vale por 24 horas. A cliente entra na corrida ao agendar pelo app (os pontos ficam ligados ao telefone da reserva). As metas ficam no Supabase, em **Table Editor** > `lady_metas`.
 - **Frase do topo:** fica em `FRASE`, no arquivo `src/app/telas/Inicio.tsx`.
 
 ## Painel da Leide (`/painel`)
@@ -36,7 +38,8 @@ No endereço do site com `/painel` no final, a Leide entra com e-mail e senha e:
 - bloqueia folgas, feriados e compromissos;
 - muda preços, durações e esconde ou adiciona serviços;
 - ajusta o horário de atendimento, inclusive pausa para almoço;
-- pega o link para ver os agendamentos no Google Agenda.
+- pega o link para ver os agendamentos no Google Agenda;
+- na aba **Pontos**: lança os Lady Points quando a cliente paga (ou pelo botão **+ Lady Points** num atendimento concluído), valida o código que a cliente mostra e vê os resgates esperando. Quando uma cliente resgata, aparece um aviso dourado no topo do painel e um número na aba.
 
 ### Criar o acesso da Leide (uma vez só)
 

@@ -2,6 +2,8 @@ import { WhatsAppIcon } from '../../icons'
 import { linkWhats, type Oferta } from '../dados'
 import { preco } from '../formato'
 import { Mascote } from '../Mascote'
+import type { Corrida } from '../lady'
+import { CorridaCartao } from './Corrida'
 import { Cabecalho, depoisDeFechar, Esqueleto, Folha, Vazio } from '../ui'
 
 const validadeFmt = new Intl.DateTimeFormat('pt-BR', { timeZone: 'UTC', day: 'numeric', month: 'long' })
@@ -22,10 +24,20 @@ function Precos({ o }: { o: Oferta }) {
   )
 }
 
-export function Ofertas({ ofertas, carregando, abrir }: { ofertas: Oferta[]; carregando: boolean; abrir: (o: Oferta) => void }) {
+type Props = {
+  ofertas: Oferta[]
+  carregando: boolean
+  abrir: (o: Oferta) => void
+  // undefined: a corrida ainda não está no banco, então o cartão não aparece
+  corrida: Corrida | null | undefined
+  abrirCorrida: () => void
+}
+
+export function Ofertas({ ofertas, carregando, abrir, corrida, abrirCorrida }: Props) {
   return (
     <div className="tela">
       <Cabecalho titulo="Ofertas" sub="Promoções e vantagens do salão" />
+      {corrida !== undefined && <CorridaCartao corrida={corrida} abrir={abrirCorrida} />}
       {carregando && <Esqueleto linhas={3} />}
       {!carregando && ofertas.length === 0 && (
         <Vazio
