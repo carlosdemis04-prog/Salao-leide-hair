@@ -15,7 +15,8 @@ No painel do Supabase, abra **SQL Editor** e rode, nesta ordem, o conteúdo de c
 4. [`supabase/migrations/0003_painel.sql`](supabase/migrations/0003_painel.sql): cria o acesso ao painel da Leide e o link para o Google Agenda.
 5. [`supabase/migrations/0004_google_agenda.sql`](supabase/migrations/0004_google_agenda.sql): prepara a ligação direta com o Google Agenda (veja abaixo).
 6. [`supabase/migrations/0005_app_celular.sql`](supabase/migrations/0005_app_celular.sql): cria as ofertas e os eventos do app e deixa a cliente ver e cancelar a própria reserva.
-7. [`supabase/migrations/0006_terca_a_sabado.sql`](supabase/migrations/0006_terca_a_sabado.sql): tira a segunda-feira da agenda (o salão atende de terça a sábado).
+7. [`supabase/migrations/0006_atendimento_domiciliar.sql`](supabase/migrations/0006_atendimento_domiciliar.sql): permite evento sem data e coloca o "Atendimento domiciliar" em Eventos.
+8. [`supabase/migrations/0007_terca_a_sabado.sql`](supabase/migrations/0007_terca_a_sabado.sql): tira a segunda-feira da agenda (o salão atende de terça a sábado).
 
 ## App para celular (`/app`)
 
