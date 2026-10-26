@@ -39,9 +39,16 @@ Endereços que você vai usar (copie e cole exatamente):
 4. **Público:** escolha **Externo** e clique em **Próxima**.
 5. **Dados de contato:** coloque o seu e-mail e clique em **Próxima**.
 6. **Concluir:** marque que concorda com a política de dados do Google e clique em **Continuar** e depois em **Criar**.
-7. Agora no menu da esquerda dessa área, abra **Branding** (ou **Identidade visual**):
-   - Em **Domínios autorizados**, clique em **Adicionar domínio** e cole `rxozyjdtnkzdsrafizxu.supabase.co`.
-   - **Não envie logo.** Com logo o Google exige uma verificação que demora semanas. Sem logo, funciona na hora.
+7. Agora no menu da esquerda dessa área, abra **Branding** (ou **Identidade visual**) e preencha. O Google só deixa publicar com tudo isso preenchido:
+   - **Nome do app:** `Leide Hair`
+   - **E-mail para suporte do usuário:** o seu e-mail.
+   - **Logotipo do app:** **deixe vazio.** Com logo o Google exige uma verificação que demora semanas. Sem logo, funciona na hora.
+   - **Página inicial do aplicativo:** `https://salao-leide-hair.carlosdemis04.workers.dev`
+   - **Link da Política de Privacidade do aplicativo:** `https://salao-leide-hair.carlosdemis04.workers.dev/privacidade.html`
+   - **Link dos Termos de Serviço do aplicativo:** pode deixar vazio.
+   - **Domínios autorizados:** clique em **Adicionar domínio** duas vezes e coloque um em cada linha:
+     `carlosdemis04.workers.dev` e `rxozyjdtnkzdsrafizxu.supabase.co`
+   - **Dados de contato do desenvolvedor:** o seu e-mail.
    - Clique em **Salvar** no fim da página.
 8. Abra **Público** (ou **Audience**) no menu da esquerda e clique em **Publicar app** > **Confirmar**.
    O status deve ficar **Em produção**. Se ficar em "Teste", só e-mails cadastrados como testadores conseguem entrar e as clientes veem "Acesso bloqueado".
@@ -122,6 +129,7 @@ Endereços que você vai usar (copie e cole exatamente):
 | --- | --- |
 | `Erro 400: redirect_uri_mismatch` | O endereço da etapa 1.3.6 está diferente. Tem que ser exatamente `https://rxozyjdtnkzdsrafizxu.supabase.co/auth/v1/callback`. |
 | "Acesso bloqueado" ou "app não concluiu o processo de verificação" | Falta publicar o app (etapa 1.2.8). |
+| Ao publicar: "complete as informações de branding" | Falta algum campo da etapa 1.2.7 (página inicial, política de privacidade, domínios ou e-mail de contato). |
 | `Unsupported provider: provider is not enabled` | O Google não foi ligado ou salvo no Supabase (etapa 2.1). |
 | "Signups not allowed" | **Allow new users to sign up** está desligado (etapa 2.1.3). |
 | Depois de escolher a conta, volta para a página inicial do site em vez do app | Falta o endereço com `/**` em **Redirect URLs** (etapa 2.2.3). |
