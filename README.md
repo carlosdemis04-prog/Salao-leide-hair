@@ -31,10 +31,11 @@ No endereço do site com `/app` no final abre a versão de aplicativo: fundo cla
 - **Ofertas e eventos:** aparecem só os que estiverem cadastrados. O cadastro é no painel, na aba **Divulgar** (com ou sem o assistente). Sem nada cadastrado, as abas mostram um aviso com a Leidinha.
 - **Corrida das Lady Points:** no topo de Ofertas. Cada R$ 1,00 pago vale 100 pontos, e os pontos nunca são gastos: cada meta alcançada libera uma recompensa, que a cliente resgata uma vez. O resgate mostra um código que vale por 24 horas. A cliente entra na corrida ao agendar pelo app (os pontos ficam ligados ao telefone da reserva). As metas ficam no Supabase, em **Table Editor** > `lady_metas`.
 - **Frase do topo:** fica em `FRASE`, no arquivo `src/app/telas/Inicio.tsx`.
+- **Entrar com o Google (opcional):** o botão **Entrar** no topo do Início. Com a conta, os Lady Points e os cupons acompanham a cliente em qualquer celular, e o nome e o WhatsApp já vêm preenchidos ao agendar. Para ligar, siga o passo a passo em [`docs/login-google.md`](docs/login-google.md).
 
 ## Painel da Leide (`/painel`)
 
-No endereço do site com `/painel` no final, a Leide entra com e-mail e senha. As abas são **Início, Agenda, Pontos, Clientes, Divulgar e Mais**:
+No endereço do site com `/painel` no final, a Leide entra com e-mail e senha ou com o Google (veja [`docs/login-google.md`](docs/login-google.md)). As abas são **Início, Agenda, Pontos, Clientes, Divulgar e Mais**:
 
 - **Início:** quantas clientes vêm hoje, quanto entrou, as despesas e quanto sobrou no mês (com a comparação com o mesmo período do mês passado), gráfico dos últimos 6 meses, os serviços que mais renderam, os dias mais cheios e mais vazios, lembretes para quem vem amanhã e aniversários da semana, cada um com a mensagem pronta no WhatsApp;
 - **Agenda:** ao marcar **Atendida**, ela anota quanto a cliente pagou e como (Pix, dinheiro, cartão). É esse valor que entra nas contas do Início; se ficar vazio, conta o preço do serviço;
@@ -69,7 +70,7 @@ Se um dia quiser respostas melhores, dá para trocar pelo Claude, da Anthropic (
    insert into public.admins (user_id) select id from auth.users where email = 'email-da-leide@gmail.com';
    ```
 
-3. Recomendado: em **Authentication** > **Sign In / Providers**, desligue **Allow new users to sign up**. Mesmo ligado, uma conta nova não vê nada: só quem está na tabela `admins` entra no painel.
+3. Em **Authentication** > **Sign In / Providers**, deixe **Allow new users to sign up** ligado: o login com Google das clientes precisa dele. Uma conta nova não vê nada do painel: só quem está na tabela `admins` entra lá.
 
 ## Google Agenda
 

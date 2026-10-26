@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type ComponentType } from 'react'
 import './app.css'
+import { useConta } from './conta'
 import { useConvite, type CupomConvite } from './convite'
 import { useReservas, useSalao, type Evento, type Oferta, type Reserva } from './dados'
 import { AgendarIcon, ContatoIcon, EventoIcon, InicioIcon, OfertaIcon } from './icones'
@@ -7,6 +8,7 @@ import { useLady } from './lady'
 import { Mascote } from './Mascote'
 import { Agendar } from './telas/Agendar'
 import { Contato } from './telas/Contato'
+import { ContaFolha } from './telas/Conta'
 import { BoasVindasFolha, IndiqueFolha, PresenteFolha } from './telas/Convite'
 import { CorridaFolha } from './telas/Corrida'
 import { EventoFolha, Eventos } from './telas/Eventos'
@@ -39,6 +41,16 @@ export default function AppCelular() {
   const reservas = useReservas()
   const lady = useLady()
   const convite = useConvite()
+  // Login com Google: ao ligar a conta, os pontos e os convites podem mudar
+  const { carregar: recarregarPontos } = lady
+  const { carregar: recarregarConvite } = convite
+  const aoLigarConta = useCallback(() => {
+    recarregarPontos()
+    recarregarConvite()
+  }, [recarregarPontos, recarregarConvite])
+  const conta = useConta(aoLigarConta)
+  // Voltou do Google com erro: abre a folha da conta para mostrar o aviso
+  const [verConta, setVerConta] = useState(conta.erro !== '')
   const [verCorrida, setVerCorrida] = useState(false)
   const [verConvite, setVerConvite] = useState(false)
   // Abriu pelo link de uma amiga: mostra o convite depois da abertura
@@ -81,15 +93,17 @@ export default function AppCelular() {
   const { adicionar } = reservas
   const { vincular } = lady
   const { registrar, carregar: carregarConvite } = convite
+  const { ligar: ligarConta } = conta
   const aoReservar = useCallback(
     async (r: Reserva) => {
       adicionar(r)
       await vincular(r.id)
+      await ligarConta()
       const ganhou = await registrar(r.id)
       carregarConvite()
       if (ganhou) setTimeout(() => setPresente(ganhou), 1200)
     },
-    [adicionar, vincular, registrar, carregarConvite],
+    [adicionar, vincular, ligarConta, registrar, carregarConvite],
   )
 
   // Quando a cliente volta para o app, atualiza a situação da reserva e os pontos
@@ -155,6 +169,8 @@ export default function AppCelular() {
             abrirOferta={setOferta}
             abrirEvento={setEvento}
             instalar={instalar}
+            conta={conta.conta}
+            abrirConta={() => setVerConta(true)}
           />
         </div>
         <div hidden={aba !== 'agendar'}>
@@ -164,6 +180,7 @@ export default function AppCelular() {
             carregando={salao.carregando}
             erro={salao.erro}
             pedido={pedido}
+            conta={conta.conta}
             aoReservar={aoReservar}
             verInicio={() => ir('inicio')}
           />
@@ -233,6 +250,16 @@ export default function AppCelular() {
           madrinha={presente.madrinha}
           convidar={() => (ir('eventos'), setVerConvite(true))}
           fechar={() => setPresente(null)}
+        />
+      )}
+      {verConta && !abrindo && (
+        <ContaFolha
+          conta={conta.conta}
+          erro={conta.erro}
+          entrar={conta.entrar}
+          sair={conta.sair}
+          agendar={() => ir('agendar')}
+          fechar={() => setVerConta(false)}
         />
       )}
       {evento && <EventoFolha evento={evento} fechar={() => setEvento(null)} />}

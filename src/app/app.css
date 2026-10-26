@@ -2058,3 +2058,51 @@ a.cartao:active {
     transition-duration: 0.01ms;
   }
 }
+
+/* Login com Google */
+.conta-botao {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-left: auto;
+  border-radius: 999px;
+}
+
+.inicio-topo .chip ~ .chip,
+.inicio-topo .chip ~ .conta-botao {
+  margin-left: 0;
+}
+
+.conta-foto {
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  object-fit: cover;
+  box-shadow: 0 0 0 2px var(--a-superficie), 0 0 0 3.5px var(--a-ouro);
+}
+
+.conta-foto.inicial {
+  background: var(--a-ouro-claro);
+  color: var(--a-ouro-texto);
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.botao.google {
+  background: var(--a-superficie);
+  color: var(--a-tinta);
+  box-shadow: inset 0 0 0 1.5px var(--a-linha), var(--a-sombra);
+}
+
+.conta-whats {
+  width: 100%;
+  padding: 14px 16px;
+  text-align: left;
+  line-height: 1.45;
+}
+
+.conta-nota {
+  font-size: 0.85rem;
+  color: var(--a-tinta-2);
+}

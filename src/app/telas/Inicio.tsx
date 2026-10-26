@@ -7,6 +7,8 @@ import { AgendarIcon, ContatoIcon, OfertaIcon, ServicosIcon } from '../icones'
 import { Mascote } from '../Mascote'
 import { depoisDeFechar, Esqueleto, Folha, IconeServico } from '../ui'
 import type { Aba } from '../AppCelular'
+import type { Conta } from '../conta'
+import { Avatar } from './Conta'
 
 // Frase do topo. Troque aqui quando o slogan oficial do salão for definido.
 export const FRASE = 'Seu momento de cuidado, com hora marcada.'
@@ -36,6 +38,8 @@ type Props = {
   abrirOferta: (o: Oferta) => void
   abrirEvento: (e: Evento) => void
   instalar: (() => void) | null
+  conta: Conta | null
+  abrirConta: () => void
 }
 
 export function Inicio(p: Props) {
@@ -61,12 +65,24 @@ export function Inicio(p: Props) {
       <header className="inicio-topo">
         <img src="/logo.webp" alt="Leide Hair" className="inicio-logo" width="56" height="49" />
         <div>
-          <p className="inicio-oi">{saudacao()}!</p>
+          <p className="inicio-oi">
+            {saudacao()}
+            {p.conta?.nome ? `, ${p.conta.nome.split(' ')[0]}` : ''}!
+          </p>
           <p className="inicio-nome">Leide Hair</p>
         </div>
         {p.instalar && (
           <button className="chip" onClick={p.instalar}>
             Instalar app
+          </button>
+        )}
+        {p.conta ? (
+          <button className="conta-botao" onClick={p.abrirConta} aria-label="Minha conta">
+            <Avatar conta={p.conta} size={40} />
+          </button>
+        ) : (
+          <button className="chip conta-entrar" onClick={p.abrirConta}>
+            Entrar
           </button>
         )}
       </header>
