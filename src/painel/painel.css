@@ -58,6 +58,40 @@
   width: min(100%, 360px);
 }
 
+/* Login com Google */
+.pn-login .pn-ou {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: min(100%, 360px);
+  margin: 10px 0 2px;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.85rem;
+}
+
+.pn-login .pn-ou::before,
+.pn-login .pn-ou::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--line-light);
+}
+
+.pn-login .pn-google {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: min(100%, 360px);
+  border-color: transparent;
+  background: var(--white);
+  color: var(--black);
+}
+
+.pn-login .pn-google:hover {
+  background: var(--beige-soft);
+}
+
 .pn-login .pn-field > span {
   color: rgba(255, 255, 255, 0.75);
 }

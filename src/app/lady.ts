@@ -23,7 +23,7 @@ export type Corrida = { participando: boolean; pontos: number; metas: Meta[] }
 const CHAVE_TOKEN = 'leide-app-lady'
 const CHAVE_RESERVAS = 'leide-app-reservas'
 
-function token() {
+export function token() {
   try {
     let t = localStorage.getItem(CHAVE_TOKEN)
     if (!t) {

@@ -18,6 +18,7 @@ import {
   type Dia,
 } from '../formato'
 import { Mascote } from '../Mascote'
+import type { Conta } from '../conta'
 import { Cabecalho, Esqueleto, IconeServico, Vazio } from '../ui'
 
 type Etapa = 'servico' | 'horario' | 'dados' | 'feito'
@@ -54,9 +55,10 @@ type Props = {
   pedido: { servicoId: string; n: number } | null
   aoReservar: (r: Reserva) => void
   verInicio: () => void
+  conta: Conta | null
 }
 
-export function Agendar({ services, hours, carregando, erro, pedido, aoReservar, verInicio }: Props) {
+export function Agendar({ services, hours, carregando, erro, pedido, aoReservar, verInicio, conta }: Props) {
   const [etapa, setEtapa] = useState<Etapa>('servico')
   const [servico, setServico] = useState<Service | null>(null)
   const [dia, setDia] = useState<Dia | null>(null)
@@ -69,6 +71,14 @@ export function Agendar({ services, hours, carregando, erro, pedido, aoReservar,
   const [erroForm, setErroForm] = useState('')
   const [feita, setFeita] = useState<Reserva | null>(null)
   const topo = useRef<HTMLDivElement>(null)
+
+  // Entrou com o Google: já preenche nome e WhatsApp, se estiverem vazios
+  const nomeConta = conta?.nome
+  const telConta = conta?.telefone
+  useEffect(() => {
+    if (nomeConta) setNome((n) => n || nomeConta)
+    if (telConta) setTel((t) => t || telefone(telConta))
+  }, [nomeConta, telConta])
 
   const dias = useMemo(() => proximosDias(hours), [hours])
 

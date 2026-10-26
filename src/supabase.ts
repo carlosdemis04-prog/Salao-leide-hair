@@ -3,7 +3,8 @@ import { createClient } from '@supabase/supabase-js'
 const url = import.meta.env.VITE_SUPABASE_URL as string | undefined
 const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
 
-export const supabase = url && anonKey ? createClient(url, anonKey) : null
+// pkce: a volta do login com Google chega como ?code= e não mexe no #aba do app
+export const supabase = url && anonKey ? createClient(url, anonKey, { auth: { flowType: 'pkce' } }) : null
 
 // Pede para o site mandar já os agendamentos novos para o Google Agenda da Leide,
 // sem esperar a rodada de 5 minutos. Se a ligação com o Google não estiver feita, não faz nada.
