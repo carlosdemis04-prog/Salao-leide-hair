@@ -3,6 +3,8 @@ import { linkWhats, type Evento } from '../dados'
 import { dataCurtaFmt, dataLongaFmt, horaFmt, maiuscula } from '../formato'
 import { Mascote } from '../Mascote'
 import { Cabecalho, Esqueleto, Folha, Vazio } from '../ui'
+import type { MeuConvite } from '../convite'
+import { IndiqueCartao } from './Convite'
 
 function quando(e: Evento) {
   if (!e.starts_at) return 'Com hora marcada pelo WhatsApp'
@@ -11,10 +13,23 @@ function quando(e: Evento) {
   return `${maiuscula(dataLongaFmt.format(ini))}, ${horaFmt.format(ini)}${fim}`
 }
 
-export function Eventos({ eventos, carregando, abrir }: { eventos: Evento[]; carregando: boolean; abrir: (e: Evento) => void }) {
+export function Eventos({
+  eventos,
+  carregando,
+  abrir,
+  convite,
+  abrirConvite,
+}: {
+  eventos: Evento[]
+  carregando: boolean
+  abrir: (e: Evento) => void
+  convite: MeuConvite | null | undefined
+  abrirConvite: () => void
+}) {
   return (
     <div className="tela">
       <Cabecalho titulo="Eventos" sub="Dias especiais, cursos e lançamentos" />
+      <IndiqueCartao meu={convite} abrir={abrirConvite} />
       {carregando && <Esqueleto linhas={3} />}
       {!carregando && eventos.length === 0 && (
         <Vazio titulo="Nenhum evento marcado" texto="Os próximos eventos do salão vão aparecer aqui. Volte em breve!" />
