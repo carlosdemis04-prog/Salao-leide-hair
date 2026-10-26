@@ -64,7 +64,8 @@ const IDEIAS = [
 ]
 
 const ERROS: Record<string, string> = {
-  sem_chave: 'O assistente ainda não foi ligado. O Carlos precisa colocar a chave na Cloudflare (passo a passo no README).',
+  sem_chave: 'O assistente ainda não foi ligado na Cloudflare. Peça para o Carlos conferir (passo a passo no README).',
+  cota_do_dia: 'O assistente grátis já foi muito usado hoje. Amanhã ele volta; enquanto isso, crie a oferta pelo botão lá embaixo.',
   chave_invalida: 'A chave do assistente na Cloudflare não está funcionando. Peça para o Carlos conferir.',
   sem_acesso: 'Sua sessão expirou. Saia e entre de novo no painel.',
   ocupado: 'O assistente está ocupado agora. Tente de novo em um minuto.',
