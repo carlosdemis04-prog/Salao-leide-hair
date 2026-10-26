@@ -2,7 +2,7 @@ import { useState } from 'react'
 import type { Service } from '../../supabase'
 import { CalendarIcon, ClockIcon } from '../../icons'
 import { linkWhats, type Evento, type Oferta, type Reserva, type SituacaoReserva } from '../dados'
-import { dataCurtaFmt, dataLongaFmt, duracao, horaFmt, maiuscula, preco } from '../formato'
+import { dataCurtaFmt, dataLongaFmt, duracao, horaFmt, maiuscula, MOSTRAR_PRECO_SERVICOS, precoServico } from '../formato'
 import { AgendarIcon, ContatoIcon, OfertaIcon, ServicosIcon } from '../icones'
 import { Mascote } from '../Mascote'
 import { depoisDeFechar, Esqueleto, Folha, IconeServico } from '../ui'
@@ -157,7 +157,7 @@ export function Inicio(p: Props) {
                 <span className="servico-nome">{s.name}</span>
                 <span className="servico-meta">
                   {duracao(s.duration_min)}
-                  {s.price_cents !== null && ` · ${preco(s.price_cents)}`}
+                  {MOSTRAR_PRECO_SERVICOS && s.price_cents !== null && ` · ${precoServico(s.price_cents)}`}
                 </span>
               </button>
             </li>
@@ -200,7 +200,7 @@ export function Inicio(p: Props) {
             <h2>{detalhe.name}</h2>
             {detalhe.description && <p>{detalhe.description}</p>}
             <p className="servico-meta">
-              <ClockIcon /> {duracao(detalhe.duration_min)} · {preco(detalhe.price_cents)}
+              <ClockIcon /> {duracao(detalhe.duration_min)} · {precoServico(detalhe.price_cents)}
             </p>
             <button className="botao" onClick={() => depoisDeFechar(() => p.agendarServico(detalhe.id))}>
               Agendar este serviço

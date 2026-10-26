@@ -15,6 +15,14 @@ export function preco(cents: number | null) {
   return cents === null ? 'Valor a consultar' : brl.format(cents / 100)
 }
 
+// O Carlos pediu para não mostrar o preço dos serviços por enquanto (2026-10-26).
+// Quando a Leide quiser mostrar, troque para true: o site e o app voltam a usar o preço do painel.
+export const MOSTRAR_PRECO_SERVICOS = false
+
+export function precoServico(cents: number | null) {
+  return MOSTRAR_PRECO_SERVICOS ? preco(cents) : 'Valor a consultar'
+}
+
 export function duracao(min: number) {
   const h = Math.floor(min / 60)
   const m = min % 60

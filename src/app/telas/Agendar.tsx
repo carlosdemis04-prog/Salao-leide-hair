@@ -11,7 +11,7 @@ import {
   maiuscula,
   manha,
   mesFmt,
-  preco,
+  precoServico,
   proximosDias,
   semanaFmt,
   telefone,
@@ -199,7 +199,7 @@ export function Agendar({ services, hours, carregando, erro, pedido, aoReservar,
                     <span className="servico-nome">{s.name}</span>
                     {s.description && <span className="servico-desc">{s.description}</span>}
                     <span className="servico-meta">
-                      <ClockIcon /> {duracao(s.duration_min)} · {preco(s.price_cents)}
+                      <ClockIcon /> {duracao(s.duration_min)} · {precoServico(s.price_cents)}
                     </span>
                   </span>
                   <span className="seta" aria-hidden>
@@ -302,7 +302,7 @@ export function Agendar({ services, hours, carregando, erro, pedido, aoReservar,
               <dt>Duração</dt>
               <dd>{duracao(servico.duration_min)}</dd>
               <dt>Valor</dt>
-              <dd>{preco(servico.price_cents)}</dd>
+              <dd>{precoServico(servico.price_cents)}</dd>
             </dl>
           </div>
 
