@@ -38,6 +38,10 @@ type Mais = 'despesas' | 'folgas' | 'servicos' | 'ajustes'
 type Pendente = { codigo: string; titulo: string; phone: string; nome: string | null; criado_em: string; expira_em: string }
 type Lancamento = { id: string; phone: string; pontos: number; valor_cents: number | null; nota: string | null; created_at: string }
 type Prefill = { phone: string; nome: string; valor: number | null; n: number }
+type ConvitePainel = {
+  indicacoes: { madrinha: string | null; madrinha_phone: string; amiga: string | null; amiga_phone: string; quando: string; status: Status }[]
+  cupons: { codigo: string; tipo: 'boas_vindas' | 'madrinha'; desconto: number; nome: string | null; phone: string; expira_em: string }[]
+}
 
 const STATUS_LABEL: Record<Status, string> = {
   pendente: 'A confirmar',
@@ -747,6 +751,16 @@ function LadyPoints({ pendentes, reload, prefill }: { pendentes: Pendente[]; rel
     loadExtrato()
   }, [loadExtrato])
 
+  // Campanha Indique amigas (migração 0011). Sem a migração, a seção explica o que falta.
+  const [convite, setConvite] = useState<ConvitePainel | null | 'sem'>(null)
+  const loadConvite = useCallback(async () => {
+    const { data, error } = await supabase!.rpc('convite_painel')
+    setConvite(error ? 'sem' : (data as ConvitePainel))
+  }, [])
+  useEffect(() => {
+    loadConvite()
+  }, [loadConvite])
+
   async function validar(c: string) {
     setErroCodigo('')
     setValidado(null)
@@ -755,6 +769,7 @@ function LadyPoints({ pendentes, reload, prefill }: { pendentes: Pendente[]; rel
     setValidado(data as { titulo: string; nome: string | null; phone: string })
     setCodigo('')
     reload()
+    loadConvite()
   }
 
   const cents = inputToCents(valor)
@@ -788,7 +803,9 @@ function LadyPoints({ pendentes, reload, prefill }: { pendentes: Pendente[]; rel
     <>
       <section className="pn-section">
         <h2>Validar código</h2>
-        <p className="pn-muted">A cliente mostra o código no app. Digite aqui para conferir e dar baixa.</p>
+        <p className="pn-muted">
+          A cliente mostra o código no app (Lady Points ou cupom do Indique amigas). Digite aqui para conferir e dar baixa.
+        </p>
         <form
           className="pn-form pn-box"
           onSubmit={(e) => {
@@ -843,6 +860,56 @@ function LadyPoints({ pendentes, reload, prefill }: { pendentes: Pendente[]; rel
             </li>
           ))}
         </ul>
+      </section>
+
+      <section className="pn-section">
+        <h2>Indique amigas</h2>
+        <p className="pn-muted">
+          Quem traz 3 amigas novas ganha 30%. A amiga nova ganha 10% no primeiro horário. Os cupons valem até a data mostrada.
+        </p>
+        {convite === 'sem' && <p className="pn-empty">Rode o arquivo 0011_indique_amigas.sql no Supabase para ligar a campanha.</p>}
+        {convite && convite !== 'sem' && (
+          <>
+            <h3>Cupons para usar</h3>
+            {convite.cupons.length === 0 && <p className="pn-empty">Nenhum cupom esperando.</p>}
+            <ul className="pn-list">
+              {convite.cupons.map((c) => (
+                <li key={c.codigo} className="pn-card pn-card-flat">
+                  <div className="pn-card-body">
+                    <span className="pn-card-service">
+                      {c.desconto}% {c.tipo === 'madrinha' ? '· indicou 3 amigas' : '· boas-vindas'}
+                    </span>
+                    <span className="pn-card-client">
+                      {c.nome ?? 'Cliente'} · {formatPhone(c.phone)}
+                    </span>
+                    <span className="pn-muted-inline">
+                      Código <strong>{c.codigo}</strong> · vale até {shortDateFmt.format(new Date(c.expira_em))}
+                    </span>
+                  </div>
+                  <button className="pn-btn pn-btn-dark" onClick={() => validar(c.codigo)}>
+                    <CheckIcon /> Usou
+                  </button>
+                </li>
+              ))}
+            </ul>
+            <h3>Últimas indicações</h3>
+            {convite.indicacoes.length === 0 && <p className="pn-empty">Nenhuma amiga chegou por convite ainda.</p>}
+            <ul className="pn-list">
+              {convite.indicacoes.map((i) => (
+                <li key={i.amiga_phone} className="pn-card pn-card-flat">
+                  <div className="pn-card-body">
+                    <span className="pn-card-service">
+                      {i.amiga ?? formatPhone(i.amiga_phone)} <span className="pn-muted-inline">veio por</span>{' '}
+                      {i.madrinha ?? formatPhone(i.madrinha_phone)}
+                    </span>
+                    <span className="pn-muted-inline">{capitalize(shortDateFmt.format(new Date(i.quando)))}</span>
+                  </div>
+                  <span className={`pn-badge b-${i.status}`}>{STATUS_LABEL[i.status]}</span>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
       </section>
 
       <section className="pn-section">

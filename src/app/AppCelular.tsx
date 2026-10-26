@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useState, type ComponentType } from 'react'
 import './app.css'
+import { useConvite, type CupomConvite } from './convite'
 import { useReservas, useSalao, type Evento, type Oferta, type Reserva } from './dados'
 import { AgendarIcon, ContatoIcon, EventoIcon, InicioIcon, OfertaIcon } from './icones'
 import { useLady } from './lady'
 import { Mascote } from './Mascote'
 import { Agendar } from './telas/Agendar'
 import { Contato } from './telas/Contato'
+import { BoasVindasFolha, IndiqueFolha, PresenteFolha } from './telas/Convite'
 import { CorridaFolha } from './telas/Corrida'
 import { EventoFolha, Eventos } from './telas/Eventos'
 import { Inicio } from './telas/Inicio'
@@ -36,7 +38,12 @@ export default function AppCelular() {
   const salao = useSalao()
   const reservas = useReservas()
   const lady = useLady()
+  const convite = useConvite()
   const [verCorrida, setVerCorrida] = useState(false)
+  const [verConvite, setVerConvite] = useState(false)
+  // Abriu pelo link de uma amiga: mostra o convite depois da abertura
+  const [verBoasVindas, setVerBoasVindas] = useState(convite.convidada?.agora ?? false)
+  const [presente, setPresente] = useState<{ cupom: CupomConvite; madrinha: string | null } | null>(null)
   const [aba, setAba] = useState<Aba>(abaDoEndereco)
   const [pedido, setPedido] = useState<{ servicoId: string; n: number } | null>(null)
   const [oferta, setOferta] = useState<Oferta | null>(null)
@@ -69,15 +76,20 @@ export default function AppCelular() {
     [ir],
   )
 
-  // Reservou pelo app: entra na corrida das Lady Points com o telefone da reserva
+  // Reservou pelo app: entra na corrida das Lady Points com o telefone da reserva.
+  // Se veio pelo convite de uma amiga, conta a indicação e mostra o cupom de 10%.
   const { adicionar } = reservas
   const { vincular } = lady
+  const { registrar, carregar: carregarConvite } = convite
   const aoReservar = useCallback(
-    (r: Reserva) => {
+    async (r: Reserva) => {
       adicionar(r)
-      vincular(r.id)
+      await vincular(r.id)
+      const ganhou = await registrar(r.id)
+      carregarConvite()
+      if (ganhou) setTimeout(() => setPresente(ganhou), 1200)
     },
-    [adicionar, vincular],
+    [adicionar, vincular, registrar, carregarConvite],
   )
 
   // Quando a cliente volta para o app, atualiza a situação da reserva e os pontos
@@ -88,10 +100,11 @@ export default function AppCelular() {
       if (document.visibilityState !== 'visible') return
       atualizar()
       carregarPontos()
+      carregarConvite()
     }
     document.addEventListener('visibilitychange', ver)
     return () => document.removeEventListener('visibilitychange', ver)
-  }, [atualizar, carregarPontos])
+  }, [atualizar, carregarPontos, carregarConvite])
 
   // Botão "Instalar app": Android mostra o pedido do sistema; no iPhone explicamos o caminho
   const [pedidoInstalar, setPedidoInstalar] = useState<PedidoInstalacao | null>(null)
@@ -165,7 +178,13 @@ export default function AppCelular() {
           />
         </div>
         <div hidden={aba !== 'eventos'}>
-          <Eventos eventos={salao.eventos} carregando={salao.carregando} abrir={setEvento} />
+          <Eventos
+            eventos={salao.eventos}
+            carregando={salao.carregando}
+            abrir={setEvento}
+            convite={convite.meu}
+            abrirConvite={() => (carregarConvite(), setVerConvite(true))}
+          />
         </div>
         <div hidden={aba !== 'contato'}>
           <Contato hours={salao.hours} />
@@ -196,6 +215,24 @@ export default function AppCelular() {
           atualizar={lady.carregar}
           agendar={() => ir('agendar')}
           fechar={() => setVerCorrida(false)}
+        />
+      )}
+      {verConvite && (
+        <IndiqueFolha meu={convite.meu} agendar={() => ir('agendar')} fechar={() => setVerConvite(false)} />
+      )}
+      {verBoasVindas && !abrindo && (
+        <BoasVindasFolha
+          madrinha={convite.convidada?.madrinha ?? null}
+          agendar={() => ir('agendar')}
+          fechar={() => setVerBoasVindas(false)}
+        />
+      )}
+      {presente && (
+        <PresenteFolha
+          cupom={presente.cupom}
+          madrinha={presente.madrinha}
+          convidar={() => (ir('eventos'), setVerConvite(true))}
+          fechar={() => setPresente(null)}
         />
       )}
       {evento && <EventoFolha evento={evento} fechar={() => setEvento(null)} />}

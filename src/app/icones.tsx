@@ -86,3 +86,24 @@ export const FlorIcon = (p: P) => (
     <path d="M12 9.6C10 7 10 4.5 12 3c2 1.5 2 4 0 6.6ZM12 14.4c2 2.6 2 5.1 0 6.6-2-1.5-2-4 0-6.6ZM9.6 12C7 14 4.5 14 3 12c1.5-2 4-2 6.6 0ZM14.4 12c2.6-2 5.1-2 6.6 0-1.5 2-4 2-6.6 0Z" />
   </Base>
 )
+
+export const CopiarIcon = (p: P) => (
+  <Base {...p}>
+    <rect x="8.5" y="8.5" width="11" height="11" rx="2.2" />
+    <path d="M15.5 8.5V6.2A1.7 1.7 0 0 0 13.8 4.5H6.2A1.7 1.7 0 0 0 4.5 6.2v7.6a1.7 1.7 0 0 0 1.7 1.7h2.3" />
+  </Base>
+)
+
+export const CompartilharIcon = (p: P) => (
+  <Base {...p}>
+    <path d="M12 15V4M8 7.5 12 3.5l4 4" />
+    <path d="M7 10.5H6a1.5 1.5 0 0 0-1.5 1.5v7A1.5 1.5 0 0 0 6 20.5h12a1.5 1.5 0 0 0 1.5-1.5v-7a1.5 1.5 0 0 0-1.5-1.5h-1" />
+  </Base>
+)
+
+export const PresenteIcon = (p: P) => (
+  <Base {...p}>
+    <rect x="4" y="9" width="16" height="11.5" rx="1.8" />
+    <path d="M3 9h18M12 9v11.5M12 9c-1.5-3.8-6-4.6-6-1.8C6 9 12 9 12 9Zm0 0c1.5-3.8 6-4.6 6-1.8C18 9 12 9 12 9Z" />
+  </Base>
+)

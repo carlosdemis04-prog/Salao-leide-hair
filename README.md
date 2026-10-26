@@ -20,6 +20,7 @@ No painel do Supabase, abra **SQL Editor** e rode, nesta ordem, o conteúdo de c
 9. [`supabase/migrations/0008_lady_points.sql`](supabase/migrations/0008_lady_points.sql): cria a Corrida das Lady Points (pontos, metas, resgates e códigos).
 10. [`supabase/migrations/0009_painel_admin.sql`](supabase/migrations/0009_painel_admin.sql): guarda quanto cada cliente pagou, cria a lista de clientes e as despesas do painel.
 11. [`supabase/migrations/0010_lady_metas_dificeis.sql`](supabase/migrations/0010_lady_metas_dificeis.sql): deixa as metas da Corrida das Lady Points mais difíceis (a final passa a pedir 500.000 pontos, ou R$ 5.000 gastos).
+12. [`supabase/migrations/0011_indique_amigas.sql`](supabase/migrations/0011_indique_amigas.sql): liga a campanha Indique amigas (link de convite no app, cupom de 10% para a amiga nova e de 30% a cada 3 amigas), validada no painel.
 
 ## App para celular (`/app`)
 
