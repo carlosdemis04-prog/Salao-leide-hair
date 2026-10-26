@@ -86,14 +86,14 @@ create policy "admin gerencia resgates" on public.lady_resgates
 -- Metas iniciais (só entram se a tabela estiver vazia)
 insert into public.lady_metas (ordem, pontos, titulo, descricao, final)
 select * from (values
-  (1, 5000, 'Cupom de 5% de desconto', 'Vale em qualquer serviço do salão.', false),
-  (2, 10000, 'Cupom de 10% de desconto', 'Vale em qualquer serviço do salão.', false),
-  (3, 20000, 'Design de sobrancelhas grátis', 'Um design de sobrancelhas por conta da casa.', false),
-  (4, 30000, 'Escova grátis', 'Uma escova por conta da casa.', false),
-  (5, 45000, 'Cupom de 15% de desconto', 'Vale em qualquer serviço do salão.', false),
-  (6, 60000, 'Hidratação grátis', 'Uma hidratação por conta da casa.', false),
-  (7, 80000, 'Cupom de 20% de desconto', 'Vale em qualquer serviço do salão.', false),
-  (8, 100000, 'Qualquer serviço grátis', 'A grande recompensa: escolha qualquer serviço do salão, por conta da casa.', true)
+  (1, 50000, 'Cupom de 5% de desconto', 'Vale em qualquer serviço do salão.', false),
+  (2, 100000, 'Cupom de 10% de desconto', 'Vale em qualquer serviço do salão.', false),
+  (3, 150000, 'Design de sobrancelhas grátis', 'Um design de sobrancelhas por conta da casa.', false),
+  (4, 200000, 'Cupom de 15% de desconto', 'Vale em qualquer serviço do salão.', false),
+  (5, 275000, 'Escova grátis', 'Uma escova por conta da casa.', false),
+  (6, 350000, 'Hidratação grátis', 'Uma hidratação por conta da casa.', false),
+  (7, 425000, 'Cupom de 20% de desconto', 'Vale em qualquer serviço do salão.', false),
+  (8, 500000, 'Qualquer serviço grátis', 'A grande recompensa: escolha qualquer serviço do salão, por conta da casa.', true)
 ) as m(ordem, pontos, titulo, descricao, final)
 where not exists (select 1 from public.lady_metas);
 
