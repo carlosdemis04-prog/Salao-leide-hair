@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState, type ComponentType } from 'react'
 import './app.css'
-import { useReservas, useSalao, type Evento, type Oferta } from './dados'
+import { useReservas, useSalao, type Evento, type Oferta, type Reserva } from './dados'
 import { AgendarIcon, ContatoIcon, EventoIcon, InicioIcon, OfertaIcon } from './icones'
+import { useLady } from './lady'
 import { Mascote } from './Mascote'
 import { Agendar } from './telas/Agendar'
 import { Contato } from './telas/Contato'
+import { CorridaFolha } from './telas/Corrida'
 import { EventoFolha, Eventos } from './telas/Eventos'
 import { Inicio } from './telas/Inicio'
 import { OfertaFolha, Ofertas } from './telas/Ofertas'
@@ -33,6 +35,8 @@ const instalado = window.matchMedia('(display-mode: standalone)').matches || ('s
 export default function AppCelular() {
   const salao = useSalao()
   const reservas = useReservas()
+  const lady = useLady()
+  const [verCorrida, setVerCorrida] = useState(false)
   const [aba, setAba] = useState<Aba>(abaDoEndereco)
   const [pedido, setPedido] = useState<{ servicoId: string; n: number } | null>(null)
   const [oferta, setOferta] = useState<Oferta | null>(null)
@@ -65,13 +69,29 @@ export default function AppCelular() {
     [ir],
   )
 
-  // Quando a cliente volta para o app, atualiza a situação da reserva
+  // Reservou pelo app: entra na corrida das Lady Points com o telefone da reserva
+  const { adicionar } = reservas
+  const { vincular } = lady
+  const aoReservar = useCallback(
+    (r: Reserva) => {
+      adicionar(r)
+      vincular(r.id)
+    },
+    [adicionar, vincular],
+  )
+
+  // Quando a cliente volta para o app, atualiza a situação da reserva e os pontos
   const { atualizar } = reservas
+  const { carregar: carregarPontos } = lady
   useEffect(() => {
-    const ver = () => document.visibilityState === 'visible' && atualizar()
+    const ver = () => {
+      if (document.visibilityState !== 'visible') return
+      atualizar()
+      carregarPontos()
+    }
     document.addEventListener('visibilitychange', ver)
     return () => document.removeEventListener('visibilitychange', ver)
-  }, [atualizar])
+  }, [atualizar, carregarPontos])
 
   // Botão "Instalar app": Android mostra o pedido do sistema; no iPhone explicamos o caminho
   const [pedidoInstalar, setPedidoInstalar] = useState<PedidoInstalacao | null>(null)
@@ -131,12 +151,18 @@ export default function AppCelular() {
             carregando={salao.carregando}
             erro={salao.erro}
             pedido={pedido}
-            aoReservar={reservas.adicionar}
+            aoReservar={aoReservar}
             verInicio={() => ir('inicio')}
           />
         </div>
         <div hidden={aba !== 'ofertas'}>
-          <Ofertas ofertas={salao.ofertas} carregando={salao.carregando} abrir={setOferta} />
+          <Ofertas
+            ofertas={salao.ofertas}
+            carregando={salao.carregando}
+            abrir={setOferta}
+            corrida={lady.corrida}
+            abrirCorrida={() => setVerCorrida(true)}
+          />
         </div>
         <div hidden={aba !== 'eventos'}>
           <Eventos eventos={salao.eventos} carregando={salao.carregando} abrir={setEvento} />
@@ -163,6 +189,15 @@ export default function AppCelular() {
       </nav>
 
       {oferta && <OfertaFolha oferta={oferta} fechar={() => setOferta(null)} agendar={agendarServico} />}
+      {verCorrida && lady.corrida && (
+        <CorridaFolha
+          corrida={lady.corrida}
+          resgatar={lady.resgatar}
+          atualizar={lady.carregar}
+          agendar={() => ir('agendar')}
+          fechar={() => setVerCorrida(false)}
+        />
+      )}
       {evento && <EventoFolha evento={evento} fechar={() => setEvento(null)} />}
       {ajudaIos && (
         <Folha titulo="Instalar no iPhone" aoFechar={() => setAjudaIos(false)}>

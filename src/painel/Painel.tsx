@@ -2,40 +2,42 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react
 import type { Session } from '@supabase/supabase-js'
 import { avisarGoogle, supabase } from '../supabase'
 import { CalendarIcon, CheckIcon, ChevronLeftIcon, ChevronRightIcon, ClockIcon, WhatsAppIcon } from '../icons'
+import {
+  addDays,
+  atSaoPaulo,
+  brl,
+  capitalize,
+  centsToInput,
+  dayTitleFmt,
+  dbError,
+  durationLabel,
+  ENDERECO,
+  formatPhone,
+  inputToCents,
+  isoDateFmt,
+  shortDateFmt,
+  timeFmt,
+  todayIso,
+  whatsappLink,
+  type AdminService,
+  type Appointment,
+  type Status,
+} from './util'
+import Inicio, { type Destino } from './Inicio'
+import Clientes from './Clientes'
+import Divulgar from './Divulgar'
+import Despesas from './Despesas'
 import './painel.css'
-
-const TZ = 'America/Sao_Paulo'
-const ENDERECO = 'Rua Silvestre Francisco Puglia, 26'
-
-const timeFmt = new Intl.DateTimeFormat('pt-BR', { timeZone: TZ, hour: '2-digit', minute: '2-digit' })
-const dayTitleFmt = new Intl.DateTimeFormat('pt-BR', { timeZone: TZ, weekday: 'long', day: 'numeric', month: 'long' })
-const shortDateFmt = new Intl.DateTimeFormat('pt-BR', { timeZone: TZ, weekday: 'short', day: 'numeric', month: 'short' })
-const isoDateFmt = new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' })
-const brl = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
 
 const WEEKDAYS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
 const DURATIONS = Array.from({ length: 20 }, (_, i) => (i + 1) * 15)
 
-type Status = 'pendente' | 'confirmado' | 'cancelado' | 'concluido'
-type Appointment = {
-  id: string
-  starts_at: string
-  ends_at: string
-  status: Status
-  client_name: string
-  client_phone: string
-  service: { name: string } | null
-}
-type AdminService = {
-  id: string
-  name: string
-  price_cents: number | null
-  duration_min: number
-  active: boolean
-  sort_order: number
-}
 type Block = { id: string; starts_at: string; ends_at: string; reason: string | null }
-type Tab = 'agenda' | 'folgas' | 'servicos' | 'ajustes'
+type Tab = Destino | 'inicio'
+type Mais = 'despesas' | 'folgas' | 'servicos' | 'ajustes'
+type Pendente = { codigo: string; titulo: string; phone: string; nome: string | null; criado_em: string; expira_em: string }
+type Lancamento = { id: string; phone: string; pontos: number; valor_cents: number | null; nota: string | null; created_at: string }
+type Prefill = { phone: string; nome: string; valor: number | null; n: number }
 
 const STATUS_LABEL: Record<Status, string> = {
   pendente: 'A confirmar',
@@ -45,64 +47,27 @@ const STATUS_LABEL: Record<Status, string> = {
 }
 
 const TABS: { key: Tab; label: string }[] = [
+  { key: 'inicio', label: 'Início' },
   { key: 'agenda', label: 'Agenda' },
-  { key: 'folgas', label: 'Folgas' },
-  { key: 'servicos', label: 'Serviços' },
-  { key: 'ajustes', label: 'Ajustes' },
+  { key: 'pontos', label: 'Pontos' },
+  { key: 'clientes', label: 'Clientes' },
+  { key: 'divulgar', label: 'Divulgar' },
+  { key: 'mais', label: 'Mais' },
 ]
 
-function todayIso() {
-  return isoDateFmt.format(new Date())
-}
+const MAIS: { key: Mais; label: string }[] = [
+  { key: 'despesas', label: 'Despesas' },
+  { key: 'folgas', label: 'Folgas' },
+  { key: 'servicos', label: 'Serviços e preços' },
+  { key: 'ajustes', label: 'Horário e Google' },
+]
 
-function addDays(iso: string, n: number) {
-  return isoDateFmt.format(new Date(new Date(`${iso}T12:00:00-03:00`).getTime() + n * 86_400_000))
-}
-
-// São Paulo não tem mais horário de verão, então -03:00 vale o ano todo
-function atSaoPaulo(iso: string, time: string) {
-  return new Date(`${iso}T${time}:00-03:00`).toISOString()
-}
-
-function capitalize(s: string) {
-  return s.charAt(0).toUpperCase() + s.slice(1)
-}
-
-function formatPhone(raw: string) {
-  const d = raw.replace(/\D/g, '').replace(/^55(?=\d{10,11}$)/, '').slice(0, 11)
-  if (d.length <= 2) return d
-  if (d.length <= 7) return `(${d.slice(0, 2)}) ${d.slice(2)}`
-  return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`
-}
-
-function whatsappLink(phone: string, text: string) {
-  const d = phone.replace(/\D/g, '')
-  return `https://wa.me/${d.length <= 11 ? `55${d}` : d}?text=${encodeURIComponent(text)}`
-}
-
-function centsToInput(cents: number | null) {
-  return cents === null ? '' : (cents / 100).toFixed(2).replace('.', ',')
-}
-
-function inputToCents(value: string): number | null | 'erro' {
-  const v = value.trim().replace(/^R\$\s*/, '').replace(/\./g, '').replace(',', '.')
-  if (v === '') return null
-  const n = Number(v)
-  return Number.isFinite(n) && n >= 0 ? Math.round(n * 100) : 'erro'
-}
-
-function durationLabel(min: number) {
-  const h = Math.floor(min / 60)
-  const m = min % 60
-  if (h === 0) return `${m} min`
-  return m === 0 ? `${h}h` : `${h}h${String(m).padStart(2, '0')}`
-}
-
-function dbError(error: { code?: string; message?: string }) {
-  if (error.code === '23P01') return 'Já tem um agendamento nesse horário.'
-  if (error.code === '42501') return 'Sua conta não tem permissão para isso.'
-  return 'Não foi possível salvar. Confira a internet e tente de novo.'
-}
+const PAGAMENTOS: { key: string; label: string }[] = [
+  { key: 'pix', label: 'Pix' },
+  { key: 'dinheiro', label: 'Dinheiro' },
+  { key: 'cartao', label: 'Cartão' },
+  { key: 'outro', label: 'Outro' },
+]
 
 export default function Painel() {
   const [session, setSession] = useState<Session | null>(null)
@@ -184,7 +149,13 @@ function Login() {
 }
 
 function Dashboard() {
-  const [tab, setTab] = useState<Tab>('agenda')
+  const [tab, setTabState] = useState<Tab>('inicio')
+  const [mais, setMais] = useState<Mais>('despesas')
+
+  function setTab(t: Tab) {
+    setTabState(t)
+    window.scrollTo({ top: 0 })
+  }
   const [services, setServices] = useState<AdminService[]>([])
 
   const loadServices = useCallback(async () => {
@@ -198,6 +169,27 @@ function Dashboard() {
   useEffect(() => {
     loadServices()
   }, [loadServices])
+
+  // Resgates de Lady Points esperando a Leide. Confere de minuto em minuto e quando ela volta ao painel.
+  const [pendentes, setPendentes] = useState<Pendente[]>([])
+  const loadPendentes = useCallback(async () => {
+    const { data, error } = await supabase!.rpc('lady_pendentes')
+    setPendentes(error ? [] : ((data as Pendente[]) ?? []))
+  }, [])
+  useEffect(() => {
+    loadPendentes()
+    const t = setInterval(loadPendentes, 60_000)
+    const ver = () => document.visibilityState === 'visible' && loadPendentes()
+    document.addEventListener('visibilitychange', ver)
+    return () => (clearInterval(t), document.removeEventListener('visibilitychange', ver))
+  }, [loadPendentes])
+
+  // "+ Lady Points" num atendimento: abre a aba Pontos com o telefone da cliente
+  const [prefill, setPrefill] = useState<Prefill | null>(null)
+  function pontosPara(a: Appointment) {
+    setPrefill((p) => ({ phone: a.client_phone, nome: a.client_name, valor: a.amount_cents, n: (p?.n ?? 0) + 1 }))
+    setTab('pontos')
+  }
 
   return (
     <div className="pn">
@@ -214,14 +206,45 @@ function Dashboard() {
         {TABS.map((t) => (
           <button key={t.key} className={tab === t.key ? 'on' : ''} aria-current={tab === t.key} onClick={() => setTab(t.key)}>
             {t.label}
+            {t.key === 'pontos' && pendentes.length > 0 && (
+              <span className="pn-dot" aria-label={`${pendentes.length} resgates esperando`}>
+                {pendentes.length}
+              </span>
+            )}
           </button>
         ))}
       </nav>
       <main className="pn-main">
-        {tab === 'agenda' && <Agenda services={services} />}
-        {tab === 'folgas' && <Folgas />}
-        {tab === 'servicos' && <Servicos services={services} reload={loadServices} />}
-        {tab === 'ajustes' && <Ajustes />}
+        {tab !== 'pontos' && pendentes.length > 0 && (
+          <button className="pn-alerta" onClick={() => setTab('pontos')}>
+            <strong>
+              {pendentes.length === 1
+                ? `${pendentes[0].nome?.split(' ')[0] ?? 'Uma cliente'} resgatou: ${pendentes[0].titulo}`
+                : `${pendentes.length} clientes resgataram Lady Points`}
+            </strong>
+            <span>Valide o código quando ela mostrar no salão ›</span>
+          </button>
+        )}
+        {tab === 'inicio' && <Inicio onIr={setTab} resgates={pendentes.length} />}
+        {tab === 'agenda' && <Agenda services={services} onPontos={pontosPara} />}
+        {tab === 'pontos' && <LadyPoints pendentes={pendentes} reload={loadPendentes} prefill={prefill} />}
+        {tab === 'clientes' && <Clientes />}
+        {tab === 'divulgar' && <Divulgar services={services} />}
+        {tab === 'mais' && (
+          <>
+            <nav className="pn-row pn-row-left pn-mais" aria-label="Mais opções">
+              {MAIS.map((m) => (
+                <button key={m.key} className={`pn-chip ${mais === m.key ? 'pn-chip-dark' : ''}`} onClick={() => setMais(m.key)}>
+                  {m.label}
+                </button>
+              ))}
+            </nav>
+            {mais === 'despesas' && <Despesas />}
+            {mais === 'folgas' && <Folgas />}
+            {mais === 'servicos' && <Servicos services={services} reload={loadServices} />}
+            {mais === 'ajustes' && <Ajustes />}
+          </>
+        )}
       </main>
     </div>
   )
@@ -229,7 +252,7 @@ function Dashboard() {
 
 /* ---------------- Agenda ---------------- */
 
-function Agenda({ services }: { services: AdminService[] }) {
+function Agenda({ services, onPontos }: { services: AdminService[]; onPontos: (a: Appointment) => void }) {
   const [day, setDay] = useState(todayIso())
   const [items, setItems] = useState<Appointment[] | null>(null)
   const [pending, setPending] = useState<Appointment[]>([])
@@ -237,7 +260,8 @@ function Agenda({ services }: { services: AdminService[] }) {
   const [error, setError] = useState('')
 
   const load = useCallback(async () => {
-    const cols = 'id, starts_at, ends_at, status, client_name, client_phone, service:services(name)'
+    const cols =
+      'id, starts_at, ends_at, status, client_name, client_phone, amount_cents, payment_method, service:services(name, price_cents)'
     const [d, p] = await Promise.all([
       supabase!
         .from('appointments')
@@ -262,9 +286,9 @@ function Agenda({ services }: { services: AdminService[] }) {
     load()
   }, [load])
 
-  async function setStatus(a: Appointment, status: Status) {
+  async function setStatus(a: Appointment, status: Status, pagamento?: Pick<Appointment, 'amount_cents' | 'payment_method'>) {
     setError('')
-    const { error } = await supabase!.from('appointments').update({ status }).eq('id', a.id)
+    const { error } = await supabase!.from('appointments').update({ status, ...pagamento }).eq('id', a.id)
     if (error) setError(dbError(error))
     else avisarGoogle()
     load()
@@ -280,7 +304,7 @@ function Agenda({ services }: { services: AdminService[] }) {
           <p className="pn-muted">Clientes que agendaram pelo site e ainda esperam sua confirmação.</p>
           <ul className="pn-list">
             {pending.map((a) => (
-              <AppointmentCard key={a.id} a={a} showDate onStatus={setStatus} />
+              <AppointmentCard key={a.id} a={a} showDate onStatus={setStatus} onPontos={onPontos} />
             ))}
           </ul>
         </section>
@@ -327,7 +351,7 @@ function Agenda({ services }: { services: AdminService[] }) {
         {items?.length === 0 && <p className="pn-empty">Nenhum agendamento neste dia.</p>}
         <ul className="pn-list">
           {items?.map((a) => (
-            <AppointmentCard key={a.id} a={a} onStatus={setStatus} />
+            <AppointmentCard key={a.id} a={a} onStatus={setStatus} onPontos={onPontos} />
           ))}
         </ul>
       </section>
@@ -339,11 +363,14 @@ function AppointmentCard({
   a,
   showDate,
   onStatus,
+  onPontos,
 }: {
   a: Appointment
   showDate?: boolean
-  onStatus: (a: Appointment, s: Status) => void
+  onStatus: (a: Appointment, s: Status, pagamento?: Pick<Appointment, 'amount_cents' | 'payment_method'>) => void
+  onPontos: (a: Appointment) => void
 }) {
+  const [pagando, setPagando] = useState(false)
   const start = new Date(a.starts_at)
   const firstName = a.client_name.split(' ')[0]
   const when = `${dayTitleFmt.format(start)} às ${timeFmt.format(start)}`
@@ -385,14 +412,19 @@ function AppointmentCard({
               <WhatsAppIcon /> Confirmar
             </button>
           )}
-          {a.status === 'confirmado' && (
-            <button className="pn-btn" onClick={() => onStatus(a, 'concluido')}>
+          {a.status === 'confirmado' && !pagando && (
+            <button className="pn-btn" onClick={() => setPagando(true)}>
               <CheckIcon /> Atendida
             </button>
           )}
-          {(a.status === 'pendente' || a.status === 'confirmado') && (
+          {(a.status === 'pendente' || a.status === 'confirmado') && !pagando && (
             <button className="pn-btn pn-btn-quiet" onClick={cancel}>
               Cancelar
+            </button>
+          )}
+          {a.status === 'concluido' && (
+            <button className="pn-btn pn-btn-dark" onClick={() => onPontos(a)}>
+              + Lady Points
             </button>
           )}
           {(a.status === 'cancelado' || a.status === 'concluido') && (
@@ -401,8 +433,78 @@ function AppointmentCard({
             </button>
           )}
         </div>
+        {a.status === 'concluido' && a.amount_cents !== null && (
+          <span className="pn-muted-inline">
+            Pagou {brl.format(a.amount_cents / 100)}
+            {a.payment_method && ` · ${PAGAMENTOS.find((p) => p.key === a.payment_method)?.label ?? ''}`}
+          </span>
+        )}
+        {pagando && (
+          <Pagamento
+            a={a}
+            onCancel={() => setPagando(false)}
+            onSave={(pagamento) => {
+              setPagando(false)
+              onStatus(a, 'concluido', pagamento)
+            }}
+          />
+        )}
       </div>
     </li>
+  )
+}
+
+// Ao marcar "Atendida", a Leide anota quanto a cliente pagou. É isso que vira o "Entrou" do Início.
+function Pagamento({
+  a,
+  onCancel,
+  onSave,
+}: {
+  a: Appointment
+  onCancel: () => void
+  onSave: (p: Pick<Appointment, 'amount_cents' | 'payment_method'>) => void
+}) {
+  const [valor, setValor] = useState(centsToInput(a.amount_cents ?? a.service?.price_cents ?? null))
+  const [metodo, setMetodo] = useState(a.payment_method ?? 'pix')
+  const [erro, setErro] = useState('')
+
+  function salvar(e: FormEvent) {
+    e.preventDefault()
+    const c = inputToCents(valor)
+    if (c === 'erro') return setErro('Valor inválido. Use, por exemplo, 80 ou 79,90.')
+    onSave({ amount_cents: c, payment_method: c === null ? null : metodo })
+  }
+
+  return (
+    <form className="pn-form pn-pagamento" onSubmit={salvar}>
+      <label className="pn-field">
+        <span>Quanto ela pagou? (R$)</span>
+        <input inputMode="decimal" value={valor} placeholder="0,00" autoFocus onChange={(e) => setValor(e.target.value)} />
+      </label>
+      <div className="pn-row pn-row-left" role="radiogroup" aria-label="Como pagou">
+        {PAGAMENTOS.map((p) => (
+          <button
+            key={p.key}
+            type="button"
+            role="radio"
+            aria-checked={metodo === p.key}
+            className={`pn-chip ${metodo === p.key ? 'pn-chip-dark' : ''}`}
+            onClick={() => setMetodo(p.key)}
+          >
+            {p.label}
+          </button>
+        ))}
+      </div>
+      {erro && <p className="pn-error">{erro}</p>}
+      <div className="pn-card-actions">
+        <button className="pn-btn pn-btn-dark">
+          <CheckIcon /> Salvar atendimento
+        </button>
+        <button type="button" className="pn-btn pn-btn-quiet" onClick={onCancel}>
+          Voltar
+        </button>
+      </div>
+    </form>
   )
 }
 
@@ -588,6 +690,225 @@ function Folgas() {
         })}
       </ul>
     </section>
+  )
+}
+
+/* ---------------- Lady Points ---------------- */
+
+const LADY_ERRO: Record<string, string> = {
+  codigo_invalido: 'Esse código não existe. Confira as letras com a cliente.',
+  codigo_usado: 'Esse código já foi usado.',
+  codigo_expirado: 'Esse código venceu. Peça para a cliente resgatar de novo no app.',
+  telefone_invalido: 'Confira o telefone (com DDD).',
+  valor_invalido: 'Digite o valor pago.',
+  sem_permissao: 'Sua conta não tem permissão para isso.',
+}
+
+function ladyErro(error: { message?: string }) {
+  return LADY_ERRO[error.message ?? ''] ?? 'Não deu certo. Confira a internet e tente de novo. (Já rodou o arquivo 0008 no Supabase?)'
+}
+
+const pontosFmt = new Intl.NumberFormat('pt-BR')
+
+function LadyPoints({ pendentes, reload, prefill }: { pendentes: Pendente[]; reload: () => void; prefill: Prefill | null }) {
+  const [codigo, setCodigo] = useState('')
+  const [validado, setValidado] = useState<{ titulo: string; nome: string | null; phone: string } | null>(null)
+  const [erroCodigo, setErroCodigo] = useState('')
+
+  const [phone, setPhone] = useState(prefill ? formatPhone(prefill.phone) : '')
+  const [nome, setNome] = useState(prefill?.nome ?? '')
+  const [valor, setValor] = useState(centsToInput(prefill?.valor ?? null))
+  const [nota, setNota] = useState('')
+  const [lancado, setLancado] = useState('')
+  const [erroLanc, setErroLanc] = useState('')
+  const [enviando, setEnviando] = useState(false)
+  const [extrato, setExtrato] = useState<Lancamento[] | null>(null)
+
+  // Veio do "+ Lady Points" de um atendimento
+  const [vindoDe, setVindoDe] = useState(prefill?.n)
+  if (prefill && prefill.n !== vindoDe) {
+    setVindoDe(prefill.n)
+    setPhone(formatPhone(prefill.phone))
+    setNome(prefill.nome)
+    setValor(centsToInput(prefill.valor))
+    setLancado('')
+  }
+
+  const loadExtrato = useCallback(async () => {
+    const { data } = await supabase!
+      .from('lady_pontos')
+      .select('id, phone, pontos, valor_cents, nota, created_at')
+      .order('created_at', { ascending: false })
+      .limit(15)
+    setExtrato(data ?? [])
+  }, [])
+
+  useEffect(() => {
+    loadExtrato()
+  }, [loadExtrato])
+
+  async function validar(c: string) {
+    setErroCodigo('')
+    setValidado(null)
+    const { data, error } = await supabase!.rpc('lady_validar', { p_codigo: c })
+    if (error) return setErroCodigo(ladyErro(error))
+    setValidado(data as { titulo: string; nome: string | null; phone: string })
+    setCodigo('')
+    reload()
+  }
+
+  const cents = inputToCents(valor)
+
+  async function lancar(e: FormEvent) {
+    e.preventDefault()
+    setErroLanc('')
+    setLancado('')
+    if (cents === 'erro' || cents === null || cents === 0) return setErroLanc('Digite o valor pago, por exemplo 120,00.')
+    setEnviando(true)
+    const { data, error } = await supabase!.rpc('lady_lancar', {
+      p_phone: phone,
+      p_valor_cents: cents,
+      p_nota: nota.trim() || (nome ? nome : null),
+    })
+    setEnviando(false)
+    if (error) return setErroLanc(ladyErro(error))
+    setLancado(`${pontosFmt.format(cents)} pontos lançados. ${nome ? nome.split(' ')[0] : 'A cliente'} agora tem ${pontosFmt.format(data as number)} pontos.`)
+    setValor('')
+    setNota('')
+    loadExtrato()
+  }
+
+  async function desfazer(l: Lancamento) {
+    if (!window.confirm(`Apagar o lançamento de ${pontosFmt.format(l.pontos)} pontos para ${formatPhone(l.phone)}?`)) return
+    await supabase!.from('lady_pontos').delete().eq('id', l.id)
+    loadExtrato()
+  }
+
+  return (
+    <>
+      <section className="pn-section">
+        <h2>Validar código</h2>
+        <p className="pn-muted">A cliente mostra o código no app. Digite aqui para conferir e dar baixa.</p>
+        <form
+          className="pn-form pn-box"
+          onSubmit={(e) => {
+            e.preventDefault()
+            validar(codigo)
+          }}
+        >
+          <label className="pn-field">
+            <span>Código</span>
+            <input
+              className="pn-codigo"
+              value={codigo}
+              onChange={(e) => setCodigo(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6))}
+              placeholder="ABC123"
+              autoCapitalize="characters"
+              autoComplete="off"
+              required
+              minLength={6}
+            />
+          </label>
+          {erroCodigo && <p className="pn-error">{erroCodigo}</p>}
+          {validado && (
+            <p className="pn-ok">
+              <CheckIcon /> Código válido: <strong>{validado.titulo}</strong>
+              {validado.nome ? ` para ${validado.nome}` : ` para ${formatPhone(validado.phone)}`}. Já demos baixa.
+            </p>
+          )}
+          <button className="btn btn-primary">Validar código</button>
+        </form>
+      </section>
+
+      <section className="pn-section">
+        <h2>Resgates esperando</h2>
+        <p className="pn-muted">Recompensas que as clientes resgataram no app e ainda vão usar no salão.</p>
+        {pendentes.length === 0 && <p className="pn-empty">Nenhum resgate esperando.</p>}
+        <ul className="pn-list">
+          {pendentes.map((r) => (
+            <li key={r.codigo} className="pn-card pn-card-flat">
+              <div className="pn-card-body">
+                <span className="pn-card-service">{r.titulo}</span>
+                <span className="pn-card-client">
+                  {r.nome ?? 'Cliente'} · {formatPhone(r.phone)}
+                </span>
+                <span className="pn-muted-inline">
+                  Código <strong>{r.codigo}</strong> · vale até {timeFmt.format(new Date(r.expira_em))} de{' '}
+                  {shortDateFmt.format(new Date(r.expira_em))}
+                </span>
+              </div>
+              <button className="pn-btn pn-btn-dark" onClick={() => validar(r.codigo)}>
+                <CheckIcon /> Usou
+              </button>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section className="pn-section">
+        <h2>Lançar pontos</h2>
+        <p className="pn-muted">Quando a cliente pagar, lance o valor. Cada R$ 1,00 vale 100 Lady Points.</p>
+        <form className="pn-form pn-box" onSubmit={lancar}>
+          {nome && <p className="pn-muted-inline">Cliente: {nome}</p>}
+          <label className="pn-field">
+            <span>Telefone da cliente (o mesmo do agendamento)</span>
+            <input
+              type="tel"
+              inputMode="tel"
+              value={phone}
+              onChange={(e) => (setPhone(formatPhone(e.target.value)), setNome(''))}
+              placeholder="(11) 90000-0000"
+              required
+            />
+          </label>
+          <label className="pn-field">
+            <span>Valor pago (R$)</span>
+            <input inputMode="decimal" value={valor} onChange={(e) => setValor(e.target.value)} placeholder="120,00" required />
+          </label>
+          {typeof cents === 'number' && cents > 0 && (
+            <p className="pn-muted-inline">= {pontosFmt.format(cents)} Lady Points</p>
+          )}
+          <label className="pn-field">
+            <span>Anotação (opcional)</span>
+            <input value={nota} onChange={(e) => setNota(e.target.value)} placeholder="Escova e hidratação" />
+          </label>
+          {erroLanc && <p className="pn-error">{erroLanc}</p>}
+          {lancado && (
+            <p className="pn-ok">
+              <CheckIcon /> {lancado}
+            </p>
+          )}
+          <button className="btn btn-primary" disabled={enviando}>
+            {enviando ? 'Lançando…' : 'Lançar pontos'}
+          </button>
+        </form>
+      </section>
+
+      <section className="pn-section">
+        <h3>Últimos lançamentos</h3>
+        {extrato?.length === 0 && <p className="pn-empty">Nenhum ponto lançado ainda.</p>}
+        <ul className="pn-list">
+          {extrato?.map((l) => (
+            <li key={l.id} className="pn-card pn-card-flat">
+              <div className="pn-card-body">
+                <span className="pn-card-service">
+                  {l.pontos > 0 ? '+' : ''}
+                  {pontosFmt.format(l.pontos)} pontos
+                </span>
+                <span className="pn-card-client">
+                  {formatPhone(l.phone)}
+                  {l.nota ? ` · ${l.nota}` : ''}
+                </span>
+                <span className="pn-muted-inline">{capitalize(shortDateFmt.format(new Date(l.created_at)))}</span>
+              </div>
+              <button className="pn-btn pn-btn-quiet" onClick={() => desfazer(l)}>
+                Apagar
+              </button>
+            </li>
+          ))}
+        </ul>
+      </section>
+    </>
   )
 }
 
