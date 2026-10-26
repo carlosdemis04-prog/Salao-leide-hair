@@ -581,45 +581,172 @@ svg {
 
 .palco {
   position: relative;
-  height: 72svh;
-  min-height: 420px;
+  height: 62svh;
+  min-height: 400px;
   background: var(--preto);
 }
 
-.palco-canvas {
+/* Vitrine em ouro: desenho em traço que se desenha sozinho, aro da logo e um brilho passando */
+.vitrine {
+  --mx: 0;
+  --my: 0;
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
-  cursor: grab;
-  opacity: 0;
-  transition: opacity 1.2s var(--ease);
-  /* Deixa a página rolar na vertical; o arrasto de lado gira a peça */
-  touch-action: pan-y;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: radial-gradient(60% 55% at 50% 50%, rgba(226, 176, 78, 0.16), transparent 70%), var(--preto);
 }
 
-.palco.pronto .palco-canvas {
-  opacity: 1;
-}
-
-.palco-figura {
+.vitrine-numero {
   position: absolute;
-  left: 10%;
-  right: 10%;
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-.palco-dica {
-  position: absolute;
-  left: var(--gutter);
-  right: var(--gutter);
-  bottom: 16px;
-  margin: 0;
-  text-align: center;
-  font-size: 0.86rem;
-  color: var(--bege-2);
+  right: 4%;
+  bottom: -0.12em;
+  font-family: var(--serif);
+  font-size: clamp(10rem, 30vw, 26rem);
+  line-height: 1;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(226, 176, 78, 0.28);
   pointer-events: none;
+  transform: translate(calc(var(--mx) * -18px), calc(var(--my) * -12px));
+  transition: transform 0.6s var(--ease);
+}
+
+.vitrine-aro {
+  position: absolute;
+  width: min(78vw, 64svh, 560px);
+  aspect-ratio: 1;
+  border: 1px solid rgba(226, 176, 78, 0.35);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 18px rgba(226, 176, 78, 0.04),
+    inset 0 0 80px rgba(226, 176, 78, 0.08);
+  animation: aro-entra 1.4s var(--ease) both;
+}
+
+.vitrine-desenho {
+  position: relative;
+  width: min(70vw, 56svh, 500px);
+  height: auto;
+  overflow: visible;
+  transform: translate(calc(var(--mx) * 22px), calc(var(--my) * 16px));
+  transition: transform 0.6s var(--ease);
+  filter: drop-shadow(0 0 10px rgba(226, 176, 78, 0.35));
+}
+
+.tracos * {
+  fill: none;
+  stroke: url(#traco-ouro);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: traco 1.5s var(--ease) calc(var(--i, 0) * 0.11s) forwards;
+}
+
+.tracos g {
+  animation: none;
+}
+
+.tracos .esmalte-liquido,
+.tracos .pupila,
+.tracos .brilho {
+  fill-opacity: 0;
+  animation:
+    traco 1.5s var(--ease) calc(var(--i, 0) * 0.11s) forwards,
+    preenche 0.9s ease calc(var(--i, 0) * 0.11s + 0.9s) forwards;
+}
+
+.tracos .esmalte-liquido {
+  fill: var(--esmalte);
+  transition: fill 0.5s ease;
+}
+
+.tracos .pupila,
+.tracos .brilho {
+  fill: url(#traco-ouro);
+}
+
+.tracos .reflexo {
+  stroke: rgba(255, 253, 251, 0.7);
+}
+
+/* As estrelinhas piscam depois que o desenho termina */
+.tracos .brilho {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation:
+    traco 1.5s var(--ease) calc(var(--i, 0) * 0.11s) forwards,
+    preenche 0.9s ease calc(var(--i, 0) * 0.11s + 0.9s) forwards,
+    pisca 3.2s ease-in-out calc(var(--i, 0) * 0.11s + 1.8s) infinite;
+}
+
+/* Um reflexo de luz atravessa a vitrine de tempos em tempos */
+.vitrine-luz {
+  position: absolute;
+  inset: -20% -60%;
+  background: linear-gradient(100deg, transparent 42%, rgba(246, 220, 154, 0.12) 50%, transparent 58%);
+  transform: translateX(-60%);
+  animation: luz 7s ease-in-out 1.6s infinite;
+  pointer-events: none;
+}
+
+@keyframes traco {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes preenche {
+  to {
+    fill-opacity: 1;
+  }
+}
+
+@keyframes pisca {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(0.55);
+    opacity: 0.55;
+  }
+}
+
+@keyframes luz {
+  0% {
+    transform: translateX(-60%);
+  }
+  45%,
+  100% {
+    transform: translateX(60%);
+  }
+}
+
+@keyframes aro-entra {
+  from {
+    opacity: 0;
+    transform: scale(0.86);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tracos *,
+  .tracos .esmalte-liquido,
+  .tracos .pupila,
+  .tracos .brilho {
+    animation: none;
+    stroke-dashoffset: 0;
+    fill-opacity: 1;
+  }
+
+  .vitrine-luz,
+  .vitrine-aro {
+    animation: none;
+  }
 }
 
 .servicos-texto {
@@ -821,13 +948,12 @@ svg {
     height: auto;
   }
 
-  .palco-dica {
-    left: auto;
-    right: var(--gutter);
-    bottom: 28px;
-    max-width: 320px;
-    text-align: right;
+  /* O desenho fica à direita, longe do texto */
+  .vitrine-aro,
+  .vitrine-desenho {
+    margin-left: 36vw;
   }
+
 
   /* O texto fica por cima do filme, na coluna da esquerda; o vão deixa o arrasto chegar na peça */
   .servicos-texto {

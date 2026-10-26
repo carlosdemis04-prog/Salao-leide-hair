@@ -14,6 +14,7 @@ import {
 import { abertura, atualizarCenas, cenas, cursor, rolagemSuave, scrollToY } from './cinema'
 import { Letras } from './Letras'
 import { Servicos } from './Servicos'
+import { MOSTRAR_PRECO_SERVICOS } from './app/formato'
 import { HeroFigura } from './HeroFigura'
 
 const TZ = 'America/Sao_Paulo'
@@ -81,7 +82,8 @@ function formatDuration(min: number) {
 }
 
 function formatPrice(cents: number | null) {
-  return cents === null ? 'A consultar' : brl.format(cents / 100)
+  if (!MOSTRAR_PRECO_SERVICOS || cents === null) return 'Valor a consultar'
+  return brl.format(cents / 100)
 }
 
 function formatPhone(raw: string) {
