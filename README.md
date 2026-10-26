@@ -54,13 +54,9 @@ Além disso, ela:
 
 A Leide escreve com as palavras dela ("faz uma promoção de escova para terça") e o assistente devolve a oferta ou o evento prontos, com o texto para WhatsApp e Instagram. Nada vai para o app sem ela apertar **Publicar no app**. Ele também conhece os números do Início, então dá para perguntar "como foi meu mês?".
 
-Ele usa o Claude, da Anthropic, pelo worker da Cloudflare ([`worker/assistente.js`](worker/assistente.js)). A chave fica guardada como segredo na Cloudflare e nunca vai para o navegador. Para ligar (uma vez só):
+Ele roda no worker da Cloudflare ([`worker/assistente.js`](worker/assistente.js)) e usa a **IA grátis da própria Cloudflare** (Workers AI, modelo Llama 3.3). Não precisa de chave nem de cartão: a ligação `"ai"` no `wrangler.jsonc` já basta. A cota grátis é de 10 mil "neurônios" por dia, o que dá algumas dezenas de conversas; se acabar, o painel avisa e ela volta no dia seguinte.
 
-1. Crie uma conta em [console.anthropic.com](https://console.anthropic.com), coloque um cartão em **Billing** (cada conversa custa centavos) e, em **API Keys**, clique em **Create Key**. Copie a chave (começa com `sk-ant-`).
-2. No painel da Cloudflare, abra **Workers & Pages** > **salao-leide-hair** (não mexa no outro projeto) > **Settings** > **Variables and Secrets** > **Add**.
-3. Em **Type** escolha **Secret**, em **Variable name** escreva `ANTHROPIC_API_KEY`, cole a chave em **Value** e clique em **Deploy**.
-
-Não mande a chave por chat nem coloque no código. Sem a chave, o resto do painel funciona normalmente e a aba Divulgar avisa que o assistente ainda não foi ligado.
+Se um dia quiser respostas melhores, dá para trocar pelo Claude, da Anthropic (pago, centavos por conversa): crie uma chave em [console.anthropic.com](https://console.anthropic.com) e coloque na Cloudflare em **Workers & Pages** > **salao-leide-hair** (não mexa no outro projeto) > **Settings** > **Variables and Secrets** > **Add**, tipo **Secret**, nome `ANTHROPIC_API_KEY`. Com a chave colocada, o assistente passa a usar o Claude sozinho. Não mande a chave por chat nem coloque no código.
 
 ### Criar o acesso da Leide (uma vez só)
 

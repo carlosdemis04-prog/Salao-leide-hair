@@ -18,6 +18,10 @@
   "triggers": {
     "crons": ["*/5 * * * *"]
   },
+  // IA grátis da Cloudflare, usada pelo assistente do painel (worker/assistente.js)
+  "ai": {
+    "binding": "AI"
+  },
   // Endereço e chave pública do Supabase (as mesmas do .env.production, não são segredo)
   "vars": {
     "SUPABASE_URL": "https://rxozyjdtnkzdsrafizxu.supabase.co",
