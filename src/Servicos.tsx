@@ -1,10 +1,10 @@
-// Área Serviços: cada categoria tem um desenho em traço de ouro que se desenha sozinho num fundo preto.
+// Área Serviços: cada categoria tem uma peça fotografada em estúdio que gira em 360° com o arrasto.
 // No computador a área fica presa na tela e a rolagem passa pelos três capítulos, como cenas de um filme.
-// Não usa 3D: é só SVG e CSS, leve para qualquer celular.
+// Não usa 3D no navegador: são fotos renderizadas, leves para qualquer celular.
 import { useEffect, useRef, useState } from 'react'
 import { scrollToY } from './cinema'
 import type { Service } from './supabase'
-import { ESMALTES, VitrineOuro, type Aba } from './Vitrine'
+import { ESMALTES, PECAS_CABELO, VitrineOuro, type Aba, type PecaCabelo } from './Vitrine'
 import { Letras } from './Letras'
 
 type Grupo = { key: string; title: string; items: Service[] }
@@ -14,19 +14,19 @@ const ABAS: { key: Aba; titulo: string; frase: string; rotulo: string }[] = [
     key: 'cabelo',
     titulo: 'Cabelo',
     frase: 'Corte, escova, cor e tratamento, do jeito que você pedir.',
-    rotulo: 'Tesoura, pente e mechas de cabelo desenhados em ouro',
+    rotulo: '',
   },
   {
     key: 'unhas',
     titulo: 'Unhas',
     frase: 'Manicure e pedicure com a cor que combina com você.',
-    rotulo: 'Frasco de esmalte, pincel e unhas desenhados em ouro',
+    rotulo: 'Frasco de esmalte de vidro com tampa preta e aro dourado',
   },
   {
     key: 'estetica',
     titulo: 'Estética',
     frase: 'Sobrancelhas, depilação e cuidados com a pele.',
-    rotulo: 'Espelho de mão com um olhar e a sobrancelha desenhados em ouro',
+    rotulo: 'A musa do salão: cabeça de mulher em ouro polido sobre base de mármore preto',
   },
 ]
 
@@ -46,6 +46,7 @@ export function Servicos({
 }) {
   const [aba, setAba] = useState<Aba>('cabelo')
   const [cor, setCor] = useState(ESMALTES[0].cor)
+  const [peca, setPeca] = useState<PecaCabelo>('secador')
   const secaoRef = useRef<HTMLElement>(null)
   const abaRef = useRef(aba)
 
@@ -83,13 +84,14 @@ export function Servicos({
   }
 
   const atual = ABAS.find((a) => a.key === aba)!
+  const rotulo = aba === 'cabelo' ? PECAS_CABELO.find((p) => p.key === peca)!.rotulo : atual.rotulo
   const lista = grupos.find((g) => g.key === aba)?.items ?? []
 
   return (
     <section className="servicos" id="servicos" aria-labelledby="servicos-titulo" data-aba={aba} ref={secaoRef}>
       <div className="servicos-cena">
         <div className="palco">
-          <VitrineOuro aba={aba} cor={cor} rotulo={atual.rotulo} />
+          <VitrineOuro aba={aba} cor={cor} peca={peca} rotulo={rotulo} />
         </div>
 
         <div className="servicos-texto">
@@ -116,6 +118,22 @@ export function Servicos({
 
           <div id="servicos-painel" role="tabpanel" aria-labelledby={`aba-${aba}`} className="servicos-painel" key={aba}>
             <p className="servicos-frase">{atual.frase}</p>
+
+            {aba === 'cabelo' && (
+              <div className="controles" role="radiogroup" aria-label="Peça">
+                {PECAS_CABELO.map((p) => (
+                  <button
+                    key={p.key}
+                    role="radio"
+                    aria-checked={peca === p.key}
+                    className="controle"
+                    onClick={() => setPeca(p.key)}
+                  >
+                    {p.nome}
+                  </button>
+                ))}
+              </div>
+            )}
 
             {aba === 'unhas' && (
               <div className="controles">
