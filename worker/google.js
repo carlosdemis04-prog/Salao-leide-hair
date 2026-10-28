@@ -12,8 +12,15 @@ const DIAS_LIDOS = 30
 // Marca que diferencia os eventos criados pelo site dos compromissos da própria Leide
 const MARCA = 'leidehair'
 
+const SEGREDOS = ['GOOGLE_SERVICE_ACCOUNT', 'GOOGLE_CALENDAR_ID', 'GOOGLE_SYNC_TOKEN']
+
+// Nomes (nunca os valores) dos segredos que o worker não está recebendo
+export function segredosFaltando(env) {
+  return SEGREDOS.filter((nome) => !env[nome])
+}
+
 export function googleConfigurado(env) {
-  return Boolean(env.GOOGLE_SERVICE_ACCOUNT && env.GOOGLE_CALENDAR_ID && env.GOOGLE_SYNC_TOKEN)
+  return segredosFaltando(env).length === 0
 }
 
 function base64url(bytes) {
@@ -157,7 +164,10 @@ export async function lerCompromissos(env, acesso) {
 }
 
 export async function sincronizar(env) {
-  if (!googleConfigurado(env)) return { configurado: false }
+  if (!googleConfigurado(env)) {
+    const nomes = Object.keys(env).filter((k) => k.toUpperCase().includes('GOOGLE'))
+    return { configurado: false, faltando: segredosFaltando(env), recebidos: nomes }
+  }
   const acesso = await acessoGoogle(env)
   const enviados = await enviarAgendamentos(env, acesso)
   const bloqueios = await lerCompromissos(env, acesso)
