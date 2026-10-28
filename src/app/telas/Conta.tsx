@@ -1,3 +1,4 @@
+import { EntrarComGoogle } from '../../googleBotao'
 import type { Conta } from '../conta'
 import { telefone } from '../formato'
 import { Mascote } from '../Mascote'
@@ -30,12 +31,13 @@ type Props = {
   conta: Conta | null
   erro: string
   entrar: () => void
+  avisarErro: (mensagem: string) => void
   sair: () => Promise<void>
   agendar: () => void
   fechar: () => void
 }
 
-export function ContaFolha({ conta, erro, entrar, sair, agendar, fechar }: Props) {
+export function ContaFolha({ conta, erro, entrar, avisarErro, sair, agendar, fechar }: Props) {
   if (!conta)
     return (
       <Folha titulo="Entrar" aoFechar={fechar}>
@@ -45,10 +47,15 @@ export function ContaFolha({ conta, erro, entrar, sair, agendar, fechar }: Props
           <p className="suave">
             Seus Lady Points, cupons e convites ficam guardados na sua conta. Trocou de celular? É só entrar de novo.
           </p>
-          <button className="botao google" onClick={entrar}>
-            <GoogleIcon />
-            Continuar com o Google
-          </button>
+          <EntrarComGoogle
+            aoErro={avisarErro}
+            reserva={
+              <button className="botao google" onClick={entrar}>
+                <GoogleIcon />
+                Continuar com o Google
+              </button>
+            }
+          />
           {erro && <p className="aviso-erro">{erro}</p>}
           <p className="conta-nota">Não precisa de conta para agendar. O login é só para guardar seus pontos.</p>
           <p className="conta-nota">

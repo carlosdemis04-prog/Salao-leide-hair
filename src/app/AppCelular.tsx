@@ -276,6 +276,7 @@ export default function AppCelular() {
           conta={conta.conta}
           erro={conta.erro}
           entrar={conta.entrar}
+          avisarErro={conta.avisarErro}
           sair={conta.sair}
           agendar={() => ir('agendar')}
           fechar={() => setVerConta(false)}

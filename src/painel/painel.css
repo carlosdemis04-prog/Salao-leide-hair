@@ -1203,3 +1203,10 @@ a.pn-btn-dark {
   color: var(--black);
   font-weight: 600;
 }
+
+.pn-login .google-oficial {
+  display: flex;
+  justify-content: center;
+  width: min(100%, 360px);
+  min-height: 44px;
+}
