@@ -67,6 +67,11 @@ export function Contato({ hours }: { hours: BusinessHours[] }) {
       <a className="link site" href="/">
         Ver o site completo do salão
       </a>
+      <p className="links-legais">
+        <a href="/privacidade.html">Privacidade</a>
+        <a href="/cookies.html">Cookies</a>
+        <a href="/termos.html">Termos de uso</a>
+      </p>
     </div>
   )
 }

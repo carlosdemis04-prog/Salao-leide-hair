@@ -51,6 +51,17 @@ export function ContaFolha({ conta, erro, entrar, sair, agendar, fechar }: Props
           </button>
           {erro && <p className="aviso-erro">{erro}</p>}
           <p className="conta-nota">Não precisa de conta para agendar. O login é só para guardar seus pontos.</p>
+          <p className="conta-nota">
+            Ao continuar, o Google nos envia seu nome, e-mail e foto. Veja a{' '}
+            <a href="/privacidade.html" target="_blank" rel="noreferrer">
+              política de privacidade
+            </a>{' '}
+            e os{' '}
+            <a href="/termos.html" target="_blank" rel="noreferrer">
+              termos de uso
+            </a>
+            .
+          </p>
         </div>
       </Folha>
     )
