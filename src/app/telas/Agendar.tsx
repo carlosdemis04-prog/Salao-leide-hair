@@ -17,6 +17,7 @@ import {
   telefone,
   type Dia,
 } from '../formato'
+import { AgendarIcon } from '../icones'
 import { Mascote } from '../Mascote'
 import type { Conta } from '../conta'
 import { Cabecalho, Esqueleto, IconeServico, Vazio } from '../ui'
@@ -56,9 +57,11 @@ type Props = {
   aoReservar: (r: Reserva) => void
   verInicio: () => void
   conta: Conta | null
+  // A aba Agendar está aberta na tela
+  ativa: boolean
 }
 
-export function Agendar({ services, hours, carregando, erro, pedido, aoReservar, verInicio, conta }: Props) {
+export function Agendar({ services, hours, carregando, erro, pedido, aoReservar, verInicio, conta, ativa }: Props) {
   const [etapa, setEtapa] = useState<Etapa>('servico')
   const [servico, setServico] = useState<Service | null>(null)
   const [dia, setDia] = useState<Dia | null>(null)
@@ -162,6 +165,16 @@ export function Agendar({ services, hours, carregando, erro, pedido, aoReservar,
     setErroForm('')
     ir('servico')
   }
+
+  // Saiu da aba depois de reservar: ao voltar, a agenda já começa um novo agendamento
+  useEffect(() => {
+    if (!ativa && etapa === 'feito') {
+      setServico(null)
+      setHorario(null)
+      setFeita(null)
+      setEtapa('servico')
+    }
+  }, [ativa, etapa])
 
   const indice = ETAPAS.findIndex((x) => x.chave === etapa)
   const manhaLista = (horarios ?? []).filter(manha)
@@ -344,6 +357,17 @@ export function Agendar({ services, hours, carregando, erro, pedido, aoReservar,
             />
           </label>
           <p className="suave">A Leide confirma a reserva pelo WhatsApp.</p>
+          <p className="suave aviso-legal">
+            Ao confirmar, você concorda com os{' '}
+            <a href="/termos.html" target="_blank" rel="noreferrer">
+              termos de uso
+            </a>{' '}
+            e com a{' '}
+            <a href="/privacidade.html" target="_blank" rel="noreferrer">
+              política de privacidade
+            </a>
+            . Seu nome e WhatsApp são usados só para o agendamento.
+          </p>
 
           <div className="barra-acao">
             <button className="botao" type="submit" disabled={enviando}>
@@ -374,6 +398,9 @@ export function Agendar({ services, hours, carregando, erro, pedido, aoReservar,
             >
               <WhatsAppIcon /> Avisar a Leide
             </a>
+            <button className="botao secundario" onClick={recomecar}>
+              <AgendarIcon /> Agendar outro horário
+            </button>
             <a
               className="botao secundario"
               href={linkGoogleAgenda({ name: feita.servico }, feita.inicio, feita.fim)}
@@ -384,9 +411,6 @@ export function Agendar({ services, hours, carregando, erro, pedido, aoReservar,
             </a>
             <button className="botao texto" onClick={verInicio}>
               Ver na tela inicial
-            </button>
-            <button className="botao texto" onClick={recomecar}>
-              Agendar outro serviço
             </button>
           </div>
         </section>

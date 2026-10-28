@@ -21,6 +21,10 @@ No painel do Supabase, abra **SQL Editor** e rode, nesta ordem, o conteúdo de c
 10. [`supabase/migrations/0009_painel_admin.sql`](supabase/migrations/0009_painel_admin.sql): guarda quanto cada cliente pagou, cria a lista de clientes e as despesas do painel.
 11. [`supabase/migrations/0010_lady_metas_dificeis.sql`](supabase/migrations/0010_lady_metas_dificeis.sql): deixa as metas da Corrida das Lady Points mais difíceis (a final passa a pedir 500.000 pontos, ou R$ 5.000 gastos).
 12. [`supabase/migrations/0011_indique_amigas.sql`](supabase/migrations/0011_indique_amigas.sql): liga a campanha Indique amigas (link de convite no app, cupom de 10% para a amiga nova e de 30% a cada 3 amigas), validada no painel.
+13. [`supabase/migrations/0012_login_google.sql`](supabase/migrations/0012_login_google.sql): liga a conta Google da cliente ao WhatsApp dela, para os pontos aparecerem em qualquer celular.
+14. [`supabase/migrations/0013_lgpd_apagar_cliente.sql`](supabase/migrations/0013_lgpd_apagar_cliente.sql): cria o botão **Apagar dados da cliente** na ficha do painel, para atender quem pedir a exclusão dos dados (LGPD).
+
+Privacidade e regras: o site tem [política de privacidade](public/privacidade.html), [política de cookies](public/cookies.html) e [termos de uso](public/termos.html). O que falta fazer e os cuidados do dia a dia estão em [`docs/lgpd.md`](docs/lgpd.md).
 
 ## App para celular (`/app`)
 

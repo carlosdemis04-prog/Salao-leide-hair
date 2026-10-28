@@ -81,5 +81,7 @@ export function durationLabel(min: number) {
 export function dbError(error: { code?: string; message?: string }) {
   if (error.code === '23P01') return 'Já tem um agendamento nesse horário.'
   if (error.code === '42501') return 'Sua conta não tem permissão para isso.'
+  // Coluna do valor cobrado ainda não existe: falta rodar a migração 0009 no Supabase
+  if (error.code === '42703' || error.code === 'PGRST204') return 'Falta atualizar o banco (migração 0009) para guardar o valor cobrado.'
   return 'Não foi possível salvar. Confira a internet e tente de novo.'
 }

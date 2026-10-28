@@ -1142,6 +1142,26 @@ a.cartao:active {
   text-align: center;
 }
 
+.links-legais {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 18px;
+  margin: 10px 0 0;
+  font-size: 0.85rem;
+}
+
+.links-legais a,
+.aviso-legal a,
+.conta-nota a {
+  color: var(--a-ouro-texto);
+  text-decoration: underline;
+}
+
+.aviso-legal {
+  font-size: 0.82rem;
+}
+
 /* ---------- Folha de baixo ---------- */
 
 .folha-fundo {

@@ -1,0 +1,86 @@
+/* Estilo das páginas de política de privacidade, cookies e termos de uso */
+:root {
+  color-scheme: light;
+  --fundo: #fbf7f2;
+  --tinta: #2b211b;
+  --tinta-2: #75675b;
+  --ouro: #87601a;
+  --linha: #eee3d6;
+  --cartao: #f4ece2;
+}
+body {
+  margin: 0;
+  background: var(--fundo);
+  color: var(--tinta);
+  font: 16px/1.6 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+main {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 32px 20px 64px;
+}
+header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--linha);
+}
+header img {
+  width: 56px;
+  height: auto;
+  padding: 6px;
+  border-radius: 14px;
+  background: #2b211b;
+}
+h1 {
+  margin: 0;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-weight: 400;
+  font-size: 1.9rem;
+  line-height: 1.15;
+}
+h2 {
+  margin: 28px 0 6px;
+  font-size: 1.05rem;
+}
+p,
+li {
+  margin: 6px 0;
+}
+.suave {
+  color: var(--tinta-2);
+  font-size: 0.9rem;
+}
+.resumo {
+  margin: 20px 0;
+  padding: 14px 18px;
+  border-radius: 14px;
+  background: var(--cartao);
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+th,
+td {
+  padding: 8px 6px;
+  border-bottom: 1px solid var(--linha);
+  text-align: left;
+  vertical-align: top;
+}
+.tabela {
+  overflow-x: auto;
+}
+nav.outras {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin-top: 36px;
+  padding-top: 18px;
+  border-top: 1px solid var(--linha);
+}
+a {
+  color: var(--ouro);
+}
