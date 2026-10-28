@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
 import type { Session } from '@supabase/supabase-js'
+import { EntrarComGoogle } from '../googleBotao'
 import { avisarGoogle, supabase } from '../supabase'
 import { CalendarIcon, CheckIcon, ChevronLeftIcon, ChevronRightIcon, ClockIcon, WhatsAppIcon } from '../icons'
 import {
@@ -189,10 +190,16 @@ function Login() {
       <div className="pn-ou" aria-hidden>
         <span>ou</span>
       </div>
-      <button type="button" className="btn btn-ghost pn-google" onClick={google}>
-        <GoogleIcon />
-        Entrar com o Google
-      </button>
+      <EntrarComGoogle
+        escuro
+        aoErro={setError}
+        reserva={
+          <button type="button" className="btn btn-ghost pn-google" onClick={google}>
+            <GoogleIcon />
+            Entrar com o Google
+          </button>
+        }
+      />
       <p className="pn-legal">
         <a href="/privacidade.html">Privacidade</a> · <a href="/termos.html">Termos de uso</a>
       </p>

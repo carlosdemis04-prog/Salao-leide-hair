@@ -133,8 +133,19 @@ Endereços que você vai usar (copie e cole exatamente):
 | `Unsupported provider: provider is not enabled` | O Google não foi ligado ou salvo no Supabase (etapa 2.1). |
 | "Signups not allowed" | **Allow new users to sign up** está desligado (etapa 2.1.3). |
 | Depois de escolher a conta, volta para a página inicial do site em vez do app | Falta o endereço com `/**` em **Redirect URLs** (etapa 2.2.3). |
+| Depois de escolher a conta, abre `localhost:3000` com erro | O **Site URL** do Supabase ainda é o padrão. Troque pelo endereço do site (etapa 2.2.2) e confira o `/**` em **Redirect URLs**. |
 | Entra, mas os pontos não aparecem | Falta rodar a migração 0012 (etapa 2.3). O login funciona sem ela, só não guarda os pontos na conta. |
 | App instalado no iPhone volta sem estar logado | No iPhone, o app instalado na tela de início às vezes abre o Google no Safari e volta lá. Entre pelo Safari uma vez; o resto do app continua funcionando sem login. |
+
+## Botão oficial do Google (opcional)
+
+Sem nada a mais, a tela do Google mostra o endereço do Supabase. Para mostrar o endereço do site:
+
+1. No Google Cloud, no cliente OAuth do login, adicione o endereço do site em **Origens JavaScript autorizadas** (sem barra no final), por exemplo `https://salao-leide-hair.carlosdemis04.workers.dev`.
+2. Coloque o **ID do cliente** (público, termina em `.apps.googleusercontent.com`) em `VITE_GOOGLE_CLIENT_ID` no `.env.production`.
+3. No Supabase, em **Providers > Google**, o mesmo ID precisa estar em **Client IDs**.
+
+Com o ID, o app e o painel desenham o botão do Google (`src/googleBotao.tsx`) e entram com `signInWithIdToken`. Sem o ID, ou se o script do Google não carregar, volta o botão antigo.
 
 ## Como funciona (para quem for mexer no código)
 
