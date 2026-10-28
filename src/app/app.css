@@ -2223,20 +2223,10 @@ a.cartao:active {
   background: radial-gradient(closest-side, rgba(251, 231, 189, 0.95), rgba(233, 183, 90, 0.25), transparent);
 }
 
-.familia-barra {
-  display: grid;
-  gap: 6px;
-  width: 100%;
-}
-
-.familia-barra-topo {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.92rem;
-}
-
 .familia-barra-trilho {
-  height: 10px;
+  position: relative;
+  display: block;
+  height: 12px;
   border-radius: 99px;
   background: var(--a-creme);
   overflow: hidden;
@@ -2372,4 +2362,57 @@ a.cartao:active {
 .familia-conta strong {
   display: block;
   font-size: 1rem;
+}
+
+.familia-progresso {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+}
+
+.familia-progresso-topo {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.familia-nivel {
+  color: var(--a-ouro-texto);
+  font-weight: 700;
+}
+
+.familia-pct {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 2.2rem;
+  line-height: 1;
+}
+
+.familia-marco {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  margin-left: -1px;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.familia-marcos {
+  display: flex;
+  justify-content: space-between;
+  color: var(--a-tinta-2);
+  font-size: 0.75rem;
+}
+
+.familia-frase {
+  margin: 4px 0 0;
+  font-family: var(--serif);
+  font-size: 1.35rem;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.familia-botoes {
+  width: 100%;
 }

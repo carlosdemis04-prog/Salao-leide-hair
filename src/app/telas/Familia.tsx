@@ -1,4 +1,4 @@
-import { AMIGAS_PARA_ENTRAR, DESCONTO_FAMILIA, diasAte, SERVICOS_PARA_ENTRAR, type MinhaFamilia } from '../familia'
+import { AMIGAS_PARA_ENTRAR, DESCONTO_FAMILIA, diasAte, nivel, porcentagem, SERVICOS_PARA_ENTRAR, type MinhaFamilia } from '../familia'
 import { dataCurtaFmt } from '../formato'
 import { Mascote } from '../Mascote'
 import { depoisDeFechar, Folha } from '../ui'
@@ -7,23 +7,32 @@ function data(iso: string) {
   return dataCurtaFmt.format(new Date(iso)).replace('.', '')
 }
 
-function faltam(n: number, um: string, varios: string) {
-  return `${n} ${n === 1 ? um : varios}`
-}
-
-function Barra({ valor, total, rotulo }: { valor: number; total: number; rotulo: string }) {
-  const feito = Math.min(valor, total)
+// Barra única em porcentagem, com o nível e a frase do nível
+function Progresso({ pct }: { pct: number }) {
+  const n = nivel(pct)
   return (
-    <div className="familia-barra">
-      <span className="familia-barra-topo">
-        <span>{rotulo}</span>
-        <strong>
-          {feito}/{total}
-        </strong>
+    <div className="familia-progresso">
+      <span className="familia-progresso-topo">
+        <span className="familia-nivel">{n.nome}</span>
+        <strong className="familia-pct">{pct}%</strong>
       </span>
-      <span className="familia-barra-trilho" aria-hidden>
-        <span style={{ width: `${(feito / total) * 100}%` }} />
+      <span
+        className="familia-barra-trilho"
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={pct}
+        aria-label="Caminho até a família"
+      >
+        <span style={{ width: `${pct}%` }} />
+        <i className="familia-marco" style={{ left: '50%' }} aria-hidden />
       </span>
+      <span className="familia-marcos" aria-hidden>
+        <span>Conhecida</span>
+        <span>Quase lá</span>
+        <span>Família</span>
+      </span>
+      <p className="familia-frase">{n.frase}</p>
     </div>
   )
 }
@@ -57,8 +66,7 @@ export function FamiliaCartao({ familia, abrir }: { familia: MinhaFamilia | null
       <span className="familia-cartao-pe">
         {p && !p.membro ? (
           <span className="familia-mini">
-            {Math.min(p.amigas, AMIGAS_PARA_ENTRAR)}/{AMIGAS_PARA_ENTRAR} amigas · {Math.min(p.servicos, SERVICOS_PARA_ENTRAR)}/
-            {SERVICOS_PARA_ENTRAR} serviços
+            {porcentagem(p)}% concluído · {nivel(porcentagem(p)).nome}
           </span>
         ) : p?.membro && p.servico_ate ? (
           <span className="familia-mini">Próximo serviço até {data(p.servico_ate)}</span>
@@ -106,8 +114,6 @@ export function FamiliaFolha({
   fechar: () => void
 }) {
   const p = familia?.participando ? familia : null
-  const faltaAmigas = p ? Math.max(0, AMIGAS_PARA_ENTRAR - p.amigas) : AMIGAS_PARA_ENTRAR
-  const faltaServicos = p ? Math.max(0, SERVICOS_PARA_ENTRAR - p.servicos) : SERVICOS_PARA_ENTRAR
 
   return (
     <Folha titulo="Lady Family" aoFechar={fechar}>
@@ -146,6 +152,9 @@ export function FamiliaFolha({
               <span className="familia-carteirinha-pe">{DESCONTO_FAMILIA}% de desconto em todos os serviços</span>
             </section>
             <p className="suave indique-centro">Mostre esta tela para a Leide na hora de pagar.</p>
+            <section className="indique-caixa">
+              <Progresso pct={100} />
+            </section>
 
             <section>
               <h3 className="indique-subtitulo">Para continuar na família</h3>
@@ -184,23 +193,15 @@ export function FamiliaFolha({
         {p && !p.membro && !p.saiu_em && (
           <section className="indique-caixa">
             <span className="indique-subtitulo">Seu caminho até a família</span>
-            <Barra rotulo="Amigas indicadas" valor={p.amigas} total={AMIGAS_PARA_ENTRAR} />
-            <Barra rotulo="Serviços feitos" valor={p.servicos} total={SERVICOS_PARA_ENTRAR} />
-            <p className="suave indique-centro">
-              {faltaAmigas === 0 && faltaServicos === 0
-                ? 'Tudo pronto! Abra de novo para ver sua carteirinha.'
-                : `Falta${faltaAmigas + faltaServicos > 1 ? 'm' : ''} ${[
-                    faltaAmigas ? faltam(faltaAmigas, 'amiga', 'amigas') : '',
-                    faltaServicos ? faltam(faltaServicos, 'serviço', 'serviços') : '',
-                  ]
-                    .filter(Boolean)
-                    .join(' e ')} para você entrar.`}
-            </p>
-            {faltaAmigas > 0 && (
-              <button className="botao secundario" onClick={() => depoisDeFechar(convidar)}>
-                Pegar meu link de convite
+            <Progresso pct={porcentagem(p)} />
+            <div className="indique-botoes familia-botoes">
+              <button className="botao" onClick={() => depoisDeFechar(agendar)}>
+                Agendar horário
               </button>
-            )}
+              <button className="botao secundario" onClick={() => depoisDeFechar(convidar)}>
+                Indicar uma amiga
+              </button>
+            </div>
           </section>
         )}
 
