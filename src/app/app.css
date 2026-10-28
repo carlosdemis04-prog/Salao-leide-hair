@@ -2106,3 +2106,250 @@ a.cartao:active {
   font-size: 0.85rem;
   color: var(--a-tinta-2);
 }
+
+/* Lady Family (aba Eventos): preto e dourado da logo, para parecer um clube */
+.cartao.familia-cartao {
+  position: relative;
+  display: grid;
+  gap: 10px;
+  margin-bottom: 18px;
+  padding: 18px;
+  overflow: hidden;
+  background:
+    radial-gradient(110% 80% at 100% 0%, rgba(233, 183, 90, 0.32) 0%, transparent 60%),
+    linear-gradient(150deg, #2b211b 0%, #3b2b1d 60%, #4a3520 100%);
+  color: #fbf3e4;
+  text-align: left;
+}
+
+.familia-cartao-topo,
+.familia-carteirinha-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.familia-rotulo {
+  display: block;
+  color: var(--a-ouro);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.familia-nome {
+  display: block;
+  font-family: var(--serif);
+  font-size: 1.85rem;
+  line-height: 1.05;
+}
+
+.familia-selo {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  flex: none;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f6d68e, var(--a-ouro) 55%, #c98d2a);
+  color: var(--a-tinta);
+  font-weight: 700;
+  font-size: 1.05rem;
+  box-shadow: 0 0 0 4px rgba(233, 183, 90, 0.18);
+}
+
+.familia-cartao-texto {
+  color: rgba(251, 243, 228, 0.82);
+  font-size: 0.95rem;
+}
+
+.familia-cartao-texto strong {
+  color: #fff;
+}
+
+.familia-cartao-pe {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.familia-mini {
+  color: var(--a-ouro);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.familia-cartao-acao {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 0.92rem;
+  white-space: nowrap;
+}
+
+.familia-cartao-acao .seta {
+  margin: 0;
+}
+
+.familia .familia-rotulo {
+  color: var(--a-ouro-texto);
+}
+
+.familia-brilho {
+  background: radial-gradient(closest-side, rgba(251, 231, 189, 0.95), rgba(233, 183, 90, 0.25), transparent);
+}
+
+.familia-barra {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+}
+
+.familia-barra-topo {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.92rem;
+}
+
+.familia-barra-trilho {
+  height: 10px;
+  border-radius: 99px;
+  background: var(--a-creme);
+  overflow: hidden;
+}
+
+.familia-barra-trilho span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #f6d68e, var(--a-ouro), #c98d2a);
+  transition: width 0.6s var(--a-ease);
+}
+
+.familia-carteirinha {
+  display: grid;
+  gap: 6px;
+  padding: 18px;
+  border-radius: var(--a-raio);
+  background:
+    radial-gradient(110% 80% at 100% 0%, rgba(233, 183, 90, 0.35) 0%, transparent 60%),
+    linear-gradient(150deg, #2b211b 0%, #3b2b1d 60%, #4a3520 100%);
+  color: rgba(251, 243, 228, 0.85);
+  box-shadow: 0 10px 28px rgba(43, 33, 27, 0.25);
+}
+
+.familia-carteirinha .familia-rotulo {
+  color: var(--a-ouro);
+}
+
+.familia-carteirinha-nome {
+  margin-top: 6px;
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 1.9rem;
+  line-height: 1.05;
+  color: #fff;
+}
+
+.familia-carteirinha-pe {
+  margin-top: 6px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(233, 183, 90, 0.3);
+  color: var(--a-ouro);
+  font-weight: 600;
+}
+
+.familia-prazos {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.familia-prazo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: var(--a-raio-p);
+  background: var(--a-superficie);
+  box-shadow: var(--a-sombra);
+}
+
+.familia-prazo-dias {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  flex: none;
+  border-radius: var(--a-raio-p);
+  background: var(--a-ouro-claro);
+  color: var(--a-ouro-texto);
+  line-height: 1;
+}
+
+.familia-prazo-dias strong {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 1.6rem;
+}
+
+.familia-prazo-dias span {
+  font-size: 0.75rem;
+}
+
+.familia-prazo.perto .familia-prazo-dias {
+  background: var(--a-blush);
+  color: var(--a-rosa);
+}
+
+.familia-prazo-corpo {
+  display: grid;
+  gap: 2px;
+}
+
+.familia-prazo-titulo {
+  font-weight: 600;
+}
+
+.familia-volta {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  text-align: left;
+}
+
+.familia-volta-ok {
+  color: var(--a-verde);
+  font-weight: 600;
+}
+
+.familia-cupons p {
+  margin: 0 0 10px;
+}
+
+.familia-conta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px 8px;
+  padding: 12px;
+  border-radius: var(--a-raio-p);
+  background: var(--a-creme);
+  font-size: 0.88rem;
+  text-align: center;
+}
+
+.familia-conta strong {
+  display: block;
+  font-size: 1rem;
+}
