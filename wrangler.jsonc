@@ -18,6 +18,10 @@
   "triggers": {
     "crons": ["*/5 * * * *"]
   },
+  // Guarda os registros do worker (Observability > Events) para achar erros do Google Agenda
+  "observability": {
+    "enabled": true
+  },
   // IA grátis da Cloudflare, usada pelo assistente do painel (worker/assistente.js)
   "ai": {
     "binding": "AI"
