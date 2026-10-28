@@ -92,6 +92,16 @@
   background: var(--beige-soft);
 }
 
+.pn-login .pn-legal {
+  margin-top: 18px;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.pn-login .pn-legal a {
+  color: inherit;
+}
+
 .pn-login .pn-field > span {
   color: rgba(255, 255, 255, 0.75);
 }

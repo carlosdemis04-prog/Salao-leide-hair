@@ -637,6 +637,17 @@ export default function App() {
                     </div>
                   </label>
                   {formError && <p className="error">{formError}</p>}
+                  <p className="form-legal">
+                    Ao confirmar, você concorda com os{' '}
+                    <a href="/termos.html" target="_blank" rel="noreferrer">
+                      termos de uso
+                    </a>{' '}
+                    e com a{' '}
+                    <a href="/privacidade.html" target="_blank" rel="noreferrer">
+                      política de privacidade
+                    </a>
+                    . Seu nome e WhatsApp são usados só para o agendamento.
+                  </p>
                   <div className="actions">
                     <button className="btn btn-primary" disabled={sending}>
                       {sending ? 'Reservando…' : 'Confirmar agendamento'}
@@ -748,7 +759,14 @@ export default function App() {
             <Letras texto="Leide Hair" />
           </span>
         </p>
-        <p className="footer-copy">© {new Date().getFullYear()} Leide Hair</p>
+        <p className="footer-copy">
+          © {new Date().getFullYear()} Leide Hair
+          <span className="footer-legal">
+            <a href="/privacidade.html">Privacidade</a>
+            <a href="/cookies.html">Cookies</a>
+            <a href="/termos.html">Termos de uso</a>
+          </span>
+        </p>
       </footer>
     </div>
   )

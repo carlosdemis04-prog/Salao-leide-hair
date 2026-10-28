@@ -1597,6 +1597,18 @@ svg {
   max-width: 520px;
 }
 
+.form-legal {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  opacity: 0.75;
+}
+
+.form-legal a {
+  color: inherit;
+  text-decoration: underline;
+}
+
 .input > span {
   display: block;
   margin-bottom: 8px;
@@ -1788,6 +1800,21 @@ svg {
   margin: 20px auto 0;
   font-size: 0.875rem;
   color: var(--bege-2);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px 18px;
+}
+
+.footer-legal {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+}
+
+.footer .footer-legal a {
+  color: inherit;
+  text-decoration: underline;
 }
 
 /* ---------- Faixa de serviços ---------- */

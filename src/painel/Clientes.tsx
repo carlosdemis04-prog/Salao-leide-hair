@@ -255,6 +255,23 @@ function FichaCliente({ f, hoje, voltar, reload }: { f: Ficha; hoje: string; vol
     setEstado('Salvo.')
   }
 
+  async function apagarDados() {
+    const aviso =
+      `Apagar os dados de ${f.name}?\n\n` +
+      'Some a ficha, os Lady Points, os cupons, os convites e a conta Google dela. ' +
+      'Os atendimentos continuam nos números do salão, mas sem nome nem telefone. Não dá para desfazer.'
+    if (!window.confirm(aviso)) return
+    setEstado('Apagando…')
+    const { error } = await supabase!.rpc('lgpd_apagar_cliente', { p_phone: f.phone })
+    if (error) {
+      return setEstado(
+        error.message.includes('lgpd_apagar_cliente') ? 'Rode o arquivo 0013 no Supabase para poder apagar.' : dbError(error),
+      )
+    }
+    await reload()
+    voltar()
+  }
+
   const mensagens = [
     { rotulo: 'Oi', texto: `Oi, ${primeiro}! Tudo bem? Aqui é a Leide, do Leide Hair.` },
     {
@@ -338,11 +355,14 @@ function FichaCliente({ f, hoje, voltar, reload }: { f: Ficha; hoje: string; vol
           <textarea
             rows={4}
             value={notes}
-            placeholder="Cor da tinta, alergias, do que ela gosta, nome dos filhos…"
+            placeholder="Cor da tinta, produto que prefere, do que ela gosta…"
             onChange={(e) => (setNotes(e.target.value), setEstado(''))}
           />
         </label>
         <p className="pn-muted">Se não souber o ano do aniversário, use qualquer ano: só o dia e o mês contam.</p>
+        <p className="pn-muted">
+          Privacidade: anote só o que ajuda no atendimento. Alergia ou outro dado de saúde, só se a cliente concordar.
+        </p>
         <div className="pn-save">
           <button className="btn btn-primary" disabled={!mudou}>
             Salvar ficha
@@ -350,6 +370,17 @@ function FichaCliente({ f, hoje, voltar, reload }: { f: Ficha; hoje: string; vol
           {estado && <span className={estado === 'Salvo.' ? 'pn-ok' : 'pn-muted-inline'}>{estado}</span>}
         </div>
       </form>
+
+      <div className="pn-box">
+        <h3>Privacidade</h3>
+        <p className="pn-muted">
+          Se a cliente pedir para apagar os dados dela (direito garantido pela LGPD), toque aqui. Faça isso em até 15 dias
+          do pedido.
+        </p>
+        <button type="button" className="pn-btn pn-btn-quiet" onClick={apagarDados}>
+          Apagar dados da cliente
+        </button>
+      </div>
 
       <h3 className="pn-sub">Histórico</h3>
       {f.visitas.length === 0 && <p className="pn-empty">Nenhum agendamento ainda.</p>}

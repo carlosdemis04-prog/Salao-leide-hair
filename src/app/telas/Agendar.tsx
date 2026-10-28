@@ -344,6 +344,17 @@ export function Agendar({ services, hours, carregando, erro, pedido, aoReservar,
             />
           </label>
           <p className="suave">A Leide confirma a reserva pelo WhatsApp.</p>
+          <p className="suave aviso-legal">
+            Ao confirmar, você concorda com os{' '}
+            <a href="/termos.html" target="_blank" rel="noreferrer">
+              termos de uso
+            </a>{' '}
+            e com a{' '}
+            <a href="/privacidade.html" target="_blank" rel="noreferrer">
+              política de privacidade
+            </a>
+            . Seu nome e WhatsApp são usados só para o agendamento.
+          </p>
 
           <div className="barra-acao">
             <button className="botao" type="submit" disabled={enviando}>
