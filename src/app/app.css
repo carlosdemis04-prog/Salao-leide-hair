@@ -2373,3 +2373,12 @@ a.cartao:active {
   display: block;
   font-size: 1rem;
 }
+
+/* Botão oficial do Google (googleBotao.tsx): o Google desenha o botão dentro desta caixa */
+.google-oficial {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  max-width: 400px;
+  min-height: 44px;
+}

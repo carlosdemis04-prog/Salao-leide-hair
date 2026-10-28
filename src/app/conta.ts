@@ -75,5 +75,5 @@ export function useConta(aoLigar: () => void) {
       }
     : null
 
-  return { conta, erro, entrar, sair, ligar }
+  return { conta, erro, avisarErro: setErro, entrar, sair, ligar }
 }
