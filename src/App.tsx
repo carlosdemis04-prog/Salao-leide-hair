@@ -685,7 +685,7 @@ export default function App() {
                   <a className="btn btn-ghost" href={googleCalendarLink(service, slot!)} target="_blank" rel="noreferrer">
                     <CalendarIcon /> Salvar na minha agenda
                   </a>
-                  <button className="btn btn-link" onClick={restart}>
+                  <button className="btn btn-ghost" onClick={restart}>
                     Fazer outro agendamento
                   </button>
                 </div>

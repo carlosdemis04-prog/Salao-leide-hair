@@ -445,7 +445,7 @@ function AppointmentCard({
               <WhatsAppIcon /> Confirmar
             </button>
           )}
-          {a.status === 'confirmado' && !pagando && (
+          {(a.status === 'pendente' || a.status === 'confirmado') && !pagando && (
             <button className="pn-btn" onClick={() => setPagando(true)}>
               <CheckIcon /> Atendida
             </button>
@@ -455,12 +455,17 @@ function AppointmentCard({
               Cancelar
             </button>
           )}
+          {a.status === 'concluido' && a.amount_cents === null && !pagando && (
+            <button className="pn-btn" onClick={() => setPagando(true)}>
+              Anotar valor cobrado
+            </button>
+          )}
           {a.status === 'concluido' && (
             <button className="pn-btn pn-btn-dark" onClick={() => onPontos(a)}>
               + Lady Points
             </button>
           )}
-          {(a.status === 'cancelado' || a.status === 'concluido') && (
+          {(a.status === 'cancelado' || a.status === 'concluido') && !pagando && (
             <button className="pn-btn pn-btn-quiet" onClick={() => onStatus(a, 'confirmado')}>
               Desfazer
             </button>
@@ -468,7 +473,7 @@ function AppointmentCard({
         </div>
         {a.status === 'concluido' && a.amount_cents !== null && (
           <span className="pn-muted-inline">
-            Pagou {brl.format(a.amount_cents / 100)}
+            Valor cobrado: {brl.format(a.amount_cents / 100)}
             {a.payment_method && ` · ${PAGAMENTOS.find((p) => p.key === a.payment_method)?.label ?? ''}`}
           </span>
         )}
@@ -487,7 +492,7 @@ function AppointmentCard({
   )
 }
 
-// Ao marcar "Atendida", a Leide anota quanto a cliente pagou. É isso que vira o "Entrou" do Início.
+// Ao marcar "Atendida", a Leide anota quanto cobrou (obrigatório). É isso que vira o "Entrou" do Início.
 function Pagamento({
   a,
   onCancel,
@@ -504,15 +509,26 @@ function Pagamento({
   function salvar(e: FormEvent) {
     e.preventDefault()
     const c = inputToCents(valor)
+    if (c === null) return setErro('Digite quanto você cobrou, por exemplo 80 ou 79,90.')
     if (c === 'erro') return setErro('Valor inválido. Use, por exemplo, 80 ou 79,90.')
-    onSave({ amount_cents: c, payment_method: c === null ? null : metodo })
+    onSave({ amount_cents: c, payment_method: metodo })
   }
 
   return (
     <form className="pn-form pn-pagamento" onSubmit={salvar}>
       <label className="pn-field">
-        <span>Quanto ela pagou? (R$)</span>
-        <input inputMode="decimal" value={valor} placeholder="0,00" autoFocus onChange={(e) => setValor(e.target.value)} />
+        <span>Qual foi o valor cobrado de {a.client_name.split(' ')[0]}? (R$)</span>
+        <input
+          inputMode="decimal"
+          value={valor}
+          placeholder="Ex.: 80,00"
+          autoFocus
+          required
+          onChange={(e) => {
+            setValor(e.target.value)
+            setErro('')
+          }}
+        />
       </label>
       <div className="pn-row pn-row-left" role="radiogroup" aria-label="Como pagou">
         {PAGAMENTOS.map((p) => (
