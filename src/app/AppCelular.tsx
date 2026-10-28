@@ -183,6 +183,7 @@ export default function AppCelular() {
             conta={conta.conta}
             aoReservar={aoReservar}
             verInicio={() => ir('inicio')}
+            ativa={aba === 'agendar'}
           />
         </div>
         <div hidden={aba !== 'ofertas'}>
