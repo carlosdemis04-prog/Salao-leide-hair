@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, type ComponentType } from 'react'
 import './app.css'
 import { useConta } from './conta'
 import { useConvite, type CupomConvite } from './convite'
+import { useFamilia } from './familia'
 import { useReservas, useSalao, type Evento, type Oferta, type Reserva } from './dados'
 import { AgendarIcon, ContatoIcon, EventoIcon, InicioIcon, OfertaIcon } from './icones'
 import { useLady } from './lady'
@@ -12,6 +13,7 @@ import { ContaFolha } from './telas/Conta'
 import { BoasVindasFolha, IndiqueFolha, PresenteFolha } from './telas/Convite'
 import { CorridaFolha } from './telas/Corrida'
 import { EventoFolha, Eventos } from './telas/Eventos'
+import { FamiliaFolha } from './telas/Familia'
 import { Inicio } from './telas/Inicio'
 import { OfertaFolha, Ofertas } from './telas/Ofertas'
 import { Folha } from './ui'
@@ -41,18 +43,22 @@ export default function AppCelular() {
   const reservas = useReservas()
   const lady = useLady()
   const convite = useConvite()
-  // Login com Google: ao ligar a conta, os pontos e os convites podem mudar
+  const familia = useFamilia()
+  // Login com Google: ao ligar a conta, os pontos, os convites e a Lady Family podem mudar
   const { carregar: recarregarPontos } = lady
   const { carregar: recarregarConvite } = convite
+  const { carregar: carregarFamilia } = familia
   const aoLigarConta = useCallback(() => {
     recarregarPontos()
     recarregarConvite()
-  }, [recarregarPontos, recarregarConvite])
+    carregarFamilia()
+  }, [recarregarPontos, recarregarConvite, carregarFamilia])
   const conta = useConta(aoLigarConta)
   // Voltou do Google com erro: abre a folha da conta para mostrar o aviso
   const [verConta, setVerConta] = useState(conta.erro !== '')
   const [verCorrida, setVerCorrida] = useState(false)
   const [verConvite, setVerConvite] = useState(false)
+  const [verFamilia, setVerFamilia] = useState(false)
   // Abriu pelo link de uma amiga: mostra o convite depois da abertura
   const [verBoasVindas, setVerBoasVindas] = useState(convite.convidada?.agora ?? false)
   const [presente, setPresente] = useState<{ cupom: CupomConvite; madrinha: string | null } | null>(null)
@@ -101,9 +107,10 @@ export default function AppCelular() {
       await ligarConta()
       const ganhou = await registrar(r.id)
       carregarConvite()
+      carregarFamilia()
       if (ganhou) setTimeout(() => setPresente(ganhou), 1200)
     },
-    [adicionar, vincular, ligarConta, registrar, carregarConvite],
+    [adicionar, vincular, ligarConta, registrar, carregarConvite, carregarFamilia],
   )
 
   // Quando a cliente volta para o app, atualiza a situação da reserva e os pontos
@@ -115,10 +122,11 @@ export default function AppCelular() {
       atualizar()
       carregarPontos()
       carregarConvite()
+      carregarFamilia()
     }
     document.addEventListener('visibilitychange', ver)
     return () => document.removeEventListener('visibilitychange', ver)
-  }, [atualizar, carregarPontos, carregarConvite])
+  }, [atualizar, carregarPontos, carregarConvite, carregarFamilia])
 
   // Botão "Instalar app": Android mostra o pedido do sistema; no iPhone explicamos o caminho
   const [pedidoInstalar, setPedidoInstalar] = useState<PedidoInstalacao | null>(null)
@@ -202,6 +210,8 @@ export default function AppCelular() {
             abrir={setEvento}
             convite={convite.meu}
             abrirConvite={() => (carregarConvite(), setVerConvite(true))}
+            familia={familia.familia}
+            abrirFamilia={() => (carregarFamilia(), setVerFamilia(true))}
           />
         </div>
         <div hidden={aba !== 'contato'}>
@@ -237,6 +247,14 @@ export default function AppCelular() {
       )}
       {verConvite && (
         <IndiqueFolha meu={convite.meu} agendar={() => ir('agendar')} fechar={() => setVerConvite(false)} />
+      )}
+      {verFamilia && (
+        <FamiliaFolha
+          familia={familia.familia}
+          agendar={() => ir('agendar')}
+          convidar={() => (carregarConvite(), setVerConvite(true))}
+          fechar={() => setVerFamilia(false)}
+        />
       )}
       {verBoasVindas && !abrindo && (
         <BoasVindasFolha

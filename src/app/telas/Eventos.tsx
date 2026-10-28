@@ -5,6 +5,8 @@ import { Mascote } from '../Mascote'
 import { Cabecalho, Esqueleto, Folha, Vazio } from '../ui'
 import type { MeuConvite } from '../convite'
 import { IndiqueCartao } from './Convite'
+import type { MinhaFamilia } from '../familia'
+import { FamiliaCartao } from './Familia'
 
 function quando(e: Evento) {
   if (!e.starts_at) return 'Com hora marcada pelo WhatsApp'
@@ -19,17 +21,22 @@ export function Eventos({
   abrir,
   convite,
   abrirConvite,
+  familia,
+  abrirFamilia,
 }: {
   eventos: Evento[]
   carregando: boolean
   abrir: (e: Evento) => void
   convite: MeuConvite | null | undefined
   abrirConvite: () => void
+  familia: MinhaFamilia | null | undefined
+  abrirFamilia: () => void
 }) {
   return (
     <div className="tela">
       <Cabecalho titulo="Eventos" sub="Dias especiais, cursos e lançamentos" />
       <IndiqueCartao meu={convite} abrir={abrirConvite} />
+      <FamiliaCartao familia={familia} abrir={abrirFamilia} />
       {carregando && <Esqueleto linhas={3} />}
       {!carregando && eventos.length === 0 && (
         <Vazio titulo="Nenhum evento marcado" texto="Os próximos eventos do salão vão aparecer aqui. Volte em breve!" />

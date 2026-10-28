@@ -1190,3 +1190,16 @@ a.pn-btn-dark {
 .pn-icon:disabled {
   opacity: 0.35;
 }
+
+/* Lady Family */
+.pn-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pn-badge.b-familia {
+  background: linear-gradient(135deg, #f6d68e, var(--gold));
+  color: var(--black);
+  font-weight: 600;
+}

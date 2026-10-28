@@ -43,6 +43,22 @@ type ConvitePainel = {
   cupons: { codigo: string; tipo: 'boas_vindas' | 'madrinha'; desconto: number; nome: string | null; phone: string; expira_em: string }[]
 }
 
+// Lady Family (migração 0014): 5 amigas + 15 serviços = 10% para sempre
+type FamiliaPainel = {
+  phone: string
+  nome: string | null
+  servicos: number
+  amigas: number
+  membro: boolean
+  desde: string | null
+  saiu_em: string | null
+  servico_ate: string | null
+  indicacao_ate: string | null
+}
+
+const DESCONTO_FAMILIA = 10
+const foneFamilia = (p: string) => p.replace(/\D/g, '').slice(-11)
+
 const STATUS_LABEL: Record<Status, string> = {
   pendente: 'A confirmar',
   confirmado: 'Confirmado',
@@ -294,6 +310,14 @@ function Agenda({ services, onPontos }: { services: AdminService[]; onPontos: (a
   const [pending, setPending] = useState<Appointment[]>([])
   const [adding, setAdding] = useState(false)
   const [error, setError] = useState('')
+  // Telefones da Lady Family, para mostrar o selo e já sugerir o preço com 10% (sem a migração 0014, fica vazio)
+  const [familia, setFamilia] = useState<Set<string>>(new Set())
+  useEffect(() => {
+    supabase!.rpc('family_painel').then(({ data }) => {
+      const lista = (data as FamiliaPainel[] | null) ?? []
+      setFamilia(new Set(lista.filter((f) => f.membro).map((f) => f.phone)))
+    })
+  }, [])
 
   const load = useCallback(async () => {
     const cols =
@@ -340,7 +364,14 @@ function Agenda({ services, onPontos }: { services: AdminService[]; onPontos: (a
           <p className="pn-muted">Clientes que agendaram pelo site e ainda esperam sua confirmação.</p>
           <ul className="pn-list">
             {pending.map((a) => (
-              <AppointmentCard key={a.id} a={a} showDate onStatus={setStatus} onPontos={onPontos} />
+              <AppointmentCard
+                key={a.id}
+                a={a}
+                showDate
+                familia={familia.has(foneFamilia(a.client_phone))}
+                onStatus={setStatus}
+                onPontos={onPontos}
+              />
             ))}
           </ul>
         </section>
@@ -387,7 +418,13 @@ function Agenda({ services, onPontos }: { services: AdminService[]; onPontos: (a
         {items?.length === 0 && <p className="pn-empty">Nenhum agendamento neste dia.</p>}
         <ul className="pn-list">
           {items?.map((a) => (
-            <AppointmentCard key={a.id} a={a} onStatus={setStatus} onPontos={onPontos} />
+            <AppointmentCard
+              key={a.id}
+              a={a}
+              familia={familia.has(foneFamilia(a.client_phone))}
+              onStatus={setStatus}
+              onPontos={onPontos}
+            />
           ))}
         </ul>
       </section>
@@ -398,11 +435,13 @@ function Agenda({ services, onPontos }: { services: AdminService[]; onPontos: (a
 function AppointmentCard({
   a,
   showDate,
+  familia,
   onStatus,
   onPontos,
 }: {
   a: Appointment
   showDate?: boolean
+  familia?: boolean
   onStatus: (a: Appointment, s: Status, pagamento?: Pick<Appointment, 'amount_cents' | 'payment_method'>) => void
   onPontos: (a: Appointment) => void
 }) {
@@ -441,7 +480,10 @@ function AppointmentCard({
             {formatPhone(a.client_phone)}
           </a>
         </span>
-        <span className={`pn-badge b-${a.status}`}>{STATUS_LABEL[a.status]}</span>
+        <span className="pn-badges">
+          <span className={`pn-badge b-${a.status}`}>{STATUS_LABEL[a.status]}</span>
+          {familia && <span className="pn-badge b-familia">Lady Family · {DESCONTO_FAMILIA}%</span>}
+        </span>
         <div className="pn-card-actions">
           {a.status === 'pendente' && (
             <button className="pn-btn pn-btn-dark" onClick={confirm}>
@@ -483,6 +525,7 @@ function AppointmentCard({
         {pagando && (
           <Pagamento
             a={a}
+            familia={familia}
             onCancel={() => setPagando(false)}
             onSave={(pagamento) => {
               setPagando(false)
@@ -496,16 +539,21 @@ function AppointmentCard({
 }
 
 // Ao marcar "Atendida", a Leide anota quanto cobrou (obrigatório). É isso que vira o "Entrou" do Início.
+// Cliente da Lady Family: o valor já vem com os 10%. Outro cupom entra depois, sobre esse valor.
 function Pagamento({
   a,
+  familia,
   onCancel,
   onSave,
 }: {
   a: Appointment
+  familia?: boolean
   onCancel: () => void
   onSave: (p: Pick<Appointment, 'amount_cents' | 'payment_method'>) => void
 }) {
-  const [valor, setValor] = useState(centsToInput(a.amount_cents ?? a.service?.price_cents ?? null))
+  const tabela = a.service?.price_cents ?? null
+  const comFamilia = familia && tabela !== null ? Math.round((tabela * (100 - DESCONTO_FAMILIA)) / 100) : tabela
+  const [valor, setValor] = useState(centsToInput(a.amount_cents ?? comFamilia))
   const [metodo, setMetodo] = useState(a.payment_method ?? 'pix')
   const [erro, setErro] = useState('')
 
@@ -533,6 +581,13 @@ function Pagamento({
           }}
         />
       </label>
+      {familia && (
+        <p className="pn-muted-inline">
+          Lady Family: {DESCONTO_FAMILIA}% em todos os serviços
+          {tabela !== null && comFamilia !== null && ` (${brl.format(tabela / 100)} sai por ${brl.format(comFamilia / 100)})`}. Se
+          ela tiver outro cupom, desconte em cima desse valor.
+        </p>
+      )}
       <div className="pn-row pn-row-left" role="radiogroup" aria-label="Como pagou">
         {PAGAMENTOS.map((p) => (
           <button
@@ -809,6 +864,14 @@ function LadyPoints({ pendentes, reload, prefill }: { pendentes: Pendente[]; rel
     loadConvite()
   }, [loadConvite])
 
+  const [familia, setFamilia] = useState<FamiliaPainel[] | null | 'sem'>(null)
+  useEffect(() => {
+    supabase!.rpc('family_painel').then(({ data, error }) => setFamilia(error ? 'sem' : ((data as FamiliaPainel[]) ?? [])))
+  }, [])
+  const membros = familia && familia !== 'sem' ? familia.filter((f) => f.membro) : []
+  const quase = familia && familia !== 'sem' ? familia.filter((f) => !f.membro && !f.saiu_em) : []
+  const sairam = familia && familia !== 'sem' ? familia.filter((f) => !f.membro && f.saiu_em) : []
+
   async function validar(c: string) {
     setErroCodigo('')
     setValidado(null)
@@ -956,6 +1019,72 @@ function LadyPoints({ pendentes, reload, prefill }: { pendentes: Pendente[]; rel
                 </li>
               ))}
             </ul>
+          </>
+        )}
+      </section>
+
+      <section className="pn-section">
+        <h2>Lady Family</h2>
+        <p className="pn-muted">
+          Quem indicou 5 amigas e fez 15 serviços ganha {DESCONTO_FAMILIA}% para sempre. Para continuar: 1 serviço por mês e 1
+          amiga nova a cada 3 meses. Outro cupom vale sobre o preço já com os {DESCONTO_FAMILIA}%.
+        </p>
+        {familia === 'sem' && <p className="pn-empty">Rode o arquivo 0014_lady_family.sql no Supabase para ligar o programa.</p>}
+        {familia && familia !== 'sem' && (
+          <>
+            <h3>Da família ({membros.length})</h3>
+            {membros.length === 0 && <p className="pn-empty">Ninguém entrou ainda.</p>}
+            <ul className="pn-list">
+              {membros.map((f) => (
+                <li key={f.phone} className="pn-card pn-card-flat">
+                  <div className="pn-card-body">
+                    <span className="pn-card-service">{f.nome ?? formatPhone(f.phone)}</span>
+                    <span className="pn-card-client">
+                      {formatPhone(f.phone)} · desde {f.desde && shortDateFmt.format(new Date(f.desde))}
+                    </span>
+                    <span className="pn-muted-inline">
+                      Serviço até {f.servico_ate && shortDateFmt.format(new Date(f.servico_ate))} · indicar até{' '}
+                      {f.indicacao_ate && shortDateFmt.format(new Date(f.indicacao_ate))}
+                    </span>
+                  </div>
+                  <span className="pn-badge b-familia">{DESCONTO_FAMILIA}%</span>
+                </li>
+              ))}
+            </ul>
+            {quase.length > 0 && (
+              <>
+                <h3>Quase lá</h3>
+                <ul className="pn-list">
+                  {quase.map((f) => (
+                    <li key={f.phone} className="pn-card pn-card-flat">
+                      <div className="pn-card-body">
+                        <span className="pn-card-service">{f.nome ?? formatPhone(f.phone)}</span>
+                        <span className="pn-muted-inline">
+                          {Math.min(f.amigas, 5)}/5 amigas · {Math.min(f.servicos, 15)}/15 serviços
+                        </span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+            {sairam.length > 0 && (
+              <>
+                <h3>Saíram (voltam com 1 serviço e 1 amiga nova)</h3>
+                <ul className="pn-list">
+                  {sairam.map((f) => (
+                    <li key={f.phone} className="pn-card pn-card-flat">
+                      <div className="pn-card-body">
+                        <span className="pn-card-service">{f.nome ?? formatPhone(f.phone)}</span>
+                        <span className="pn-muted-inline">
+                          {formatPhone(f.phone)} · saiu em {f.saiu_em && shortDateFmt.format(new Date(f.saiu_em))}
+                        </span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
           </>
         )}
       </section>
