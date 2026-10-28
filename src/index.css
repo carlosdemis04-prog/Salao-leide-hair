@@ -624,62 +624,138 @@ svg {
   animation: aro-entra 1.4s var(--ease) both;
 }
 
-.vitrine-desenho {
+/* Peça que gira com o arrasto, no centro do aro dourado */
+.vitrine-peca {
   position: relative;
-  width: min(70vw, 56svh, 500px);
-  height: auto;
-  overflow: visible;
-  transform: translate(calc(var(--mx) * 22px), calc(var(--my) * 16px));
-  transition: transform 0.6s var(--ease);
-  filter: drop-shadow(0 0 10px rgba(226, 176, 78, 0.35));
+  width: min(84vw, 58svh, 560px);
+  animation: peca-entra 1.1s var(--ease) both;
 }
 
-.tracos * {
-  fill: none;
-  stroke: url(#traco-ouro);
-  stroke-width: 2.2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-dasharray: 1;
-  stroke-dashoffset: 1;
-  animation: traco 1.5s var(--ease) calc(var(--i, 0) * 0.11s) forwards;
+.giro {
+  position: relative;
 }
 
-.tracos g {
-  animation: none;
+.giro-caixa {
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  cursor: grab;
+  /* Arrasto para os lados é da peça; para cima e para baixo continua rolando a página */
+  touch-action: pan-y;
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
 }
 
-.tracos .esmalte-liquido,
-.tracos .pupila,
-.tracos .brilho {
-  fill-opacity: 0;
-  animation:
-    traco 1.5s var(--ease) calc(var(--i, 0) * 0.11s) forwards,
-    preenche 0.9s ease calc(var(--i, 0) * 0.11s + 0.9s) forwards;
+.giro-caixa:focus-visible {
+  box-shadow: 0 0 0 2px var(--ouro);
 }
 
-.tracos .esmalte-liquido {
-  fill: var(--esmalte);
-  transition: fill 0.5s ease;
+.giro-caixa.arrastando {
+  cursor: grabbing;
 }
 
-.tracos .pupila,
-.tracos .brilho {
-  fill: url(#traco-ouro);
+.giro-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transform: scale(0.96);
+  transition:
+    opacity 0.8s ease,
+    transform 0.9s var(--ease);
+  /* Sombra quente de estúdio por baixo da peça */
+  filter: drop-shadow(0 28px 34px rgba(0, 0, 0, 0.55));
 }
 
-.tracos .reflexo {
-  stroke: rgba(255, 253, 251, 0.7);
+.giro.chegou .giro-canvas {
+  opacity: 1;
+  transform: none;
 }
 
-/* As estrelinhas piscam depois que o desenho termina */
-.tracos .brilho {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation:
-    traco 1.5s var(--ease) calc(var(--i, 0) * 0.11s) forwards,
-    preenche 0.9s ease calc(var(--i, 0) * 0.11s + 0.9s) forwards,
-    pisca 3.2s ease-in-out calc(var(--i, 0) * 0.11s + 1.8s) infinite;
+.giro.perto .giro-canvas {
+  transform: scale(1.75);
+  transform-origin: 50% 36%;
+}
+
+.giro-rodape {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  min-height: 44px;
+  margin-top: 4px;
+}
+
+.giro-dica {
+  font-size: 0.82rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--bege-2);
+  transition: opacity 0.6s ease;
+}
+
+.giro-dica.some {
+  opacity: 0;
+}
+
+.giro-seta {
+  display: inline-block;
+  color: var(--ouro);
+  animation: seta 1.8s ease-in-out infinite;
+}
+
+.giro-seta:last-child {
+  animation-direction: reverse;
+}
+
+.giro-zoom {
+  min-height: 44px;
+  padding: 8px 18px;
+  border: 1px solid rgba(226, 176, 78, 0.55);
+  border-radius: 999px;
+  background: rgba(10, 9, 8, 0.6);
+  color: var(--ouro-claro);
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition:
+    background 0.25s,
+    color 0.25s;
+}
+
+.giro-zoom:hover,
+.giro-zoom[aria-pressed='true'] {
+  background: var(--ouro);
+  color: var(--preto);
+}
+
+/* Linha fina dourada enquanto as fotos dos outros ângulos chegam */
+.giro-carga {
+  position: absolute;
+  left: 30%;
+  right: 30%;
+  bottom: 50px;
+  height: 1px;
+  background: var(--ouro);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+  opacity: 0.7;
+}
+
+@keyframes peca-entra {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.94);
+  }
+}
+
+@keyframes seta {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(-4px);
+  }
 }
 
 /* Um reflexo de luz atravessa a vitrine de tempos em tempos */
@@ -690,30 +766,6 @@ svg {
   transform: translateX(-60%);
   animation: luz 7s ease-in-out 1.6s infinite;
   pointer-events: none;
-}
-
-@keyframes traco {
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-
-@keyframes preenche {
-  to {
-    fill-opacity: 1;
-  }
-}
-
-@keyframes pisca {
-  0%,
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(0.55);
-    opacity: 0.55;
-  }
 }
 
 @keyframes luz {
@@ -734,17 +786,10 @@ svg {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .tracos *,
-  .tracos .esmalte-liquido,
-  .tracos .pupila,
-  .tracos .brilho {
-    animation: none;
-    stroke-dashoffset: 0;
-    fill-opacity: 1;
-  }
-
   .vitrine-luz,
-  .vitrine-aro {
+  .vitrine-aro,
+  .vitrine-peca,
+  .giro-seta {
     animation: none;
   }
 }
@@ -950,7 +995,7 @@ svg {
 
   /* O desenho fica à direita, longe do texto */
   .vitrine-aro,
-  .vitrine-desenho {
+  .vitrine-peca {
     margin-left: 36vw;
   }
 
