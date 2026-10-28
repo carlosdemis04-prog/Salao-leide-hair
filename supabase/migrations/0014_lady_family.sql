@@ -7,7 +7,7 @@
 -- Quem saiu volta ao fazer 1 serviço e indicar 1 amiga nova depois da saída.
 -- Outros cupons (Lady Points, Indique amigas) valem sobre o preço que já tem os 10% da família.
 -- Não precisa de agendador: a situação é conferida sempre que o app ou o painel olham.
--- Rode este arquivo inteiro no SQL Editor do Supabase (depois do 0012). Pode rodar de novo sem problema.
+-- Rode este arquivo inteiro no SQL Editor do Supabase (depois do 0013). Pode rodar de novo sem problema.
 
 create table if not exists public.lady_family (
   phone text primary key,
@@ -186,6 +186,28 @@ begin
 end;
 $$;
 
+-- LGPD: quando os dados de uma cliente são apagados (lgpd_apagar_cliente, migração 0013), os agendamentos
+-- dela ficam sem telefone. Nessa hora a linha dela na Lady Family também é apagada.
+create or replace function public.family_esquecer()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  delete from lady_family where phone = lady_fone(old.client_phone);
+  return new;
+end;
+$$;
+
+drop trigger if exists family_esquecer on public.appointments;
+create trigger family_esquecer
+  after update of client_phone on public.appointments
+  for each row
+  when (coalesce(new.client_phone, '') = '' and coalesce(old.client_phone, '') <> '')
+  execute function public.family_esquecer();
+
+revoke all on function public.family_esquecer() from public, anon, authenticated;
 revoke all on function public.family_servicos(text, timestamptz) from public, anon, authenticated;
 revoke all on function public.family_indicacoes(text, timestamptz) from public, anon, authenticated;
 revoke all on function public.family_saida(text, timestamptz) from public, anon, authenticated;

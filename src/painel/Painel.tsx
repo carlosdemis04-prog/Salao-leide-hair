@@ -43,7 +43,7 @@ type ConvitePainel = {
   cupons: { codigo: string; tipo: 'boas_vindas' | 'madrinha'; desconto: number; nome: string | null; phone: string; expira_em: string }[]
 }
 
-// Lady Family (migração 0013): 5 amigas + 15 serviços = 10% para sempre
+// Lady Family (migração 0014): 5 amigas + 15 serviços = 10% para sempre
 type FamiliaPainel = {
   phone: string
   nome: string | null
@@ -307,7 +307,7 @@ function Agenda({ services, onPontos }: { services: AdminService[]; onPontos: (a
   const [pending, setPending] = useState<Appointment[]>([])
   const [adding, setAdding] = useState(false)
   const [error, setError] = useState('')
-  // Telefones da Lady Family, para mostrar o selo e já sugerir o preço com 10% (sem a migração 0013, fica vazio)
+  // Telefones da Lady Family, para mostrar o selo e já sugerir o preço com 10% (sem a migração 0014, fica vazio)
   const [familia, setFamilia] = useState<Set<string>>(new Set())
   useEffect(() => {
     supabase!.rpc('family_painel').then(({ data }) => {
@@ -1010,7 +1010,7 @@ function LadyPoints({ pendentes, reload, prefill }: { pendentes: Pendente[]; rel
           Quem indicou 5 amigas e fez 15 serviços ganha {DESCONTO_FAMILIA}% para sempre. Para continuar: 1 serviço por mês e 1
           amiga nova a cada 3 meses. Outro cupom vale sobre o preço já com os {DESCONTO_FAMILIA}%.
         </p>
-        {familia === 'sem' && <p className="pn-empty">Rode o arquivo 0013_lady_family.sql no Supabase para ligar o programa.</p>}
+        {familia === 'sem' && <p className="pn-empty">Rode o arquivo 0014_lady_family.sql no Supabase para ligar o programa.</p>}
         {familia && familia !== 'sem' && (
           <>
             <h3>Da família ({membros.length})</h3>

@@ -3,7 +3,7 @@ import { supabase } from '../supabase'
 
 // Lady Family: quem indicou 5 amigas e fez 15 serviços entra para a família da Leide
 // e ganha 10% de desconto permanente. Para continuar: 1 serviço por mês e 1 amiga a cada 3 meses.
-// As contas ficam no banco (migração 0013); aqui só mostramos.
+// As contas ficam no banco (migração 0014); aqui só mostramos.
 
 export const AMIGAS_PARA_ENTRAR = 5
 export const SERVICOS_PARA_ENTRAR = 15
@@ -37,7 +37,7 @@ function token() {
 }
 
 export function useFamilia() {
-  // null = carregando; undefined = programa ainda não existe no banco (migração 0013 não rodada)
+  // null = carregando; undefined = programa ainda não existe no banco (migração 0014 não rodada)
   const [familia, setFamilia] = useState<MinhaFamilia | null | undefined>(supabase ? null : undefined)
 
   const carregar = useCallback(async () => {
