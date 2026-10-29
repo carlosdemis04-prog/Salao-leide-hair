@@ -131,7 +131,10 @@ export function FamiliaFolha({
 
         {familia?.participando === false && (
           <div className="indique-caixa indique-centro">
-            <p>Seu progresso aparece aqui depois do seu primeiro agendamento pelo app. Ele fica ligado ao seu telefone.</p>
+            <p>
+              Seu progresso aparece aqui depois que a Leide confirmar seu primeiro horário marcado pelo app. Ele fica ligado
+              ao seu telefone.
+            </p>
             <button className="botao" onClick={() => depoisDeFechar(agendar)}>
               Agendar horário
             </button>
@@ -242,7 +245,7 @@ export function FamiliaFolha({
         </section>
 
         <p className="suave">
-          Contam os serviços feitos no salão e as amigas que agendaram pelo seu link e não cancelaram (as mesmas do Indique amigas).
+          Contam os serviços feitos no salão e as amigas que vieram ao salão pelo seu link (as mesmas do Indique amigas).
           Os prazos contam a partir da entrada ou do último serviço e da última indicação. Se passar um prazo, você sai da família,
           mas volta fazendo 1 serviço e indicando 1 amiga nova.
         </p>

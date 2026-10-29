@@ -117,7 +117,10 @@ export function CorridaFolha({
 
           {!corrida.participando && (
             <div className="corrida-aviso">
-              <p>Para entrar na corrida, agende um horário pelo app. Seus pontos ficam ligados ao seu telefone.</p>
+              <p>
+                Para entrar na corrida, agende um horário pelo app. Você entra assim que a Leide confirmar o horário, e
+                seus pontos ficam ligados ao seu telefone.
+              </p>
               <button className="botao secundario" onClick={() => depoisDeFechar(agendar)}>
                 Agendar horário
               </button>

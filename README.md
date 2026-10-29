@@ -23,6 +23,8 @@ No painel do Supabase, abra **SQL Editor** e rode, nesta ordem, o conteúdo de c
 12. [`supabase/migrations/0011_indique_amigas.sql`](supabase/migrations/0011_indique_amigas.sql): liga a campanha Indique amigas (link de convite no app, cupom de 10% para a amiga nova e de 30% a cada 3 amigas), validada no painel.
 13. [`supabase/migrations/0012_login_google.sql`](supabase/migrations/0012_login_google.sql): liga a conta Google da cliente ao WhatsApp dela, para os pontos aparecerem em qualquer celular.
 14. [`supabase/migrations/0013_lgpd_apagar_cliente.sql`](supabase/migrations/0013_lgpd_apagar_cliente.sql): cria o botão **Apagar dados da cliente** na ficha do painel, para atender quem pedir a exclusão dos dados (LGPD).
+15. [`supabase/migrations/0014_lady_family.sql`](supabase/migrations/0014_lady_family.sql): cria a Lady Family (10% para sempre para quem indicou 5 amigas e fez 15 serviços).
+16. [`supabase/migrations/0015_seguranca.sql`](supabase/migrations/0015_seguranca.sql): fecha brechas de segurança (pontos de outra pessoa, amigas inventadas, agenda lotada por robô) e fecha as funções do painel para quem não entrou.
 
 Privacidade e regras: o site tem [política de privacidade](public/privacidade.html), [política de cookies](public/cookies.html) e [termos de uso](public/termos.html). O que falta fazer e os cuidados do dia a dia estão em [`docs/lgpd.md`](docs/lgpd.md).
 

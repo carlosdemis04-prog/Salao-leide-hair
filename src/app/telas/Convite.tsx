@@ -131,7 +131,8 @@ export function IndiqueFolha({ meu, agendar, fechar }: { meu: MeuConvite | null 
         {meu?.participando === false && (
           <div className="indique-caixa indique-centro">
             <p>
-              Seu link de convite aparece aqui depois do seu primeiro agendamento pelo app. Ele fica ligado ao seu telefone.
+              Seu link de convite aparece aqui depois que a Leide confirmar seu primeiro horário marcado pelo app. Ele fica
+              ligado ao seu telefone.
             </p>
             <button className="botao" onClick={() => depoisDeFechar(agendar)}>
               Agendar horário
@@ -243,7 +244,7 @@ export function IndiqueFolha({ meu, agendar, fechar }: { meu: MeuConvite | null 
               <strong>A cada 3 amigas novas</strong>, aparece aqui um cupom de 30% para você.
             </li>
           </ol>
-          <p className="suave">Só contam amigas que nunca agendaram no salão. Se ela cancelar, a indicação deixa de contar.</p>
+          <p className="suave">Só contam amigas que nunca agendaram no salão, e a indicação conta quando ela vem ao salão.</p>
         </section>
       </div>
     </Folha>
