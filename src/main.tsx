@@ -1,6 +1,7 @@
 import { StrictMode, Suspense, lazy } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
+import { irParaDominio } from './dominio'
 
 // O painel da Leide só é baixado por quem abre /painel
 const Painel = lazy(() => import('./painel/Painel.tsx'))
@@ -27,20 +28,22 @@ if (isApp) {
   }
 }
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    {isPainel ? (
-      <Suspense fallback={null}>
-        <Painel />
-      </Suspense>
-    ) : isApp ? (
-      <Suspense fallback={null}>
-        <AppCelular />
-      </Suspense>
-    ) : (
-      <Suspense fallback={null}>
-        <Site />
-      </Suspense>
-    )}
-  </StrictMode>,
-)
+// Endereço antigo ou www: vai para leidehair.com.br antes de desenhar qualquer coisa
+if (!irParaDominio())
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      {isPainel ? (
+        <Suspense fallback={null}>
+          <Painel />
+        </Suspense>
+      ) : isApp ? (
+        <Suspense fallback={null}>
+          <AppCelular />
+        </Suspense>
+      ) : (
+        <Suspense fallback={null}>
+          <Site />
+        </Suspense>
+      )}
+    </StrictMode>,
+  )
