@@ -1,0 +1,13 @@
+# Cabeçalhos de segurança que a Cloudflare manda junto com cada página do site.
+# - X-Frame-Options / frame-ancestors: nenhum outro site pode abrir o painel escondido dentro dele (golpe do clique falso)
+# - X-Content-Type-Options: o navegador não "adivinha" tipo de arquivo
+# - Referrer-Policy: links para fora não levam o endereço completo da página (que pode ter código de convite)
+# - Strict-Transport-Security: o navegador sempre usa https (cadeado)
+# - Permissions-Policy: o site não pede câmera, microfone nem localização
+/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Strict-Transport-Security: max-age=31536000
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
+  Content-Security-Policy: frame-ancestors 'none'; object-src 'none'; base-uri 'self'

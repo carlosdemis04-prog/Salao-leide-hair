@@ -57,6 +57,8 @@ const ERROR_MESSAGES: Record<string, string> = {
   telefone_invalido: 'Confira o WhatsApp: use DDD e número, por exemplo (11) 98765-4321.',
   nome_invalido: 'Escreva seu nome, por favor.',
   servico_invalido: 'Esse serviço não está mais disponível.',
+  limite_por_telefone: 'Esse WhatsApp já tem 3 horários marcados. Para marcar mais, chame a Leide no WhatsApp.',
+  muitos_agendamentos: 'Muitos agendamentos agora. Tente de novo daqui a pouco ou chame a Leide no WhatsApp.',
 }
 
 const CATEGORIES: { key: string; title: string; match: RegExp }[] = [
