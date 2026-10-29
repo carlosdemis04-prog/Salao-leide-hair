@@ -59,3 +59,18 @@ export function useFamilia() {
 export function diasAte(iso: string) {
   return Math.max(0, Math.ceil((new Date(iso).getTime() - Date.now()) / 86_400_000))
 }
+
+// Caminho até a família em porcentagem: as amigas valem metade (10% cada) e os serviços a outra metade.
+// A cliente vê só a porcentagem e o nível, sem o detalhe de quantas amigas ou serviços.
+export function porcentagem(f: { amigas: number; servicos: number; membro: boolean }) {
+  if (f.membro) return 100
+  const amigas = (Math.min(f.amigas, AMIGAS_PARA_ENTRAR) / AMIGAS_PARA_ENTRAR) * 50
+  const servicos = (Math.min(f.servicos, SERVICOS_PARA_ENTRAR) / SERVICOS_PARA_ENTRAR) * 50
+  return Math.floor(amigas + servicos)
+}
+
+export function nivel(pct: number) {
+  if (pct >= 100) return { nome: 'Da família', frase: 'Você faz parte da família!' }
+  if (pct >= 50) return { nome: 'Quase da família', frase: 'Já tá quase na família, vamos continuar?' }
+  return { nome: 'Conhecida da Leide', frase: 'Conhecida da Leide, vamos marcar!' }
+}
