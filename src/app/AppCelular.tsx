@@ -6,6 +6,7 @@ import { useFamilia } from './familia'
 import { useReservas, useSalao, type Evento, type Oferta, type Reserva } from './dados'
 import { AgendarIcon, ContatoIcon, EventoIcon, InicioIcon, OfertaIcon } from './icones'
 import { useLady } from './lady'
+import { useQuestionario } from './questionario'
 import { Mascote } from './Mascote'
 import { Agendar } from './telas/Agendar'
 import { Contato } from './telas/Contato'
@@ -16,6 +17,7 @@ import { EventoFolha, Eventos } from './telas/Eventos'
 import { FamiliaFolha } from './telas/Familia'
 import { Inicio } from './telas/Inicio'
 import { OfertaFolha, Ofertas } from './telas/Ofertas'
+import { QuestionarioFolha } from './telas/Questionario'
 import { Folha } from './ui'
 
 export type Aba = 'inicio' | 'agendar' | 'ofertas' | 'eventos' | 'contato'
@@ -44,6 +46,7 @@ export default function AppCelular() {
   const lady = useLady()
   const convite = useConvite()
   const familia = useFamilia()
+  const questionario = useQuestionario()
   // Login com Google: ao ligar a conta, os pontos, os convites e a Lady Family podem mudar
   const { carregar: recarregarPontos } = lady
   const { carregar: recarregarConvite } = convite
@@ -59,6 +62,7 @@ export default function AppCelular() {
   const [verCorrida, setVerCorrida] = useState(false)
   const [verConvite, setVerConvite] = useState(false)
   const [verFamilia, setVerFamilia] = useState(false)
+  const [verQuestionario, setVerQuestionario] = useState(false)
   // Abriu pelo link de uma amiga: mostra o convite depois da abertura
   const [verBoasVindas, setVerBoasVindas] = useState(convite.convidada?.agora ?? false)
   const [presente, setPresente] = useState<{ cupom: CupomConvite; madrinha: string | null } | null>(null)
@@ -201,6 +205,8 @@ export default function AppCelular() {
             abrir={setOferta}
             corrida={lady.corrida}
             abrirCorrida={() => setVerCorrida(true)}
+            cupomQuestionario={questionario.cupom}
+            abrirQuestionario={() => setVerQuestionario(true)}
           />
         </div>
         <div hidden={aba !== 'eventos'}>
@@ -243,6 +249,15 @@ export default function AppCelular() {
           atualizar={lady.carregar}
           agendar={() => ir('agendar')}
           fechar={() => setVerCorrida(false)}
+        />
+      )}
+      {verQuestionario && (
+        <QuestionarioFolha
+          services={salao.services}
+          cupom={questionario.cupom}
+          responder={questionario.responder}
+          agendar={() => ir('agendar')}
+          fechar={() => setVerQuestionario(false)}
         />
       )}
       {verConvite && (

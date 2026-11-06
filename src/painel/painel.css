@@ -1210,3 +1210,66 @@ a.pn-btn-dark {
   width: min(100%, 360px);
   min-height: 44px;
 }
+
+/* Follow up pelo WhatsApp (escolhe o benefício antes) e respostas do questionário */
+.pn-follow {
+  display: grid;
+  gap: 10px;
+  border: 1px solid var(--gold);
+}
+
+.pn-follow .pn-row {
+  margin: 0;
+}
+
+.pn-follow-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.pn-follow-passo {
+  margin: 6px 0 0;
+  font-weight: 600;
+}
+
+.pn-respostas {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+  gap: 6px 12px;
+  margin: 12px 0 0;
+  font-size: 0.92rem;
+}
+
+.pn-respostas dt {
+  color: var(--taupe);
+}
+
+.pn-respostas dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.pn-aniver {
+  margin-top: 16px;
+  padding: 16px;
+  border-radius: 14px;
+  background: #fbefcf;
+}
+
+.pn-aniver h3 {
+  margin: 0 0 4px;
+}
+
+.pn-aniver .pn-list {
+  margin-top: 8px;
+}
+
+.pn-badge.b-aniver {
+  background: #fbefcf;
+}
+
+.pn-badge.b-quest {
+  background: var(--beige);
+}

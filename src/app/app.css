@@ -2425,3 +2425,180 @@ a.cartao:active {
   max-width: 400px;
   min-height: 44px;
 }
+
+/* ---------- Questionário (aba Ofertas, 5% de desconto) ---------- */
+
+.cartao.questionario-cartao {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding: 16px 18px;
+  background:
+    radial-gradient(110% 90% at 0% 100%, rgba(196, 86, 107, 0.12) 0%, transparent 60%),
+    linear-gradient(140deg, #ffffff 0%, #fff3ef 100%);
+  border: 1.5px solid var(--a-blush);
+  text-align: left;
+}
+
+.questionario-cartao-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.questionario-rotulo {
+  display: block;
+  color: var(--a-rosa);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.questionario-nome {
+  display: block;
+  font-family: var(--serif);
+  font-size: 1.7rem;
+  line-height: 1.05;
+}
+
+.questionario-selo {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: var(--a-ouro);
+  color: var(--a-tinta);
+  line-height: 1;
+  transform: rotate(-8deg);
+}
+
+.questionario-selo strong {
+  font-size: 1.2rem;
+}
+
+.questionario-selo span {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.questionario-cartao-texto {
+  color: var(--a-tinta-2);
+  font-size: 0.92rem;
+}
+
+.questionario {
+  display: grid;
+  gap: 4px;
+}
+
+.questionario-topo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-right: 40px;
+}
+
+.questionario-topo h2 {
+  margin: 0;
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 1.6rem;
+  line-height: 1.1;
+}
+
+.questionario-topo p {
+  margin: 2px 0 0;
+}
+
+.questionario-barra {
+  display: block;
+  height: 6px;
+  margin: 12px 0 18px;
+  border-radius: 999px;
+  background: var(--a-creme);
+  overflow: hidden;
+}
+
+.questionario-barra i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--a-ouro);
+  transition: width 0.3s var(--a-ease);
+}
+
+.pergunta {
+  margin: 0 0 18px;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.pergunta legend {
+  padding: 0;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.pergunta .suave {
+  margin: -6px 0 10px;
+}
+
+.opcoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.app .opcao {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1.5px solid var(--a-linha);
+  border-radius: 999px;
+  background: var(--a-superficie);
+  font-size: 0.92rem;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.app .opcao.marcada {
+  border-color: var(--a-ouro);
+  background: var(--a-ouro-claro);
+  color: var(--a-ouro-texto);
+  font-weight: 600;
+}
+
+.aceite {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin: 4px 0 8px;
+  font-size: 0.88rem;
+  color: var(--a-tinta-2);
+}
+
+.aceite input {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  margin: 1px 0 0;
+  accent-color: var(--a-ouro-texto);
+}
+
+.aceite a {
+  text-decoration: underline;
+}
+
+.questionario-acoes {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.questionario-acoes .botao {
+  flex: 1;
+}

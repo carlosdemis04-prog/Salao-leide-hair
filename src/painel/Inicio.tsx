@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../supabase'
 import { WhatsAppIcon } from '../icons'
+import FollowUp from './FollowUp'
 import { carregarNumeros, diaDe, nomeDoMes, variacao, type Cliente, type Numeros, type Visita } from './dados'
 import { addDays, brl, capitalize, dayTitleFmt, ENDERECO, timeFmt, whatsappLink } from './util'
 
@@ -25,6 +26,7 @@ export default function Inicio({ onIr, resgates }: { onIr: (d: Destino) => void;
   const [clientes, setClientes] = useState<Cliente[]>([])
   const [aConfirmar, setAConfirmar] = useState(0)
   const [erro, setErro] = useState('')
+  const [parabens, setParabens] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     try {
@@ -60,6 +62,7 @@ export default function Inicio({ onIr, resgates }: { onIr: (d: Destino) => void;
 
   const semana = Array.from({ length: 7 }, (_, i) => addDays(n.hoje, i).slice(5))
   const aniversariantes = clientes.filter((c) => c.birthday && semana.includes(c.birthday.slice(5)))
+  const aberta = aniversariantes.find((c) => c.phone === parabens)
 
   // Sumidas: a última visita foi há mais de 60 dias e não tem nada marcado
   const ultima = new Map<string, string>()
@@ -238,7 +241,17 @@ export default function Inicio({ onIr, resgates }: { onIr: (d: Destino) => void;
 
       {aniversariantes.length > 0 && (
         <section className="pn-section">
-          <h3>Aniversários da semana</h3>
+          <h3>🎂 Aniversários da semana</h3>
+          <p className="pn-muted">Antes de abrir o WhatsApp, você escolhe o presente que vai dar.</p>
+          {aberta && (
+            <FollowUp
+              key={aberta.phone}
+              phone={aberta.phone}
+              nome={aberta.name}
+              motivoInicial="aniversario"
+              fechar={() => setParabens(null)}
+            />
+          )}
           <ul className="pn-list">
             {aniversariantes.map((c) => (
               <li key={c.phone} className="pn-card pn-card-flat">
@@ -248,17 +261,9 @@ export default function Inicio({ onIr, resgates }: { onIr: (d: Destino) => void;
                     {c.birthday!.slice(8, 10)}/{c.birthday!.slice(5, 7)}
                   </span>
                 </div>
-                <a
-                  className="pn-btn pn-btn-dark"
-                  target="_blank"
-                  rel="noreferrer"
-                  href={whatsappLink(
-                    c.phone,
-                    `Feliz aniversário, ${c.name.split(' ')[0]}! 🎉 Que seu dia seja lindo. Para comemorar, seu próximo atendimento aqui no salão tem um mimo especial. Beijos, Leide Hair`,
-                  )}
-                >
+                <button className="pn-btn pn-btn-dark" onClick={() => setParabens(parabens === c.phone ? null : c.phone)}>
                   <WhatsAppIcon /> Parabéns
-                </a>
+                </button>
               </li>
             ))}
           </ul>

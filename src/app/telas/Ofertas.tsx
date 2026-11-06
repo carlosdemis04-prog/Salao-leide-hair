@@ -4,6 +4,8 @@ import { preco } from '../formato'
 import { Mascote } from '../Mascote'
 import type { Corrida } from '../lady'
 import { CorridaCartao } from './Corrida'
+import { QuestionarioCartao } from './Questionario'
+import type { CupomQuestionario } from '../questionario'
 import { Cabecalho, depoisDeFechar, Esqueleto, Folha, Vazio } from '../ui'
 
 const validadeFmt = new Intl.DateTimeFormat('pt-BR', { timeZone: 'UTC', day: 'numeric', month: 'long' })
@@ -31,12 +33,15 @@ type Props = {
   // undefined: a corrida ainda não está no banco, então o cartão não aparece
   corrida: Corrida | null | undefined
   abrirCorrida: () => void
+  cupomQuestionario: CupomQuestionario | null
+  abrirQuestionario: () => void
 }
 
-export function Ofertas({ ofertas, carregando, abrir, corrida, abrirCorrida }: Props) {
+export function Ofertas({ ofertas, carregando, abrir, corrida, abrirCorrida, cupomQuestionario, abrirQuestionario }: Props) {
   return (
     <div className="tela">
       <Cabecalho titulo="Ofertas" sub="Promoções e vantagens do salão" />
+      <QuestionarioCartao cupom={cupomQuestionario} abrir={abrirQuestionario} />
       {corrida !== undefined && <CorridaCartao corrida={corrida} abrir={abrirCorrida} />}
       {carregando && <Esqueleto linhas={3} />}
       {!carregando && ofertas.length === 0 && (

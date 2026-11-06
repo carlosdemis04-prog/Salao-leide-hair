@@ -7,7 +7,7 @@ import { supabase } from '../supabase'
 
 export type CupomConvite = {
   codigo: string
-  tipo: 'boas_vindas' | 'madrinha'
+  tipo: 'boas_vindas' | 'madrinha' | 'questionario' | 'presente'
   desconto: number
   expira_em: string
   usado_em: string | null
