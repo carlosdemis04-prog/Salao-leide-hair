@@ -32,6 +32,7 @@ import './painel.css'
 
 const WEEKDAYS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
 const DURATIONS = Array.from({ length: 20 }, (_, i) => (i + 1) * 15)
+const TIPO_CUPOM = { madrinha: 'indicou 3 amigas', boas_vindas: 'boas-vindas', questionario: 'questionário', presente: 'presente da Leide' }
 
 type Block = { id: string; starts_at: string; ends_at: string; reason: string | null }
 type Tab = Destino | 'inicio'
@@ -41,7 +42,7 @@ type Lancamento = { id: string; phone: string; pontos: number; valor_cents: numb
 type Prefill = { phone: string; nome: string; valor: number | null; n: number }
 type ConvitePainel = {
   indicacoes: { madrinha: string | null; madrinha_phone: string; amiga: string | null; amiga_phone: string; quando: string; status: Status }[]
-  cupons: { codigo: string; tipo: 'boas_vindas' | 'madrinha'; desconto: number; nome: string | null; phone: string; expira_em: string }[]
+  cupons: { codigo: string; tipo: 'boas_vindas' | 'madrinha' | 'questionario' | 'presente'; desconto: number; nome: string | null; phone: string; expira_em: string }[]
 }
 
 // Lady Family (migração 0014): 5 amigas + 15 serviços = 10% para sempre
@@ -995,7 +996,7 @@ function LadyPoints({ pendentes, reload, prefill }: { pendentes: Pendente[]; rel
                 <li key={c.codigo} className="pn-card pn-card-flat">
                   <div className="pn-card-body">
                     <span className="pn-card-service">
-                      {c.desconto}% {c.tipo === 'madrinha' ? '· indicou 3 amigas' : '· boas-vindas'}
+                      {c.desconto}% · {TIPO_CUPOM[c.tipo]}
                     </span>
                     <span className="pn-card-client">
                       {c.nome ?? 'Cliente'} · {formatPhone(c.phone)}

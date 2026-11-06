@@ -64,7 +64,7 @@ function Cupom({ c }: { c: CupomConvite }) {
         <span>off</span>
       </span>
       <span className="indique-ticket-corpo">
-        <span className="indique-ticket-titulo">{c.tipo === 'madrinha' ? 'Prêmio por 3 amigas' : 'Presente de boas-vindas'}</span>
+        <span className="indique-ticket-titulo">{TITULO_CUPOM[c.tipo]}</span>
         <span className="indique-ticket-codigo">{c.codigo}</span>
         <span className="indique-ticket-pe">
           {c.usado_em ? 'Já usado' : vencido ? 'Venceu' : `Vale até ${validadeFmt.format(new Date(c.expira_em)).replace('.', '')}`}
@@ -72,6 +72,13 @@ function Cupom({ c }: { c: CupomConvite }) {
       </span>
     </li>
   )
+}
+
+const TITULO_CUPOM = {
+  madrinha: 'Prêmio por 3 amigas',
+  boas_vindas: 'Presente de boas-vindas',
+  questionario: 'Respondeu o questionário',
+  presente: 'Presente da Leide',
 }
 
 const SITUACAO = { agendou: 'Agendou', veio: 'Já veio', cancelou: 'Cancelou' }
