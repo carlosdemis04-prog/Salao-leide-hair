@@ -12,6 +12,7 @@ export const brl = new Intl.NumberFormat('pt-BR', { style: 'currency', currency:
 export type Status = 'pendente' | 'confirmado' | 'cancelado' | 'concluido'
 export type Appointment = {
   id: string
+  service_id?: string
   starts_at: string
   ends_at: string
   status: Status
