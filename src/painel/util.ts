@@ -13,6 +13,7 @@ export type Status = 'pendente' | 'confirmado' | 'cancelado' | 'concluido'
 export type Appointment = {
   id: string
   service_id?: string
+  profissional?: string
   starts_at: string
   ends_at: string
   status: Status
@@ -30,6 +31,7 @@ export type AdminService = {
   duration_min: number
   active: boolean
   sort_order: number
+  profissional?: string
 }
 
 export function todayIso() {

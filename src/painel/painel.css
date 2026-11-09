@@ -1466,3 +1466,56 @@ a.pn-btn-dark {
 .pn-fechar-dia {
   margin-top: 14px;
 }
+
+/* Agenda de quem: Leide (cabelos) ou Vanessa (unhas, depilação e estética) */
+.pn-profs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 20px;
+  padding: 4px;
+  border-radius: 16px;
+  background: var(--white);
+  border: 1px solid var(--line);
+}
+
+.pn-profs button {
+  position: relative;
+  display: grid;
+  gap: 2px;
+  padding: 10px 8px;
+  border: 0;
+  border-radius: 12px;
+  background: none;
+  color: var(--black);
+  font: inherit;
+  text-align: center;
+}
+
+.pn-profs button strong {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 1.35rem;
+}
+
+.pn-profs button span {
+  color: var(--taupe);
+  font-size: 0.78rem;
+  line-height: 1.25;
+}
+
+.pn-profs button.on {
+  background: var(--black);
+  color: var(--white);
+}
+
+.pn-profs button.on span {
+  color: var(--gold);
+}
+
+.pn-profs .pn-dot {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  font-style: normal;
+}

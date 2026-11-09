@@ -36,7 +36,10 @@ const DURATIONS = Array.from({ length: 20 }, (_, i) => (i + 1) * 15)
 const TIPO_CUPOM = { madrinha: 'indicou 3 amigas', boas_vindas: 'boas-vindas', questionario: 'questionário', presente: 'presente da Leide' }
 
 type Block = { id: string; starts_at: string; ends_at: string; reason: string | null }
-type DayBlock = Block & { google_event_id: string | null }
+type DayBlock = Block & { google_event_id: string | null; profissional?: string | null }
+// Profissionais (migração 0017): Leide nos cabelos, Vanessa nas unhas, depilação e estética.
+// null = a 0017 ainda não foi rodada: o painel funciona como antes, com uma agenda só.
+export type Prof = { id: string; name: string; area: string | null }
 type HoursRow = { weekday: number; open_time: string; close_time: string }
 type Tab = Destino | 'inicio'
 type Mais = 'despesas' | 'folgas' | 'servicos' | 'ajustes'
@@ -268,11 +271,19 @@ function Dashboard() {
   const [services, setServices] = useState<AdminService[]>([])
 
   const loadServices = useCallback(async () => {
-    const { data } = await supabase!
-      .from('services')
-      .select('id, name, price_cents, duration_min, active, sort_order')
+    const cols = 'id, name, price_cents, duration_min, active, sort_order'
+    const comProf = await supabase!.from('services').select(`${cols}, profissional`).order('sort_order')
+    const data = comProf.error ? (await supabase!.from('services').select(cols).order('sort_order')).data : comProf.data
+    setServices((data as AdminService[]) ?? [])
+  }, [])
+
+  const [profs, setProfs] = useState<Prof[] | null>(null)
+  useEffect(() => {
+    supabase!
+      .from('professionals')
+      .select('id, name, area')
       .order('sort_order')
-    setServices(data ?? [])
+      .then(({ data, error }) => setProfs(error || !data?.length ? null : data))
   }, [])
 
   useEffect(() => {
@@ -346,7 +357,7 @@ function Dashboard() {
           </button>
         )}
         {tab === 'inicio' && <Inicio onIr={setTab} resgates={pendentes.length} />}
-        {tab === 'agenda' && <Agenda services={services} onPontos={pontosPara} />}
+        {tab === 'agenda' && <Agenda services={services} profs={profs} onPontos={pontosPara} />}
         {tab === 'pontos' && <LadyPoints pendentes={pendentes} reload={loadPendentes} prefill={prefill} />}
         {tab === 'clientes' && <Clientes />}
         {tab === 'divulgar' && <Divulgar services={services} />}
@@ -360,8 +371,8 @@ function Dashboard() {
               ))}
             </nav>
             {mais === 'despesas' && <Despesas />}
-            {mais === 'folgas' && <Folgas />}
-            {mais === 'servicos' && <Servicos services={services} reload={loadServices} />}
+            {mais === 'folgas' && <Folgas profs={profs} />}
+            {mais === 'servicos' && <Servicos services={services} profs={profs} reload={loadServices} />}
             {mais === 'ajustes' && <Ajustes />}
           </>
         )}
@@ -372,8 +383,37 @@ function Dashboard() {
 
 /* ---------------- Agenda ---------------- */
 
-function Agenda({ services, onPontos }: { services: AdminService[]; onPontos: (a: Appointment) => void }) {
+const PROF_SALVA = 'painel-profissional'
+function profSalva() {
+  try {
+    return localStorage.getItem(PROF_SALVA) ?? 'leide'
+  } catch {
+    return 'leide'
+  }
+}
+
+function Agenda({
+  services,
+  profs,
+  onPontos,
+}: {
+  services: AdminService[]
+  profs: Prof[] | null
+  onPontos: (a: Appointment) => void
+}) {
   const [day, setDay] = useState(todayIso())
+  // De quem é a agenda que está aberta (fica lembrado no celular)
+  const [prof, setProfState] = useState(profSalva)
+  const filtrar = profs !== null && profs.some((p) => p.id === prof)
+  const profAtual = filtrar ? profs!.find((p) => p.id === prof)! : null
+  function setProf(id: string) {
+    setProfState(id)
+    try {
+      localStorage.setItem(PROF_SALVA, id)
+    } catch {
+      /* sem problema */
+    }
+  }
   const [items, setItems] = useState<Appointment[] | null>(null)
   const [pending, setPending] = useState<Appointment[]>([])
   const [adding, setAdding] = useState(false)
@@ -402,23 +442,22 @@ function Agenda({ services, onPontos }: { services: AdminService[]; onPontos: (a
 
   const load = useCallback(async () => {
     const cols =
-      'id, service_id, starts_at, ends_at, status, client_name, client_phone, amount_cents, payment_method, service:services(name, price_cents)'
+      'id, service_id, starts_at, ends_at, status, client_name, client_phone, amount_cents, payment_method, service:services(name, price_cents)' +
+      (filtrar ? ', profissional' : '')
     const inicio = atSaoPaulo(day, '00:00')
     const fim = atSaoPaulo(addDays(day, 1), '00:00')
-    const b = supabase!
+    // Bloqueios do salão todo (profissional vazia) valem para as duas
+    let qb = supabase!
       .from('blocked_times')
-      .select('id, starts_at, ends_at, reason, google_event_id')
+      .select(`id, starts_at, ends_at, reason, google_event_id${filtrar ? ', profissional' : ''}`)
       .lt('starts_at', fim)
       .gt('ends_at', inicio)
-      .order('starts_at')
-      .then(({ data, error }) => !error && setBlocks((data as DayBlock[]) ?? []))
+    if (filtrar) qb = qb.or(`profissional.is.null,profissional.eq.${prof}`)
+    const b = qb.order('starts_at').then(({ data, error }) => !error && setBlocks((data as unknown as DayBlock[]) ?? []))
+    let qd = supabase!.from('appointments').select(cols).gte('starts_at', inicio).lt('starts_at', fim)
+    if (filtrar) qd = qd.eq('profissional', prof)
     const [d, p] = await Promise.all([
-      supabase!
-        .from('appointments')
-        .select(cols)
-        .gte('starts_at', atSaoPaulo(day, '00:00'))
-        .lt('starts_at', atSaoPaulo(addDays(day, 1), '00:00'))
-        .order('starts_at'),
+      qd.order('starts_at'),
       supabase!
         .from('appointments')
         .select(cols)
@@ -431,7 +470,12 @@ function Agenda({ services, onPontos }: { services: AdminService[]; onPontos: (a
     if (d.error || p.error) setError('Não foi possível carregar a agenda. Confira a internet.')
     setItems((d.data as unknown as Appointment[]) ?? [])
     setPending((p.data as unknown as Appointment[]) ?? [])
-  }, [day])
+  }, [day, filtrar, prof])
+
+  // "A confirmar" mostra só os da agenda aberta; o botão da outra profissional mostra quantos ela tem
+  const pendingAqui = filtrar ? pending.filter((a) => a.profissional === prof) : pending
+  const pendentesDe = (id: string) => pending.filter((a) => a.profissional === id).length
+  const servicosAqui = filtrar ? services.filter((s) => s.profissional === prof) : services
 
   // Muda o agendamento para outro dia/horário, mantendo a mesma duração
   async function remarcar(a: Appointment, novo: string): Promise<string | null> {
@@ -464,13 +508,41 @@ function Agenda({ services, onPontos }: { services: AdminService[]; onPontos: (a
 
   return (
     <>
+      {filtrar && (
+        <nav className="pn-profs" aria-label="Agenda de quem">
+          {profs!.map((p) => {
+            const n = pendentesDe(p.id)
+            return (
+              <button
+                key={p.id}
+                className={prof === p.id ? 'on' : ''}
+                aria-pressed={prof === p.id}
+                onClick={() => {
+                  setProf(p.id)
+                  setAdding(false)
+                }}
+              >
+                <strong>{p.name}</strong>
+                {p.area && <span>{p.area}</span>}
+                {n > 0 && (
+                  <i className="pn-dot" aria-label={`${n} a confirmar`}>
+                    {n}
+                  </i>
+                )}
+              </button>
+            )
+          })}
+        </nav>
+      )}
       {remarcada && <AvisoRemarcada {...remarcada} fechar={() => setRemarcada(null)} />}
-      {pending.length > 0 && (
+      {pendingAqui.length > 0 && (
         <section className="pn-section">
           <h2>A confirmar</h2>
-          <p className="pn-muted">Clientes que agendaram pelo site e ainda esperam sua confirmação.</p>
+          <p className="pn-muted">
+            Clientes que agendaram pelo site{profAtual ? ` com a ${profAtual.name}` : ''} e ainda esperam confirmação.
+          </p>
           <ul className="pn-list">
-            {pending.map((a) => (
+            {pendingAqui.map((a) => (
               <AppointmentCard
                 key={a.id}
                 a={a}
@@ -512,7 +584,8 @@ function Agenda({ services, onPontos }: { services: AdminService[]; onPontos: (a
 
         {adding && (
           <NewAppointment
-            services={services}
+            services={servicosAqui}
+            prof={profAtual}
             day={day}
             onDone={() => {
               setAdding(false)
@@ -523,7 +596,9 @@ function Agenda({ services, onPontos }: { services: AdminService[]; onPontos: (a
 
         {error && <p className="pn-error">{error}</p>}
         {items === null && <p className="pn-muted">Carregando…</p>}
-        {items?.length === 0 && <p className="pn-empty">Nenhum agendamento neste dia.</p>}
+        {items?.length === 0 && (
+          <p className="pn-empty">Nenhum agendamento {profAtual ? `da ${profAtual.name} ` : ''}neste dia.</p>
+        )}
         <ul className="pn-list">
           {items?.map((a) => (
             <AppointmentCard
@@ -538,7 +613,7 @@ function Agenda({ services, onPontos }: { services: AdminService[]; onPontos: (a
         </ul>
       </section>
 
-      <HorariosDoDia day={day} hours={hours} items={items} blocks={blocks} reload={load} />
+      <HorariosDoDia day={day} hours={hours} items={items} blocks={blocks} prof={profAtual} reload={load} />
     </>
   )
 }
@@ -746,7 +821,17 @@ function Pagamento({
   )
 }
 
-function NewAppointment({ services, day, onDone }: { services: AdminService[]; day: string; onDone: () => void }) {
+function NewAppointment({
+  services,
+  prof,
+  day,
+  onDone,
+}: {
+  services: AdminService[]
+  prof: Prof | null
+  day: string
+  onDone: () => void
+}) {
   const active = services.filter((s) => s.active)
   const [serviceId, setServiceId] = useState(active[0]?.id ?? '')
   const [date, setDate] = useState(day)
@@ -782,7 +867,10 @@ function NewAppointment({ services, day, onDone }: { services: AdminService[]; d
 
   return (
     <form className="pn-form pn-box" onSubmit={submit}>
-      <p className="pn-muted">Para clientes que marcaram pelo WhatsApp ou pessoalmente. Já entra como confirmado.</p>
+      <p className="pn-muted">
+        Para clientes que marcaram pelo WhatsApp ou pessoalmente{prof ? `, na agenda da ${prof.name}` : ''}. Já entra como
+        confirmado.
+      </p>
       <label className="pn-field">
         <span>Serviço</span>
         <select value={serviceId} onChange={(e) => setServiceId(e.target.value)}>
@@ -964,14 +1052,18 @@ function HorariosDoDia({
   hours,
   items,
   blocks,
+  prof,
   reload,
 }: {
   day: string
   hours: HoursRow[]
   items: Appointment[] | null
   blocks: DayBlock[]
+  prof: Prof | null
   reload: () => Promise<void> | void
 }) {
+  // Fechar um horário aqui fecha só a agenda aberta (a outra profissional continua livre)
+  const dono = prof ? { profissional: prof.id } : {}
   const [mexendo, setMexendo] = useState('')
   const [erro, setErro] = useState('')
   const weekday = new Date(`${day}T12:00:00-03:00`).getUTCDay()
@@ -1005,7 +1097,7 @@ function HorariosDoDia({
     setErro('')
     if (s.estado === 'livre') {
       setMexendo(s.inicio)
-      const { error } = await supabase!.from('blocked_times').insert({ starts_at: s.inicio, ends_at: s.fim, reason: MOTIVO_FORA })
+      const { error } = await supabase!.from('blocked_times').insert({ starts_at: s.inicio, ends_at: s.fim, reason: MOTIVO_FORA, ...dono })
       setMexendo('')
       if (error) return setErro(dbError(error))
       return reload()
@@ -1020,7 +1112,9 @@ function HorariosDoDia({
     const ini = new Date(b.starts_at)
     const fim = new Date(b.ends_at)
     const soEsse = ini.toISOString() === s.inicio && fim.toISOString() === s.fim
-    if (!soEsse) {
+    const doSalao = prof !== null && b.profissional === null
+    if (doSalao && !window.confirm('Esse período está fechado para o salão todo (as duas profissionais). Abrir para as duas?')) return
+    if (!soEsse && !doSalao) {
       const mesmoDia = isoDateFmt.format(ini) === isoDateFmt.format(new Date(fim.getTime() - 1))
       const periodo = mesmoDia
         ? `das ${timeFmt.format(ini)} às ${timeFmt.format(fim)}`
@@ -1041,7 +1135,7 @@ function HorariosDoDia({
     setMexendo('dia')
     const { error } = await supabase!
       .from('blocked_times')
-      .insert(livres.map((s) => ({ starts_at: s.inicio, ends_at: s.fim, reason: MOTIVO_FORA })))
+      .insert(livres.map((s) => ({ starts_at: s.inicio, ends_at: s.fim, reason: MOTIVO_FORA, ...dono })))
     setMexendo('')
     if (error) return setErro(dbError(error))
     reload()
@@ -1049,7 +1143,7 @@ function HorariosDoDia({
 
   return (
     <section className="pn-section">
-      <h2>Horários do dia</h2>
+      <h2>Horários {prof ? `da ${prof.name}` : 'do dia'}</h2>
       <p className="pn-muted">
         Marcou alguém por fora (WhatsApp, telefone, pessoalmente)? Toque no horário para <b>fechar</b>: ele some do app. Toque
         de novo para abrir.
@@ -1072,7 +1166,9 @@ function HorariosDoDia({
                   : s.estado === 'fechado'
                     ? s.bloco?.google_event_id
                       ? 'Google'
-                      : 'Fechado'
+                      : prof && s.bloco?.profissional === null
+                        ? 'Salão'
+                        : 'Fechado'
                     : s.estado === 'cliente'
                       ? s.cliente
                       : 'Passou'
@@ -1108,8 +1204,15 @@ function HorariosDoDia({
 
 /* ---------------- Folgas ---------------- */
 
-function Folgas() {
-  const [blocks, setBlocks] = useState<Block[] | null>(null)
+// Quem fica de fora num bloqueio: '' = salão todo (as duas)
+function nomeDoBloqueio(profs: Prof[] | null, id: string | null | undefined) {
+  if (!profs) return ''
+  return id ? `Só ${profs.find((p) => p.id === id)?.name ?? id}` : 'Salão todo'
+}
+
+function Folgas({ profs }: { profs: Prof[] | null }) {
+  const [blocks, setBlocks] = useState<DayBlock[] | null>(null)
+  const [quem, setQuem] = useState('')
   const [date, setDate] = useState(todayIso())
   const [allDay, setAllDay] = useState(true)
   const [from, setFrom] = useState('12:00')
@@ -1120,11 +1223,11 @@ function Folgas() {
   const load = useCallback(async () => {
     const { data } = await supabase!
       .from('blocked_times')
-      .select('id, starts_at, ends_at, reason')
+      .select(`id, starts_at, ends_at, reason, google_event_id${profs ? ', profissional' : ''}`)
       .gte('ends_at', new Date().toISOString())
       .order('starts_at')
-    setBlocks(data ?? [])
-  }, [])
+    setBlocks((data as unknown as DayBlock[]) ?? [])
+  }, [profs])
 
   useEffect(() => {
     load()
@@ -1138,13 +1241,13 @@ function Folgas() {
     if (ends <= starts) return setError('O horário final precisa ser depois do inicial.')
     const { error } = await supabase!
       .from('blocked_times')
-      .insert({ starts_at: starts, ends_at: ends, reason: reason.trim() || null })
+      .insert({ starts_at: starts, ends_at: ends, reason: reason.trim() || null, ...(profs ? { profissional: quem || null } : {}) })
     if (error) return setError(dbError(error))
     setReason('')
     load()
   }
 
-  async function remove(b: Block) {
+  async function remove(b: DayBlock) {
     if (!window.confirm('Liberar esse período de novo para agendamentos?')) return
     await supabase!.from('blocked_times').delete().eq('id', b.id)
     load()
@@ -1159,6 +1262,22 @@ function Folgas() {
           <span>Dia</span>
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
         </label>
+        {profs && (
+          <div className="pn-row pn-row-left" role="radiogroup" aria-label="Para quem">
+            {[{ id: '', name: 'Salão todo' }, ...profs].map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                role="radio"
+                aria-checked={quem === p.id}
+                className={`pn-chip ${quem === p.id ? 'pn-chip-dark' : ''}`}
+                onClick={() => setQuem(p.id)}
+              >
+                {p.id ? `Só ${p.name}` : p.name}
+              </button>
+            ))}
+          </div>
+        )}
         <label className="pn-check">
           <input type="checkbox" checked={allDay} onChange={(e) => setAllDay(e.target.checked)} />
           <span>O dia inteiro</span>
@@ -1199,7 +1318,11 @@ function Folgas() {
             <li key={b.id} className="pn-card pn-card-flat">
               <div className="pn-card-body">
                 <span className="pn-card-service">{label}</span>
-                {b.reason && <span className="pn-card-client">{b.reason}</span>}
+                {(b.reason || profs) && (
+                  <span className="pn-card-client">
+                    {[nomeDoBloqueio(profs, b.profissional), b.reason].filter(Boolean).join(' · ')}
+                  </span>
+                )}
               </div>
               <button className="pn-btn pn-btn-quiet" onClick={() => remove(b)}>
                 Liberar
@@ -1570,8 +1693,9 @@ function LadyPoints({ pendentes, reload, prefill }: { pendentes: Pendente[]; rel
 
 /* ---------------- Serviços ---------------- */
 
-function Servicos({ services, reload }: { services: AdminService[]; reload: () => Promise<void> }) {
+function Servicos({ services, profs, reload }: { services: AdminService[]; profs: Prof[] | null; reload: () => Promise<void> }) {
   const [newName, setNewName] = useState('')
+  const [newProf, setNewProf] = useState('leide')
   const [newDuration, setNewDuration] = useState(60)
   const [newPrice, setNewPrice] = useState('')
   const [error, setError] = useState('')
@@ -1586,6 +1710,7 @@ function Servicos({ services, reload }: { services: AdminService[]; reload: () =
       duration_min: newDuration,
       price_cents: cents,
       sort_order: Math.max(0, ...services.map((s) => s.sort_order)) + 1,
+      ...(profs ? { profissional: newProf } : {}),
     })
     if (error) return setError(error.code === '23505' ? 'Já existe um serviço com esse nome.' : dbError(error))
     setNewName('')
@@ -1601,7 +1726,7 @@ function Servicos({ services, reload }: { services: AdminService[]; reload: () =
       </p>
       <ul className="pn-list">
         {services.map((s) => (
-          <ServiceRow key={s.id} s={s} reload={reload} />
+          <ServiceRow key={s.id} s={s} profs={profs} reload={reload} />
         ))}
       </ul>
 
@@ -1627,6 +1752,7 @@ function Servicos({ services, reload }: { services: AdminService[]; reload: () =
             </select>
           </label>
         </div>
+        {profs && <EscolherProf profs={profs} value={newProf} onChange={setNewProf} />}
         {error && <p className="pn-error">{error}</p>}
         <button className="btn btn-primary">Adicionar serviço</button>
       </form>
@@ -1634,13 +1760,35 @@ function Servicos({ services, reload }: { services: AdminService[]; reload: () =
   )
 }
 
-function ServiceRow({ s, reload }: { s: AdminService; reload: () => Promise<void> }) {
+// Quem faz o serviço: decide em qual agenda ele entra (só aparece depois da migração 0017)
+function EscolherProf({ profs, value, onChange }: { profs: Prof[]; value: string; onChange: (v: string) => void }) {
+  return (
+    <label className="pn-field">
+      <span>Quem faz</span>
+      <select value={value} onChange={(e) => onChange(e.target.value)}>
+        {profs.map((p) => (
+          <option key={p.id} value={p.id}>
+            {p.name}
+            {p.area ? ` (${p.area.toLowerCase()})` : ''}
+          </option>
+        ))}
+      </select>
+    </label>
+  )
+}
+
+function ServiceRow({ s, profs, reload }: { s: AdminService; profs: Prof[] | null; reload: () => Promise<void> }) {
+  const [prof, setProf] = useState(s.profissional ?? 'leide')
   const [price, setPrice] = useState(centsToInput(s.price_cents))
   const [duration, setDuration] = useState(s.duration_min)
   const [active, setActive] = useState(s.active)
   const [state, setState] = useState<'' | 'salvando' | 'salvo' | string>('')
 
-  const changed = price !== centsToInput(s.price_cents) || duration !== s.duration_min || active !== s.active
+  const changed =
+    price !== centsToInput(s.price_cents) ||
+    duration !== s.duration_min ||
+    active !== s.active ||
+    (profs !== null && prof !== (s.profissional ?? 'leide'))
 
   async function save() {
     const cents = inputToCents(price)
@@ -1648,7 +1796,7 @@ function ServiceRow({ s, reload }: { s: AdminService; reload: () => Promise<void
     setState('salvando')
     const { error } = await supabase!
       .from('services')
-      .update({ price_cents: cents, duration_min: duration, active })
+      .update({ price_cents: cents, duration_min: duration, active, ...(profs ? { profissional: prof } : {}) })
       .eq('id', s.id)
     if (error) return setState(dbError(error))
     await reload()
@@ -1694,6 +1842,16 @@ function ServiceRow({ s, reload }: { s: AdminService; reload: () => Promise<void
           </select>
         </label>
       </div>
+      {profs && (
+        <EscolherProf
+          profs={profs}
+          value={prof}
+          onChange={(v) => {
+            setProf(v)
+            setState('')
+          }}
+        />
+      )}
       <div className="pn-service-foot">
         {state === 'salvo' && !changed && (
           <span className="pn-ok">
