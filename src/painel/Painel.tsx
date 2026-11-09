@@ -28,6 +28,7 @@ import Inicio, { type Destino } from './Inicio'
 import Clientes from './Clientes'
 import Divulgar from './Divulgar'
 import Despesas from './Despesas'
+import { AjudaIphone, useInstalar } from './Instalar'
 import './painel.css'
 
 const WEEKDAYS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
@@ -35,6 +36,8 @@ const DURATIONS = Array.from({ length: 20 }, (_, i) => (i + 1) * 15)
 const TIPO_CUPOM = { madrinha: 'indicou 3 amigas', boas_vindas: 'boas-vindas', questionario: 'questionário', presente: 'presente da Leide' }
 
 type Block = { id: string; starts_at: string; ends_at: string; reason: string | null }
+type DayBlock = Block & { google_event_id: string | null }
+type HoursRow = { weekday: number; open_time: string; close_time: string }
 type Tab = Destino | 'inicio'
 type Mais = 'despesas' | 'folgas' | 'servicos' | 'ajustes'
 type Pendente = { codigo: string; titulo: string; phone: string; nome: string | null; criado_em: string; expira_em: string }
@@ -105,7 +108,12 @@ function GoogleIcon() {
 export default function Painel() {
   const [session, setSession] = useState<Session | null>(null)
   const [checking, setChecking] = useState(true)
-  const [isAdmin, setIsAdmin] = useState<boolean | null>(null)
+  // Resposta do is_admin, presa à pessoa conferida (troca de conta nunca usa a resposta da conta anterior)
+  const [acesso, setAcesso] = useState<{ user: string; ok: boolean | 'erro' } | null>(null)
+  // E-mail de quem tentou entrar sem ser da lista de admins (o painel sai sozinho e avisa)
+  const [negado, setNegado] = useState('')
+  const userId = session?.user.id
+  const isAdmin = userId && acesso?.user === userId ? acesso.ok : null
 
   useEffect(() => {
     if (!supabase) return
@@ -113,38 +121,57 @@ export default function Painel() {
       setSession(data.session)
       setChecking(false)
     })
-    const { data } = supabase.auth.onAuthStateChange((_event, s) => setSession(s))
+    // Só troca a sessão quando muda a pessoa; a renovação automática do login não recarrega o painel
+    const { data } = supabase.auth.onAuthStateChange((_event, s) =>
+      setSession((atual) => (atual?.user.id === s?.user.id && atual && s ? atual : s)),
+    )
     return () => data.subscription.unsubscribe()
   }, [])
 
+  const conferir = useCallback(() => {
+    if (!supabase || !userId) return
+    setAcesso(null)
+    supabase.rpc('is_admin').then(({ data, error }) => setAcesso({ user: userId, ok: error ? 'erro' : data === true }))
+  }, [userId])
+
   useEffect(() => {
-    if (!supabase || !session) return
-    supabase.rpc('is_admin').then(({ data }) => setIsAdmin(data === true))
-  }, [session])
+    conferir()
+  }, [conferir])
+
+  // Qualquer conta Google consegue "entrar" (as clientes usam o login no app), mas só quem está na
+  // tabela admins vê o painel. Conta que não é admin é desconectada na hora, sem ver nada.
+  useEffect(() => {
+    if (isAdmin === true) setNegado('')
+    if (isAdmin !== false || !session) return
+    setNegado(session.user.email ?? 'usada')
+    supabase!.auth.signOut()
+  }, [isAdmin, session])
 
   if (!supabase) return <p className="pn-center">O painel ainda não está ligado ao banco de dados.</p>
   if (checking) return <p className="pn-center">Carregando…</p>
-  if (!session) return <Login />
+  if (!session || isAdmin === false) return <Login negado={negado} />
   if (isAdmin === null) return <p className="pn-center">Carregando…</p>
-  if (!isAdmin)
+  // Sem internet não dá para conferir: não desconecta, só pede para tentar de novo
+  if (isAdmin === 'erro')
     return (
       <div className="pn-center">
-        <p>
-          A conta {session.user.email ? <strong>{session.user.email}</strong> : 'usada'} não tem acesso ao painel.
-        </p>
-        <button className="btn btn-ghost" onClick={() => supabase!.auth.signOut()}>
-          Sair
+        <p>Não deu para abrir o painel. Confira a internet.</p>
+        <button className="btn btn-primary" onClick={conferir}>
+          Tentar de novo
         </button>
       </div>
     )
   return <Dashboard />
 }
 
-function Login() {
+function Login({ negado }: { negado: string }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [sending, setSending] = useState(false)
+  // O Google é o jeito mais fácil para a Leide; e-mail e senha ficam guardados como segunda opção
+  const [comSenha, setComSenha] = useState(false)
+  const { instalar, ajudaIos, fecharAjuda } = useInstalar()
 
   async function submit(e: FormEvent) {
     e.preventDefault()
@@ -168,29 +195,11 @@ function Login() {
     <main className="pn-login">
       <img src="/logo.webp" alt="Leide Hair" width="720" height="619" />
       <h1>Painel do salão</h1>
-      <form onSubmit={submit} className="pn-form">
-        <label className="pn-field">
-          <span>E-mail</span>
-          <input type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-        </label>
-        <label className="pn-field">
-          <span>Senha</span>
-          <input
-            type="password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </label>
-        {error && <p className="pn-error">{error}</p>}
-        <button className="btn btn-primary" disabled={sending}>
-          {sending ? 'Entrando…' : 'Entrar'}
-        </button>
-      </form>
-      <div className="pn-ou" aria-hidden>
-        <span>ou</span>
-      </div>
+      {negado && (
+        <p className="pn-error pn-negado" role="alert">
+          A conta <strong>{negado}</strong> não é a do salão. Entre com a conta da Leide.
+        </p>
+      )}
       <EntrarComGoogle
         escuro
         aoErro={setError}
@@ -201,6 +210,45 @@ function Login() {
           </button>
         }
       />
+      <p className="pn-login-dica">Entre uma vez só: o painel fica lembrando de você neste celular.</p>
+      {error && !comSenha && <p className="pn-error">{error}</p>}
+      {comSenha ? (
+        <>
+          <div className="pn-ou" aria-hidden>
+            <span>ou</span>
+          </div>
+          <form onSubmit={submit} className="pn-form">
+            <label className="pn-field">
+              <span>E-mail</span>
+              <input type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            </label>
+            <label className="pn-field">
+              <span>Senha</span>
+              <input
+                type="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </label>
+            {error && <p className="pn-error">{error}</p>}
+            <button className="btn btn-primary" disabled={sending}>
+              {sending ? 'Entrando…' : 'Entrar'}
+            </button>
+          </form>
+        </>
+      ) : (
+        <button type="button" className="pn-login-link" onClick={() => setComSenha(true)}>
+          Entrar com e-mail e senha
+        </button>
+      )}
+      {instalar && (
+        <button type="button" className="pn-login-link" onClick={instalar}>
+          Baixar o painel no celular
+        </button>
+      )}
+      {ajudaIos && <AjudaIphone fechar={fecharAjuda} />}
       <p className="pn-legal">
         <a href="/privacidade.html">Privacidade</a> · <a href="/termos.html">Termos de uso</a>
       </p>
@@ -211,6 +259,7 @@ function Login() {
 function Dashboard() {
   const [tab, setTabState] = useState<Tab>('inicio')
   const [mais, setMais] = useState<Mais>('despesas')
+  const { instalar, ajudaIos, fecharAjuda } = useInstalar()
 
   function setTab(t: Tab) {
     setTabState(t)
@@ -258,10 +307,21 @@ function Dashboard() {
           <img src="/logo.webp" alt="" width="720" height="619" />
           <span>Painel</span>
         </a>
-        <button className="pn-link" onClick={() => supabase!.auth.signOut()}>
-          Sair
-        </button>
+        <span className="pn-top-acoes">
+          {instalar && (
+            <button className="pn-link pn-link-ouro" onClick={instalar}>
+              Baixar no celular
+            </button>
+          )}
+          <button
+            className="pn-link"
+            onClick={() => window.confirm('Sair do painel? Para voltar, vai precisar entrar de novo.') && supabase!.auth.signOut()}
+          >
+            Sair
+          </button>
+        </span>
       </header>
+      {ajudaIos && <AjudaIphone fechar={fecharAjuda} />}
       <nav className="pn-tabs" aria-label="Seções do painel">
         {TABS.map((t) => (
           <button key={t.key} className={tab === t.key ? 'on' : ''} aria-current={tab === t.key} onClick={() => setTab(t.key)}>
@@ -327,9 +387,31 @@ function Agenda({ services, onPontos }: { services: AdminService[]; onPontos: (a
     })
   }, [])
 
+  // Horário de atendimento (para desenhar os horários do dia) e bloqueios do dia
+  const [hours, setHours] = useState<HoursRow[]>([])
+  const [blocks, setBlocks] = useState<DayBlock[]>([])
+  // Agendamento que acabou de mudar de horário: mostra o botão para avisar a cliente
+  const [remarcada, setRemarcada] = useState<{ a: Appointment; novo: string } | null>(null)
+  useEffect(() => {
+    supabase!
+      .from('business_hours')
+      .select('weekday, open_time, close_time')
+      .order('open_time')
+      .then(({ data }) => setHours(data ?? []))
+  }, [])
+
   const load = useCallback(async () => {
     const cols =
-      'id, starts_at, ends_at, status, client_name, client_phone, amount_cents, payment_method, service:services(name, price_cents)'
+      'id, service_id, starts_at, ends_at, status, client_name, client_phone, amount_cents, payment_method, service:services(name, price_cents)'
+    const inicio = atSaoPaulo(day, '00:00')
+    const fim = atSaoPaulo(addDays(day, 1), '00:00')
+    const b = supabase!
+      .from('blocked_times')
+      .select('id, starts_at, ends_at, reason, google_event_id')
+      .lt('starts_at', fim)
+      .gt('ends_at', inicio)
+      .order('starts_at')
+      .then(({ data, error }) => !error && setBlocks((data as DayBlock[]) ?? []))
     const [d, p] = await Promise.all([
       supabase!
         .from('appointments')
@@ -345,10 +427,26 @@ function Agenda({ services, onPontos }: { services: AdminService[]; onPontos: (a
         .order('starts_at')
         .limit(30),
     ])
+    await b
     if (d.error || p.error) setError('Não foi possível carregar a agenda. Confira a internet.')
     setItems((d.data as unknown as Appointment[]) ?? [])
     setPending((p.data as unknown as Appointment[]) ?? [])
   }, [day])
+
+  // Muda o agendamento para outro dia/horário, mantendo a mesma duração
+  async function remarcar(a: Appointment, novo: string): Promise<string | null> {
+    const dur = new Date(a.ends_at).getTime() - new Date(a.starts_at).getTime()
+    const ends = new Date(new Date(novo).getTime() + dur).toISOString()
+    const { error } = await supabase!.from('appointments').update({ starts_at: novo, ends_at: ends }).eq('id', a.id)
+    if (error) return error.code === '23P01' ? 'Já tem outra cliente nesse horário. Escolha outro.' : dbError(error)
+    avisarGoogle()
+    setRemarcada({ a, novo })
+    const novoDia = isoDateFmt.format(new Date(novo))
+    if (novoDia !== day) setDay(novoDia)
+    else load()
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+    return null
+  }
 
   useEffect(() => {
     load()
@@ -366,6 +464,7 @@ function Agenda({ services, onPontos }: { services: AdminService[]; onPontos: (a
 
   return (
     <>
+      {remarcada && <AvisoRemarcada {...remarcada} fechar={() => setRemarcada(null)} />}
       {pending.length > 0 && (
         <section className="pn-section">
           <h2>A confirmar</h2>
@@ -379,6 +478,7 @@ function Agenda({ services, onPontos }: { services: AdminService[]; onPontos: (a
                 familia={familia.has(foneFamilia(a.client_phone))}
                 onStatus={setStatus}
                 onPontos={onPontos}
+                onRemarcar={remarcar}
               />
             ))}
           </ul>
@@ -432,10 +532,13 @@ function Agenda({ services, onPontos }: { services: AdminService[]; onPontos: (a
               familia={familia.has(foneFamilia(a.client_phone))}
               onStatus={setStatus}
               onPontos={onPontos}
+              onRemarcar={remarcar}
             />
           ))}
         </ul>
       </section>
+
+      <HorariosDoDia day={day} hours={hours} items={items} blocks={blocks} reload={load} />
     </>
   )
 }
@@ -446,14 +549,18 @@ function AppointmentCard({
   familia,
   onStatus,
   onPontos,
+  onRemarcar,
 }: {
   a: Appointment
   showDate?: boolean
   familia?: boolean
   onStatus: (a: Appointment, s: Status, pagamento?: Pick<Appointment, 'amount_cents' | 'payment_method'>) => void
   onPontos: (a: Appointment) => void
+  onRemarcar: (a: Appointment, novo: string) => Promise<string | null>
 }) {
   const [pagando, setPagando] = useState(false)
+  const [remarcando, setRemarcando] = useState(false)
+  const aberto = (a.status === 'pendente' || a.status === 'confirmado') && !pagando && !remarcando
   const start = new Date(a.starts_at)
   const firstName = a.client_name.split(' ')[0]
   const when = `${dayTitleFmt.format(start)} às ${timeFmt.format(start)}`
@@ -498,12 +605,17 @@ function AppointmentCard({
               <WhatsAppIcon /> Confirmar
             </button>
           )}
-          {(a.status === 'pendente' || a.status === 'confirmado') && !pagando && (
+          {aberto && (
             <button className="pn-btn" onClick={() => setPagando(true)}>
               <CheckIcon /> Atendida
             </button>
           )}
-          {(a.status === 'pendente' || a.status === 'confirmado') && !pagando && (
+          {aberto && (
+            <button className="pn-btn" onClick={() => setRemarcando(true)}>
+              <ClockIcon /> Mudar horário
+            </button>
+          )}
+          {aberto && (
             <button className="pn-btn pn-btn-quiet" onClick={cancel}>
               Cancelar
             </button>
@@ -529,6 +641,17 @@ function AppointmentCard({
             Valor cobrado: {brl.format(a.amount_cents / 100)}
             {a.payment_method && ` · ${PAGAMENTOS.find((p) => p.key === a.payment_method)?.label ?? ''}`}
           </span>
+        )}
+        {remarcando && (
+          <Remarcar
+            a={a}
+            onCancel={() => setRemarcando(false)}
+            onSave={async (novo) => {
+              const erro = await onRemarcar(a, novo)
+              if (!erro) setRemarcando(false)
+              return erro
+            }}
+          />
         )}
         {pagando && (
           <Pagamento
@@ -699,6 +822,287 @@ function NewAppointment({ services, day, onDone }: { services: AdminService[]; d
         {sending ? 'Salvando…' : 'Salvar agendamento'}
       </button>
     </form>
+  )
+}
+
+// Formulário "Mudar horário": a Leide escolhe o dia e a hora nova. A duração continua a mesma.
+// Mostra os horários livres do dia escolhido para tocar e já preencher.
+function Remarcar({
+  a,
+  onCancel,
+  onSave,
+}: {
+  a: Appointment
+  onCancel: () => void
+  onSave: (novo: string) => Promise<string | null>
+}) {
+  const inicio = new Date(a.starts_at)
+  const [date, setDate] = useState(isoDateFmt.format(inicio))
+  const [time, setTime] = useState(timeFmt.format(inicio))
+  const [livres, setLivres] = useState<string[] | null>(null)
+  const [erro, setErro] = useState('')
+  const [salvando, setSalvando] = useState(false)
+
+  useEffect(() => {
+    if (!a.service_id || !date) return
+    let vivo = true
+    setLivres(null)
+    supabase!
+      .rpc('get_available_slots', { p_service_id: a.service_id, p_date: date })
+      .then(({ data, error }) => {
+        if (!vivo) return
+        const lista = error ? [] : ((data as { slot_start: string }[]) ?? []).map((r) => timeFmt.format(new Date(r.slot_start)))
+        setLivres(lista)
+      })
+    return () => {
+      vivo = false
+    }
+  }, [a.service_id, date])
+
+  async function salvar(e: FormEvent) {
+    e.preventDefault()
+    setErro('')
+    const novo = atSaoPaulo(date, time)
+    if (novo === new Date(a.starts_at).toISOString()) return setErro('Esse já é o horário dela. Escolha outro.')
+    const dia = new Date(`${date}T12:00:00-03:00`).getUTCDay()
+    if ((dia === 0 || dia === 1) && !window.confirm('Esse dia é domingo ou segunda (salão fechado). Marcar mesmo assim?')) return
+    setSalvando(true)
+    const r = await onSave(novo)
+    setSalvando(false)
+    if (r) setErro(r)
+  }
+
+  return (
+    <form className="pn-form pn-pagamento" onSubmit={salvar}>
+      <p className="pn-muted-inline">
+        Mudar o horário de {a.client_name.split(' ')[0]} ({a.service?.name ?? 'serviço'}). Depois você avisa ela pelo WhatsApp.
+      </p>
+      <div className="pn-grid2">
+        <label className="pn-field">
+          <span>Novo dia</span>
+          <input type="date" value={date} onChange={(e) => e.target.value && setDate(e.target.value)} required />
+        </label>
+        <label className="pn-field">
+          <span>Nova hora</span>
+          <input type="time" step={900} value={time} onChange={(e) => setTime(e.target.value)} required />
+        </label>
+      </div>
+      {a.service_id && (
+        <div className="pn-livres">
+          <span className="pn-muted-inline">
+            {livres === null ? 'Procurando horários livres…' : livres.length === 0 ? 'Nenhum horário livre no app nesse dia (você pode digitar a hora mesmo assim).' : 'Livres nesse dia:'}
+          </span>
+          {livres && livres.length > 0 && (
+            <div className="pn-row pn-row-left">
+              {livres.map((h) => (
+                <button
+                  key={h}
+                  type="button"
+                  className={`pn-chip ${time === h ? 'pn-chip-dark' : ''}`}
+                  aria-pressed={time === h}
+                  onClick={() => setTime(h)}
+                >
+                  {h}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+      {erro && <p className="pn-error">{erro}</p>}
+      <div className="pn-card-actions">
+        <button className="pn-btn pn-btn-dark" disabled={salvando}>
+          <CheckIcon /> {salvando ? 'Salvando…' : 'Salvar novo horário'}
+        </button>
+        <button type="button" className="pn-btn pn-btn-quiet" onClick={onCancel}>
+          Voltar
+        </button>
+      </div>
+    </form>
+  )
+}
+
+// Depois de mudar o horário: botão para mandar a mensagem pronta no WhatsApp da cliente
+function AvisoRemarcada({ a, novo, fechar }: { a: Appointment; novo: string; fechar: () => void }) {
+  const d = new Date(novo)
+  const antes = new Date(a.starts_at)
+  const quando = `${dayTitleFmt.format(d)} às ${timeFmt.format(d)}`
+  const quandoAntes = `${dayTitleFmt.format(antes)} às ${timeFmt.format(antes)}`
+  const primeiro = a.client_name.split(' ')[0]
+  const servico = a.service?.name ?? 'atendimento'
+  const texto = `Olá, ${primeiro}! Seu horário de ${servico} foi corrigido: agora é ${quando} (antes estava ${quandoAntes}). Endereço: ${ENDERECO}. Se esse horário não der para você, me chama aqui. Leide Hair`
+  return (
+    <section className="pn-section pn-remarcada" role="status">
+      <p className="pn-ok">
+        <CheckIcon /> Horário de <strong>{a.client_name}</strong> mudado para {quando}.
+      </p>
+      <p className="pn-muted-inline">Agora avise a cliente. A mensagem já vai pronta, é só enviar.</p>
+      <div className="pn-card-actions">
+        <a className="pn-btn pn-btn-dark" href={whatsappLink(a.client_phone, texto)} target="_blank" rel="noreferrer" onClick={fechar}>
+          <WhatsAppIcon /> Avisar {primeiro} no WhatsApp
+        </a>
+        <button className="pn-btn pn-btn-quiet" onClick={fechar}>
+          Agora não
+        </button>
+      </div>
+    </section>
+  )
+}
+
+/* ---------------- Horários do dia ---------------- */
+
+// Todos os horários do dia, de 30 em 30 minutos (o mesmo passo do app).
+// Livre: aparece no app. Toque para fechar (ex.: a Leide já marcou alguém por fora).
+// Fechado: toque para abrir de novo. Com cliente: só mostra quem é.
+type Slot = { inicio: string; fim: string; estado: 'livre' | 'fechado' | 'cliente' | 'passou'; bloco?: DayBlock; cliente?: string }
+
+const PASSO_MIN = 30
+const MOTIVO_FORA = 'Marcado por fora'
+
+function HorariosDoDia({
+  day,
+  hours,
+  items,
+  blocks,
+  reload,
+}: {
+  day: string
+  hours: HoursRow[]
+  items: Appointment[] | null
+  blocks: DayBlock[]
+  reload: () => Promise<void> | void
+}) {
+  const [mexendo, setMexendo] = useState('')
+  const [erro, setErro] = useState('')
+  const weekday = new Date(`${day}T12:00:00-03:00`).getUTCDay()
+
+  const slots = useMemo(() => {
+    const agora = Date.now()
+    const ativos = (items ?? []).filter((a) => a.status !== 'cancelado')
+    const lista: Slot[] = []
+    for (const h of hours.filter((x) => x.weekday === weekday)) {
+      let t = new Date(atSaoPaulo(day, h.open_time.slice(0, 5))).getTime()
+      const fecha = new Date(atSaoPaulo(day, h.close_time.slice(0, 5))).getTime()
+      for (; t + PASSO_MIN * 60_000 <= fecha; t += PASSO_MIN * 60_000) {
+        const fim = t + PASSO_MIN * 60_000
+        const cruza = (s: string, e: string) => new Date(s).getTime() < fim && new Date(e).getTime() > t
+        const ap = ativos.find((a) => cruza(a.starts_at, a.ends_at))
+        const bloco = blocks.find((b) => cruza(b.starts_at, b.ends_at))
+        const inicio = new Date(t).toISOString()
+        const fimIso = new Date(fim).toISOString()
+        if (ap) lista.push({ inicio, fim: fimIso, estado: 'cliente', cliente: ap.client_name.split(' ')[0] })
+        else if (bloco) lista.push({ inicio, fim: fimIso, estado: 'fechado', bloco })
+        else if (fim <= agora) lista.push({ inicio, fim: fimIso, estado: 'passou' })
+        else lista.push({ inicio, fim: fimIso, estado: 'livre' })
+      }
+    }
+    return lista.sort((x, y) => x.inicio.localeCompare(y.inicio))
+  }, [day, weekday, hours, items, blocks])
+
+  const livres = slots.filter((s) => s.estado === 'livre')
+
+  async function tocar(s: Slot) {
+    setErro('')
+    if (s.estado === 'livre') {
+      setMexendo(s.inicio)
+      const { error } = await supabase!.from('blocked_times').insert({ starts_at: s.inicio, ends_at: s.fim, reason: MOTIVO_FORA })
+      setMexendo('')
+      if (error) return setErro(dbError(error))
+      return reload()
+    }
+    if (s.estado !== 'fechado' || !s.bloco) return
+    const b = s.bloco
+    if (b.google_event_id) {
+      return window.alert(
+        `Esse horário está fechado por um compromisso do Google Agenda${b.reason ? ` (${b.reason})` : ''}. Para abrir, apague o compromisso lá no Google Agenda.`,
+      )
+    }
+    const ini = new Date(b.starts_at)
+    const fim = new Date(b.ends_at)
+    const soEsse = ini.toISOString() === s.inicio && fim.toISOString() === s.fim
+    if (!soEsse) {
+      const mesmoDia = isoDateFmt.format(ini) === isoDateFmt.format(new Date(fim.getTime() - 1))
+      const periodo = mesmoDia
+        ? `das ${timeFmt.format(ini)} às ${timeFmt.format(fim)}`
+        : `de ${shortDateFmt.format(ini)} até ${shortDateFmt.format(new Date(fim.getTime() - 1))}`
+      if (!window.confirm(`Esse horário faz parte de um período fechado ${periodo}${b.reason ? ` (${b.reason})` : ''}. Abrir o período todo?`))
+        return
+    }
+    setMexendo(s.inicio)
+    const { error } = await supabase!.from('blocked_times').delete().eq('id', b.id)
+    setMexendo('')
+    if (error) return setErro(dbError(error))
+    reload()
+  }
+
+  async function fecharDia() {
+    if (!window.confirm(`Fechar os ${livres.length} horários livres que sobraram neste dia?`)) return
+    setErro('')
+    setMexendo('dia')
+    const { error } = await supabase!
+      .from('blocked_times')
+      .insert(livres.map((s) => ({ starts_at: s.inicio, ends_at: s.fim, reason: MOTIVO_FORA })))
+    setMexendo('')
+    if (error) return setErro(dbError(error))
+    reload()
+  }
+
+  return (
+    <section className="pn-section">
+      <h2>Horários do dia</h2>
+      <p className="pn-muted">
+        Marcou alguém por fora (WhatsApp, telefone, pessoalmente)? Toque no horário para <b>fechar</b>: ele some do app. Toque
+        de novo para abrir.
+      </p>
+      {slots.length === 0 ? (
+        <p className="pn-empty">O salão não abre neste dia.</p>
+      ) : (
+        <>
+          <div className="pn-legenda" aria-hidden>
+            <span className="pn-leg-livre">Livre</span>
+            <span className="pn-leg-fechado">Fechado</span>
+            <span className="pn-leg-cliente">Cliente</span>
+          </div>
+          <ul className="pn-slots">
+            {slots.map((s) => {
+              const hora = timeFmt.format(new Date(s.inicio))
+              const rotulo =
+                s.estado === 'livre'
+                  ? 'Livre'
+                  : s.estado === 'fechado'
+                    ? s.bloco?.google_event_id
+                      ? 'Google'
+                      : 'Fechado'
+                    : s.estado === 'cliente'
+                      ? s.cliente
+                      : 'Passou'
+              const acao =
+                s.estado === 'livre' ? `Fechar ${hora}` : s.estado === 'fechado' ? `Abrir ${hora}` : `${hora}: ${rotulo}`
+              return (
+                <li key={s.inicio}>
+                  <button
+                    type="button"
+                    className={`pn-slot pn-slot-${s.estado}`}
+                    disabled={s.estado === 'cliente' || s.estado === 'passou' || mexendo !== ''}
+                    aria-label={acao}
+                    onClick={() => tocar(s)}
+                  >
+                    <strong>{hora}</strong>
+                    <span>{mexendo === s.inicio ? '…' : rotulo}</span>
+                  </button>
+                </li>
+              )
+            })}
+          </ul>
+          {erro && <p className="pn-error">{erro}</p>}
+          {livres.length > 1 && (
+            <button className="pn-chip pn-fechar-dia" onClick={fecharDia} disabled={mexendo !== ''}>
+              Fechar todos os livres deste dia
+            </button>
+          )}
+        </>
+      )}
+    </section>
   )
 }
 

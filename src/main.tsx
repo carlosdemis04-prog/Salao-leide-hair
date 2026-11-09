@@ -28,6 +28,31 @@ if (isApp) {
   }
 }
 
+if (isPainel) {
+  // O painel também pode ser instalado no celular da Leide, com ícone próprio (preto e dourado)
+  const manifesto = document.createElement('link')
+  manifesto.rel = 'manifest'
+  manifesto.href = '/painel.webmanifest'
+  document.head.append(manifesto)
+  const tituloIos = document.createElement('meta')
+  tituloIos.name = 'apple-mobile-web-app-title'
+  tituloIos.content = 'Painel Leide'
+  document.head.append(tituloIos)
+  document.querySelector('link[rel="apple-touch-icon"]')?.setAttribute('href', '/painel-icone-180.png')
+  document.title = 'Painel Leide Hair'
+  // O Android avisa cedo que dá para instalar; guardamos o aviso para o botão "Baixar no celular"
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault()
+    window.pedidoInstalarPainel = e
+    window.dispatchEvent(new Event('painel-instalavel'))
+  })
+  if ('serviceWorker' in navigator && import.meta.env.PROD) {
+    navigator.serviceWorker.register('/painel-sw.js', { scope: '/painel' }).catch(() => {})
+  }
+  // Pede ao navegador para não apagar o login do painel quando o celular faz faxina
+  navigator.storage?.persist?.().catch(() => {})
+}
+
 // Endereço antigo ou www: vai para leidehair.com.br antes de desenhar qualquer coisa
 if (!irParaDominio())
   createRoot(document.getElementById('root')!).render(
